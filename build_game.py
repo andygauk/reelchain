@@ -605,54 +605,7 @@ newPuzzle();
 """
 
 import os
-import re as _re
 
-PHP_TEMPLATE = r'''<?php
-/**
- * Plugin Name: ReelChain
- * Description: Embed the ReelChain film-to-film actor-bridge puzzle game via the [reelchain] shortcode (or the reelchain_game() template tag).
- * Version: 1.0.0
- * Author: ReelChain
- */
-
-if ( ! defined( 'ABSPATH' ) ) exit;
-
-// Enqueue the game's CSS + JS (external files -> never touched by WP filters).
-function reelchain_enqueue_assets() {
-    $css = plugins_url( 'assets/reelchain.css', __FILE__ );
-    $js  = plugins_url( 'assets/reelchain.js',  __FILE__ );
-    wp_enqueue_style(  'reelchain', $css, array(), '1.0.0' );
-    wp_enqueue_script( 'reelchain', $js,  array(), '1.0.0', true );
-}
-
-// Only load the assets on pages that actually use the shortcode.
-function reelchain_maybe_enqueue() {
-    if ( is_singular() && has_shortcode( get_post()->post_content, 'reelchain' ) ) {
-        reelchain_enqueue_assets();
-    }
-}
-add_action( 'wp_enqueue_scripts', 'reelchain_maybe_enqueue' );
-
-// Shortcode: [reelchain]  -> paste into a page in the block editor.
-function reelchain_shortcode() {
-    $file = __DIR__ . '/assets/reelchain-markup.html';
-    if ( ! file_exists( $file ) ) {
-        return '<!-- ReelChain: game markup not found. Re-run build_game.py. -->';
-    }
-    return file_get_contents( $file );
-}
-add_shortcode( 'reelchain', 'reelchain_shortcode' );
-
-// Template tag: call reelchain_game() directly in a theme template
-// (e.g. inside page-reelchain.php).
-function reelchain_game() {
-    reelchain_enqueue_assets();
-    $file = __DIR__ . '/assets/reelchain-markup.html';
-    if ( file_exists( $file ) ) {
-        echo file_get_contents( $file );
-    }
-}
-'''
 
 def main():
     with open("data.json", encoding="utf-8") as fh:
@@ -676,47 +629,6 @@ def main():
     os.makedirs(deploy_dir, exist_ok=True)
     shutil.copyfile(out, os.path.join(deploy_dir, "index.html"))
     print("Copied to %s/index.html for deployment" % deploy_dir)
-
-    # --- Split into scoped pieces for the WordPress plugin ---
-    m_style = _re.search(r"<style>(.*?)</style>", html, _re.S)
-    m_body = _re.search(r"<body>(.*?)</body>", html, _re.S)
-    if not (m_style and m_body):
-        print("WARN: could not split template for plugin build")
-        return
-
-    style_full = m_style.group(1)
-    body_full = m_body.group(1)
-    m_script = _re.search(r"<script>(.*?)</script>", body_full, _re.S)
-    if not m_script:
-        print("WARN: no <script> found for plugin build")
-        return
-    js = m_script.group(1)
-    markup = (body_full[:m_script.start()] + body_full[m_script.end()]).strip()
-
-    # The game CSS/classes are already namespaced to `.rc-app` / `.rc-*`,
-    # so it can't collide with (or be clobbered by) the host theme.
-    # No further scoping needed.
-    css = style_full
-
-    plugin_dir = "reelchain"
-    assets_dir = os.path.join(plugin_dir, "assets")
-    os.makedirs(assets_dir, exist_ok=True)
-
-    with open(os.path.join(assets_dir, "reelchain.css"), "w", encoding="utf-8") as fh:
-        fh.write(css)
-    with open(os.path.join(assets_dir, "reelchain.js"), "w", encoding="utf-8") as fh:
-        fh.write(js)
-    with open(os.path.join(assets_dir, "reelchain-markup.html"), "w", encoding="utf-8") as fh:
-        fh.write(markup + "\n")
-    with open(os.path.join(plugin_dir, "reelchain.php"), "w", encoding="utf-8") as fh:
-        fh.write(PHP_TEMPLATE)
-    print("Wrote plugin/  (reelchain/reelchain.php + assets/)")
-
-    # --- WordPress fragment: paste into a "Custom HTML" block (alt method) ---
-    embed = ("<style>" + css + "</style>\n" + markup + "\n")
-    with open("reelchain_embed.html", "w", encoding="utf-8") as fh:
-        fh.write(embed)
-    print("Wrote reelchain_embed.html (Custom-HTML-block alt method)")
 
 
 if __name__ == "__main__":
