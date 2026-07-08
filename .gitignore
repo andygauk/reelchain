@@ -1,0 +1,12 @@
+# Build artifacts / binaries
+cloudflared.exe
+*.zip
+__pycache__/
+node_modules/
+.wrangler/
+
+# Secrets (never commit)
+cloudflare_token.txt
+
+# Optional screenshots
+sample_card.png

@@ -1,0 +1,98 @@
+<div class="rc-app">
+  <h1>Reel<span class="rc-c">Chain</span></h1>
+  <div class="rc-tag">Two films. One bridge. Connect them through the actors they share.</div>
+
+  <div class="rc-toolbar">
+    <div class="rc-seg" id="diff">
+      <button data-d="easy" class="rc-active">Easy</button>
+      <button data-d="medium">Medium</button>
+      <button data-d="hard">Hard</button>
+      <button data-d="any">Surprise</button>
+    </div>
+    <button class="rc-btn" id="newBtn">🎲 New Puzzle</button>
+    <button class="rc-btn ghost" id="hintBtn">💡 Hint</button>
+    <button class="rc-btn ghost" id="revealBtn">👁 Reveal</button>
+    <button class="rc-btn ghost" id="shareBtn">📤 Share</button>
+    <button class="rc-btn ghost" id="flipBtn">🔄 Flip</button>
+    <span class="rc-spacer"></span>
+    <span class="rc-clock" id="clock">00:00</span>
+  </div>
+
+  <div class="rc-puzzle">
+    <div class="rc-card rc-start">
+      <span class="rc-emoji">🎬</span>
+      <div class="rc-lbl">Start film</div>
+      <div class="rc-name" id="startName">—</div>
+    </div>
+    <div class="rc-connector">
+      <div class="rc-dot"></div><div class="rc-line"></div><div class="rc-dot"></div>
+    </div>
+    <div class="rc-card rc-target">
+      <span class="rc-emoji">🏁</span>
+      <div class="rc-lbl">Target film</div>
+      <div class="rc-name" id="targetName">—</div>
+    </div>
+  </div>
+  <div class="rc-modebar" id="modeBar"></div>
+
+  <div class="rc-panel">
+    <h3>You are at</h3>
+    <div class="rc-chain" id="pathChain"></div>
+    <div class="rc-meta">
+      <span>Steps taken: <b id="stepsTaken">0</b></span>
+      <span>Best possible: <b id="optimal">?</b></span>
+      <span>Optimal from here: <b id="optRemaining">?</b></span>
+    </div>
+    <div id="msg"></div>
+  </div>
+
+  <div class="rc-panel">
+    <div class="rc-pickhint" id="pickHint">Pick an actor who links <b id="curName">this film</b> to another:</div>
+    <div class="rc-chips" id="castChips"></div>
+    <div id="actorPanel" style="display:none;margin-top:14px">
+      <div class="rc-pickhint" id="filmHint"></div>
+      <div class="rc-chips" id="filmChips"></div>
+    </div>
+  </div>
+
+  <div class="rc-row">
+    <button class="rc-btn ghost" id="undoBtn">↩ Undo</button>
+    <button class="rc-btn ghost" id="resetBtn">⟲ Reset</button>
+    <span class="rc-spacer"></span>
+    <div class="rc-stats">
+      <span>Won: <b id="statWon">0</b></span>
+      <span>Best time: <b id="statBest">—</b></span>
+    </div>
+  </div>
+
+  <div class="rc-panel" style="margin-top:14px">
+    <details>
+      <summary>How to play / Custom pair</summary>
+      <div class="rc-help">
+        <p><b>Goal:</b> get from the <b>start film</b> to the <b>target film</b> using the smallest number of actor links.</p>
+        <p><b>Each link:</b> pick an actor who is in your <i>current</i> film, then pick one of the other films that actor is in. That film becomes your new position. Keep going until you land on the target.</p>
+        <p><b>Example:</b> The Godfather → <i>Al Pacino</i> → Once Upon a Time in Hollywood → <i>Tim Roth</i> → Pulp Fiction. (2 links.)</p>
+        <p>Two films with no shared actor still connect through a chain of linked performers — that's the puzzle.</p>
+        <div class="rc-row" style="margin-top:14px">
+          <span class="rc-lbl2">Custom pair:</span>
+          <select id="customA"></select>
+          <span style="color:var(--muted)">→</span>
+          <select id="customB"></select>
+          <button class="rc-btn" id="customGo">Play</button>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="rc-overlay" id="overlay">
+    <div class="rc-modal">
+      <h2 id="winTitle">Connected! 🎉</h2>
+      <div class="rc-big" id="winSteps">0</div>
+      <div class="rc-sub" id="winSub"></div>
+    <div class="rc-chain" id="winChain"></div>
+    <div class="rc-row" style="justify-content:center;margin-top:6px">
+      <button class="rc-btn" id="winNext">🎲 Next puzzle</button>
+    </div>
+  </div>
+  </div>
+</div>

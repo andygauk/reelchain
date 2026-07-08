@@ -1,0 +1,93 @@
+
+  :root{
+    --bg:#0d0f17; --panel:#161a26; --panel2:#1e2333; --accent:#ff4d6d; --accent2:#ffb84d;
+    --film:#5b8cff; --actor:#ffb84d; --text:#e8eaf2; --muted:#8a90a6; --good:#39d98a; --bad:#ff5470;
+  }
+  .rc-app *{box-sizing:border-box}
+  .rc-app{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:radial-gradient(1200px 600px at 50% -10%,#1b2030,#0d0f17);color:var(--text);padding:22px 16px 80px}
+  .rc-app h1{font-size:30px;margin:0 0 2px;letter-spacing:.5px}
+  .rc-app h1 .rc-c{color:var(--accent)}
+  .rc-app .rc-tag{color:var(--muted);font-size:14px;margin-bottom:16px}
+
+  .rc-app .rc-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .rc-app .rc-seg{display:inline-flex;background:var(--panel2);border:1px solid #2b3142;border-radius:10px;overflow:hidden}
+  .rc-app .rc-seg button{background:none;border:none;color:var(--muted);padding:9px 13px;font-size:13px;font-weight:600;cursor:pointer}
+  .rc-app .rc-seg button.rc-active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1320}
+  .rc-app .rc-btn{cursor:pointer;border:none;border-radius:10px;padding:10px 15px;font-size:14px;font-weight:600;
+       background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1320;transition:transform .06s}
+  .rc-app .rc-btn:active{transform:translateY(1px)}
+  .rc-app .rc-btn.ghost{background:var(--panel2);color:var(--text);border:1px solid #2b3142}
+  .rc-app .rc-spacer{flex:1}
+  .rc-app .rc-modebar{font-size:13px;color:var(--muted);margin:-6px 0 12px;min-height:18px}
+  .rc-app .rc-modebar b{color:var(--accent2)}
+  .rc-app .rc-modebar .rc-done{color:var(--good);font-weight:600}
+
+  .rc-app .rc-puzzle{display:flex;align-items:stretch;gap:10px;margin-bottom:14px}
+  .rc-app .rc-card{flex:1;background:linear-gradient(160deg,#20283e,#141826);border:1px solid #2b3142;border-radius:16px;
+        padding:16px;position:relative;min-height:96px;display:flex;flex-direction:column;justify-content:center}
+  .rc-app .rc-card .rc-lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .rc-app .rc-card .rc-name{font-size:20px;font-weight:700;line-height:1.2}
+  .rc-app .rc-card.rc-target{background:linear-gradient(160deg,#3a1f33,#21141f);border-color:#7a3550}
+  .rc-app .rc-card .rc-emoji{position:absolute;top:12px;right:14px;font-size:22px;opacity:.6}
+  .rc-app .rc-connector{display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:12px;min-width:64px}
+  .rc-app .rc-connector .rc-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);margin:4px 0}
+  .rc-app .rc-connector .rc-line{width:2px;flex:1;background:linear-gradient(var(--accent),var(--accent2));min-height:18px}
+
+  .rc-app .rc-panel{background:var(--panel);border:1px solid #232838;border-radius:14px;padding:16px;margin-bottom:14px}
+  .rc-app .rc-panel h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+
+  .rc-app .rc-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .rc-app .rc-chip{cursor:pointer;border:none;border-radius:999px;padding:8px 13px;font-size:14px;font-weight:600;
+        background:var(--panel2);color:var(--text);border:1px solid #2b3142;transition:.08s}
+  .rc-app .rc-chip:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .rc-app .rc-chip.rc-actor{background:rgba(255,184,77,.14);color:#ffce8a;border-color:rgba(255,184,77,.4)}
+  .rc-app .rc-chip.rc-film{background:rgba(91,140,255,.14);color:#9db8ff;border-color:rgba(91,140,255,.4)}
+  .rc-app .rc-chip.rc-dim{opacity:.35;cursor:default}
+  .rc-app .rc-chip.rc-dim:hover{transform:none;border-color:#2b3142}
+  .rc-app .rc-chip.rc-picked{outline:2px solid var(--accent2)}
+
+  .rc-app .rc-pickhint{font-size:13px;color:var(--muted);margin-bottom:8px}
+  .rc-app .rc-pickhint b{color:var(--actor)}
+
+  .rc-app .rc-chain{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+  .rc-app .rc-node{padding:7px 11px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap}
+  .rc-app .rc-node.rc-film{background:rgba(91,140,255,.15);color:#9db8ff;border:1px solid rgba(91,140,255,.4)}
+  .rc-app .rc-node.rc-actor{background:rgba(255,184,77,.15);color:#ffce8a;border:1px solid rgba(255,184,77,.4)}
+  .rc-app .rc-node.rc-current{outline:2px solid var(--accent);box-shadow:0 0 0 3px rgba(255,77,109,.25)}
+  .rc-app .rc-arrow{color:var(--muted);font-size:15px}
+
+  .rc-app .rc-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:4px}
+  .rc-app .rc-meta b{color:var(--accent2)}
+  .rc-app .rc-msg{padding:11px 13px;border-radius:10px;font-size:14px;margin-top:10px}
+  .rc-app .rc-msg.rc-ok{background:rgba(57,217,138,.12);color:var(--good);border:1px solid rgba(57,217,138,.35)}
+  .rc-app .rc-msg.rc-err{background:rgba(255,84,112,.12);color:var(--bad);border:1px solid rgba(255,84,112,.35)}
+  .rc-app .rc-msg.rc-info{background:rgba(91,140,255,.1);color:#9db8ff;border:1px solid rgba(91,140,255,.35)}
+
+  .rc-app .rc-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .rc-app select{background:var(--panel2);color:var(--text);border:1px solid #2b3142;border-radius:9px;padding:9px 10px;font-size:14px}
+  .rc-app label.rc-lbl2{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+
+  .rc-app .rc-stats{display:flex;gap:18px;font-size:13px;color:var(--muted)}
+  .rc-app .rc-stats b{color:var(--text)}
+
+  .rc-overlay{position:fixed;inset:0;background:rgba(8,10,16,.85);display:none;align-items:center;justify-content:center;z-index:2147483647;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);line-height:1.5}
+  .rc-overlay.rc-open{display:flex}
+  .rc-modal{background:var(--panel);border:1px solid #2b3142;border-radius:18px;padding:26px;max-width:440px;width:calc(100% - 40px);text-align:center;
+         box-shadow:0 30px 80px rgba(0,0,0,.6);color:var(--text);font-family:inherit}
+  .rc-modal h2{margin:0 0 6px;font-size:26px;font-family:inherit;font-weight:800;color:var(--text)}
+  .rc-modal .rc-big{font-size:46px;margin:6px 0;font-family:inherit;font-weight:800;color:var(--text)}
+  .rc-modal .rc-sub{color:var(--muted);font-size:14px;margin-bottom:16px;font-family:inherit}
+  .rc-modal .rc-chain{justify-content:center;margin:14px 0}
+
+  /* Unscoped button so the win modal's button is styled even though the
+     overlay sits (by design) outside .rc-app. */
+  .rc-btn{cursor:pointer;border:none;border-radius:10px;padding:10px 15px;font-size:14px;font-weight:600;
+       background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1320;transition:transform .06s;font-family:inherit}
+  .rc-btn:active{transform:translateY(1px)}
+  .rc-btn.ghost{background:var(--panel2);color:var(--text);border:1px solid #2b3142}
+
+  .rc-app .rc-help{font-size:13px;color:var(--muted);line-height:1.6}
+  .rc-app .rc-help b{color:var(--text)}
+  .rc-app details summary{cursor:pointer;color:var(--accent2);font-size:13px;font-weight:600;margin-bottom:8px}

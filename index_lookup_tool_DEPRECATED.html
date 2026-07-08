@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReelChain — Connect Two Films via Actors</title>
+<style>
+  :root{
+    --bg:#0d0f17; --panel:#161a26; --panel2:#1e2333; --accent:#ff4d6d; --accent2:#ffb84d;
+    --film:#5b8cff; --actor:#ffb84d; --text:#e8eaf2; --muted:#8a90a6; --good:#39d98a; --bad:#ff5470;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:radial-gradient(1200px 600px at 50% -10%,#1b2030,#0d0f17);color:var(--text);min-height:100vh}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 18px 60px}
+  h1{font-size:30px;margin:0 0 4px;letter-spacing:.5px}
+  h1 .c{color:var(--accent)}
+  .tag{color:var(--muted);font-size:14px;margin-bottom:22px}
+  .panel{background:var(--panel);border:1px solid #232838;border-radius:14px;padding:18px;margin-bottom:16px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .field{flex:1;min-width:200px;position:relative}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.6px}
+  input,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #2b3142;background:var(--panel2);
+       color:var(--text);font-size:15px;outline:none}
+  input:focus,select:focus{border-color:var(--accent)}
+  .btn{cursor:pointer;border:none;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:600;
+       background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1320;transition:transform .06s}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:var(--panel2);color:var(--text);border:1px solid #2b3142}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .datalist{position:absolute;z-index:5;width:100%;background:var(--panel2);border:1px solid #2b3142;
+       border-radius:10px;margin-top:4px;max-height:200px;overflow:auto;display:none}
+  .datalist div{padding:9px 12px;cursor:pointer;font-size:14px}
+  .datalist div:hover{background:#262c40}
+  .chain{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+  .node{padding:9px 14px;border-radius:999px;font-size:14px;font-weight:600}
+  .node.film{background:rgba(91,140,255,.15);color:#9db8ff;border:1px solid rgba(91,140,255,.4)}
+  .node.actor{background:rgba(255,184,77,.15);color:#ffce8a;border:1px solid rgba(255,184,77,.4)}
+  .arrow{color:var(--muted);font-size:18px}
+  .meta{font-size:13px;color:var(--muted);margin:10px 0}
+  .meta b{color:var(--accent2)}
+  .msg{padding:12px 14px;border-radius:10px;font-size:14px;margin-top:8px}
+  .msg.ok{background:rgba(57,217,138,.12);color:var(--good);border:1px solid rgba(57,217,138,.35)}
+  .msg.err{background:rgba(255,84,112,.12);color:var(--bad);border:1px solid rgba(255,84,112,.35)}
+  .solvebox{background:var(--panel);border:1px solid #232838;border-radius:14px;padding:18px;margin-bottom:16px}
+  .steps{display:flex;flex-direction:column;gap:10px}
+  .step{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .step input{flex:1;min-width:140px}
+  .hint{font-size:12px;color:var(--muted)}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid #2b3142;border-radius:8px;
+       padding:4px 10px;font-size:12px;color:var(--muted);margin-left:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Reel<span class="c">Chain</span></h1>
+  <div class="tag">Connect two films through the actors they share. Like Six Degrees of Kevin Bacon — but movie-to-movie.</div>
+
+  <div class="panel">
+    <div class="row">
+      <div class="field">
+        <label>Film A</label>
+        <input id="filmA" placeholder="Start typing a film…" autocomplete="off">
+        <div class="datalist" id="dlA"></div>
+      </div>
+      <div class="field">
+        <label>Film B</label>
+        <input id="filmB" placeholder="Start typing a film…" autocomplete="off">
+        <div class="datalist" id="dlB"></div>
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+      <button class="btn" id="solveBtn" onclick="solveNow()">Find shortest link</button>
+      <button class="btn ghost" onclick="randomPair()">🎲 Random pair</button>
+      <span id="pairMeta" class="badge"></span>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="panel" id="dailyPanel">
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px">Daily Challenge</label>
+    <div id="dailyLoad" class="meta">Loading today's puzzle…</div>
+    <div id="dailyBody" style="display:none">
+      <div class="row">
+        <div class="field"><label>Film A</label><div class="node film" id="dailyA" style="display:inline-block;margin:0"></div></div>
+        <div class="field"><label>Film B</label><div class="node film" id="dailyB" style="display:inline-block;margin:0"></div></div>
+      </div>
+      <div class="meta" id="dailyMeta"></div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn" onclick="solveDaily()">Find shortest link</button>
+        <button class="btn ghost" onclick="shareCard('daily')">📤 Share result</button>
+        <span id="dailyChain" style="display:none"></span>
+      </div>
+      <div id="dailyResult"></div>
+    </div>
+  </div>
+
+  <div class="solvebox">
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px">
+      Or play it: build your own chain</label>
+    <div class="steps" id="buildSteps"></div>
+    <div style="margin-top:12px;display:flex;gap:10px">
+      <button class="btn ghost" onclick="addStep()">+ Add link</button>
+      <button class="btn" onclick="checkChain()">✓ Check my chain</button>
+    </div>
+    <div id="buildResult"></div>
+  </div>
+</div>
+
+<script>
+// Daily Challenge
+let dailyData = null;
+async function loadDaily(){
+  const r = await fetch("/api/daily").then(x=>x.json());
+  dailyData = r;
+  document.getElementById("dailyLoad").style.display="none";
+  document.getElementById("dailyBody").style.display="block";
+  document.getElementById("dailyA").textContent = r.film_a;
+  document.getElementById("dailyB").textContent = r.film_b;
+  document.getElementById("dailyMeta").innerHTML =
+    "Optimal solution: <b>"+r.optimal_steps+"</b> actor step"+(r.optimal_steps>1?"s":"")+
+    " · <span class='hint'>"+r.date+"</span>";
+}
+loadDaily();
+
+async function solveDaily(){
+  if(!dailyData) return;
+  document.getElementById("dailyResult").innerHTML="<div class='meta'>Searching…</div>";
+  const res = await fetch("/api/solve",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({film_a:dailyData.film_a,film_b:dailyData.film_b})}).then(r=>r.json());
+  if(res.connected){
+    renderChain("dailyResult", res, dailyData.optimal_steps, "daily", dailyData.date);
+  } else {
+    document.getElementById("dailyResult").innerHTML="<div class='msg err'>No bridge found.</div>";
+  }
+}
+
+function renderChain(targetId, res, optimal, mode, date){
+  const el=document.getElementById(targetId);
+  let html="<div class='meta'>Your link: <b>"+res.steps+"</b> actor step"+(res.steps>1?"s":"")+"</div><div class='chain'>";
+  res.chain.forEach((n,i)=>{
+    const cls=n.type==="film"?"film":"actor";
+    const icon=n.type==="film"?"🎬":"👤";
+    html+="<span class='node "+cls+"'>"+icon+" "+n.name+"</span>";
+    if(i<res.chain.length-1) html+="<span class='arrow'>→</span>";
+  });
+  html+="</div>";
+  // verdict
+  const diff = res.steps - optimal;
+  let verdict = diff===0 ? "🏆 PERFECT — matched the optimal link!"
+              : diff===1 ? "👍 1 step over optimal." : "📉 "+diff+" steps over optimal.";
+  html+="<div class='msg "+(diff===0?"ok":"err")+"'>"+verdict+"</div>";
+  el.innerHTML=html;
+  // stash chain for sharing
+  window.__lastChain = res.chain;
+  window.__lastSteps = res.steps;
+  window.__lastMode = mode;
+  window.__lastDate = date;
+  window.__lastOptimal = optimal;
+}
+
+async function shareCard(){
+  if(!window.__lastChain){alert("Solve a puzzle first, then share!");return;}
+  const payload={chain:window.__lastChain, steps:window.__lastSteps,
+    optimal:window.__lastOptimal, mode:window.__lastMode, date:window.__lastDate};
+  const res = await fetch("/api/card",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)});
+  if(!res.ok){alert("Card generation failed");return;}
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download="reelchain_card.png"; a.click();
+  URL.revokeObjectURL(url);
+  // also try Web Share API on mobile
+  if(navigator.canShare){
+    const file = new File([blob],"reelchain_card.png",{type:"image/png"});
+    if(navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:"ReelChain", text:"I solved a ReelChain puzzle!"}); }catch(e){}
+    }
+  }
+}
+
+const films = [];
+let A="", B="";
+
+function setupAutocomplete(inputId, dlId, onPick){
+  const inp=document.getElementById(inputId), dl=document.getElementById(dlId);
+  inp.addEventListener("input", async ()=>{
+    const q=inp.value.trim();
+    if(q.length<1){dl.style.display="none";return;}
+    const res=await fetch("/api/films?q="+encodeURIComponent(q)).then(r=>r.json());
+    dl.innerHTML="";
+    res.forEach(f=>{const d=document.createElement("div");d.textContent=f;
+      d.onclick=()=>{inp.value=f;dl.style.display="none";onPick(f);};
+      dl.appendChild(d);});
+    dl.style.display=res.length?"block":"none";
+  });
+  inp.addEventListener("blur",()=>setTimeout(()=>dl.style.display="none",150));
+}
+setupAutocomplete("filmA","dlA",v=>A=v);
+setupAutocomplete("filmB","dlB",v=>B=v);
+
+async function solveNow(){
+  const a=document.getElementById("filmA").value.trim();
+  const b=document.getElementById("filmB").value.trim();
+  if(!a||!b){alert("Pick two films first");return;}
+  document.getElementById("result").innerHTML="<div class='meta'>Searching…</div>";
+  const res=await fetch("/api/solve",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({film_a:a,film_b:b})}).then(r=>r.json());
+  if(res.error || !res.connected){
+    renderResult(res,a,b); return;
+  }
+  renderChain("result", res, null, "free", null);
+}
+
+function renderResult(res,a,b){
+  const el=document.getElementById("result");
+  document.getElementById("pairMeta").textContent=a+" → "+b;
+  if(res.error==="same_film"){el.innerHTML="<div class='msg err'>That's the same film!</div>";return;}
+  if(res.error==="unknown_film"){el.innerHTML="<div class='msg err'>Unknown film(s): "+res.missing.join(", ")+"</div>";return;}
+  if(!res.connected){el.innerHTML="<div class='msg err'>No actor bridge found within the current dataset.</div>";return;}
+  let html="<div class='meta'>Shortest link: <b>"+res.steps+"</b> actor step"+(res.steps>1?"s":"")+"</div><div class='chain'>";
+  res.chain.forEach((n,i)=>{
+    const cls=n.type==="film"?"film":"actor";
+    const icon=n.type==="film"?"🎬":"👤";
+    html+="<span class='node "+cls+"'>"+icon+" "+n.name+"</span>";
+    if(i<res.chain.length-1) html+="<span class='arrow'>→</span>";
+  });
+  html+="</div>";
+  el.innerHTML=html;
+}
+
+async function randomPair(){
+  const r=await fetch("/api/random").then(x=>x.json());
+  document.getElementById("filmA").value=r.film_a;
+  document.getElementById("filmB").value=r.film_b;
+  A=r.film_a;B=r.film_b;
+  solveNow();
+}
+
+// Build-your-own chain
+function addStep(){
+  const wrap=document.getElementById("buildSteps");
+  const count=wrap.children.length;
+  const div=document.createElement("div");
+  div.className="step";
+  if(count===0){
+    div.innerHTML="<input placeholder='Film 1' class='bf'><input placeholder='Actor 1' class='ba'><input placeholder='Film 2' class='bf'>";
+  }else{
+    div.innerHTML="<input placeholder='Actor' class='ba'><input placeholder='Film' class='bf'>";
+  }
+  wrap.appendChild(div);
+}
+addStep();
+
+async function checkChain(){
+  const wrap=document.getElementById("buildSteps");
+  const inputs=[...wrap.querySelectorAll("input")];
+  const filmsC=[], actorsC=[];
+  // pattern: f,a,f,(a,f)*
+  for(let i=0;i<inputs.length;i++){
+    const v=inputs[i].value.trim();
+    if(!v) continue;
+    if(inputs[i].classList.contains("bf")) filmsC.push(v);
+    else actorsC.push(v);
+  }
+  const res=await fetch("/api/validate",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({films:filmsC,actors:actorsC})}).then(r=>r.json());
+  const el=document.getElementById("buildResult");
+  if(res.valid){el.innerHTML="<div class='msg ok'>✓ Valid chain in "+res.steps+" step"+(res.steps>1?"s":"")+"!</div>";}
+  else{el.innerHTML="<div class='msg err'>✗ "+res.reason+"</div>";}
+}
+</script>
+</body>
+</html>
