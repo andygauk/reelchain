@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ReelChain — Connect Two Films</title>
+<meta name="description" content="ReelChain: connect a start film to a target film by chaining through the actors they share. A free film-trivia puzzle. Solve it, then challenge a friend.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ReelChain — Connect Two Films">
+<meta property="og:description" content="Connect a start film to a target film through the actors they share. Solve it, then challenge a friend to beat your score.">
+<meta property="og:image" content="/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ReelChain — Connect Two Films">
+<meta name="twitter:description" content="Connect a start film to a target film through the actors they share. Solve it, then challenge a friend to beat your score.">
+<meta name="twitter:image" content="/og-image.png">
 <style>
   :root{
     --bg:#0d0f17; --panel:#161a26; --panel2:#1e2333; --accent:#ff4d6d; --accent2:#ffb84d;
@@ -76,16 +85,22 @@
 
   .rc-app .rc-stats{display:flex;gap:18px;font-size:13px;color:var(--muted)}
   .rc-app .rc-stats b{color:var(--text)}
+  .rc-app .rc-streak{font-size:13px;color:var(--accent2);font-weight:600}
 
   .rc-overlay{position:fixed;inset:0;background:rgba(8,10,16,.85);display:none;align-items:center;justify-content:center;z-index:2147483647;
          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);line-height:1.5}
   .rc-overlay.rc-open{display:flex}
-  .rc-modal{background:var(--panel);border:1px solid #2b3142;border-radius:18px;padding:26px;max-width:440px;width:calc(100% - 40px);text-align:center;
+  .rc-modal{background:var(--panel);border:1px solid #2b3142;border-radius:18px;padding:26px;max-width:460px;width:calc(100% - 40px);text-align:center;
          box-shadow:0 30px 80px rgba(0,0,0,.6);color:var(--text);font-family:inherit}
   .rc-modal h2{margin:0 0 6px;font-size:26px;font-family:inherit;font-weight:800;color:var(--text)}
   .rc-modal .rc-big{font-size:46px;margin:6px 0;font-family:inherit;font-weight:800;color:var(--text)}
   .rc-modal .rc-sub{color:var(--muted);font-size:14px;margin-bottom:16px;font-family:inherit}
   .rc-modal .rc-chain{justify-content:center;margin:14px 0}
+  .rc-modal .rc-winbtns{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .rc-modal .rc-challenge{background:var(--panel2);border:1px solid #2b3142;border-radius:10px;padding:12px;margin-top:14px;font-size:13px;color:var(--muted)}
+  .rc-modal .rc-challenge b{color:var(--text)}
+  .rc-modal .rc-copy{margin-top:8px}
+  .rc-modal .rc-copy input{width:100%;background:var(--bg);color:var(--text);border:1px solid #2b3142;border-radius:8px;padding:8px;font-size:12px}
 
   /* Unscoped button so the win modal's button is styled even though the
      overlay sits (by design) outside .rc-app. */
@@ -93,10 +108,22 @@
        background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1320;transition:transform .06s;font-family:inherit}
   .rc-btn:active{transform:translateY(1px)}
   .rc-btn.ghost{background:var(--panel2);color:var(--text);border:1px solid #2b3142}
+  .rc-btn.block{display:block;width:100%}
 
   .rc-app .rc-help{font-size:13px;color:var(--muted);line-height:1.6}
   .rc-app .rc-help b{color:var(--text)}
   .rc-app details summary{cursor:pointer;color:var(--accent2);font-size:13px;font-weight:600;margin-bottom:8px}
+
+  /* Onboarding overlay */
+  #rc-onboard{position:fixed;inset:0;background:rgba(8,10,16,.92);display:flex;align-items:center;justify-content:center;z-index:2147483646;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text)}
+  #rc-onboard.rc-hidden{display:none}
+  #rc-onboard .rc-ob{background:var(--panel);border:1px solid #2b3142;border-radius:18px;padding:28px;max-width:440px;width:calc(100% - 40px);text-align:center;
+         box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  #rc-onboard h2{margin:0 0 8px;font-size:24px}
+  #rc-onboard p{color:var(--muted);font-size:14px;line-height:1.6;text-align:left}
+  #rc-onboard .rc-ex{background:var(--bg);border:1px solid #2b3142;border-radius:10px;padding:10px;margin:12px 0;font-size:13px;text-align:left}
+  #rc-onboard .rc-ob .rc-btn{margin-top:14px}
 </style>
 </head>
 <body>
@@ -111,6 +138,7 @@
       <button data-d="hard">Hard</button>
       <button data-d="any">Surprise</button>
     </div>
+    <button class="rc-btn" id="dailyBtn">📅 Daily</button>
     <button class="rc-btn" id="newBtn">🎲 New Puzzle</button>
     <button class="rc-btn ghost" id="hintBtn">💡 Hint</button>
     <button class="rc-btn ghost" id="revealBtn">👁 Reveal</button>
@@ -141,7 +169,7 @@
     <h3>You are at</h3>
     <div class="rc-chain" id="pathChain"></div>
     <div class="rc-meta">
-      <span>Steps taken: <b id="stepsTaken">0</b></span>
+      <span>Links used: <b id="stepsTaken">0</b></span>
       <span>Best possible: <b id="optimal">?</b></span>
       <span>Optimal from here: <b id="optRemaining">?</b></span>
     </div>
@@ -165,6 +193,7 @@
       <span>Won: <b id="statWon">0</b></span>
       <span>Best time: <b id="statBest">—</b></span>
     </div>
+    <span class="rc-streak" id="streakBox"></span>
   </div>
 
   <div class="rc-panel" style="margin-top:14px">
@@ -175,6 +204,7 @@
         <p><b>Each link:</b> pick an actor who is in your <i>current</i> film, then pick one of the other films that actor is in. That film becomes your new position. Keep going until you land on the target.</p>
         <p><b>Example:</b> The Godfather → <i>Al Pacino</i> → Once Upon a Time in Hollywood → <i>Tim Roth</i> → Pulp Fiction. (2 links.)</p>
         <p>Two films with no shared actor still connect through a chain of linked performers — that's the puzzle.</p>
+        <p><b>Challenge a friend:</b> solve a puzzle, hit Share, and send the link — it opens the exact same puzzle so they can try to beat your link count.</p>
         <div class="rc-row" style="margin-top:14px">
           <span class="rc-lbl2">Custom pair:</span>
           <select id="customA"></select>
@@ -191,16 +221,32 @@
       <h2 id="winTitle">Connected! 🎉</h2>
       <div class="rc-big" id="winSteps">0</div>
       <div class="rc-sub" id="winSub"></div>
-    <div class="rc-chain" id="winChain"></div>
-    <div class="rc-row" style="justify-content:center;margin-top:6px">
-      <button class="rc-btn" id="winNext">🎲 Next puzzle</button>
+      <div class="rc-chain" id="winChain"></div>
+      <div class="rc-winbtns">
+        <button class="rc-btn" id="winNext">🎲 Next puzzle</button>
+        <button class="rc-btn ghost" id="winShare">📤 Share my result</button>
+      </div>
+      <div class="rc-challenge" id="challengeBox" style="display:none">
+        <b>Challenge a friend:</b> this link opens the same puzzle — can they beat <b id="chalScore">your</b> score?
+        <div class="rc-copy"><input id="chalLink" readonly><button class="rc-btn ghost" id="chalCopy" style="margin-top:6px">Copy link</button></div>
+      </div>
     </div>
-  </div>
   </div>
 </div>
 
+<div id="rc-onboard">
+  <div class="rc-ob">
+    <h2>Welcome to ReelChain 🎬</h2>
+    <p>Your job: get from the <b>start film</b> to the <b>target film</b> using the fewest <b>actor links</b>.</p>
+    <div class="rc-ex">🎬 The Godfather → 👤 <i>Al Pacino</i> → 🎬 Once Upon a Time in Hollywood → 👤 <i>Tim Roth</i> → 🎬 Pulp Fiction<br><span style="color:var(--muted)">(that's 2 links)</span></div>
+    <p>Each step: pick an actor in your current film, then a film they're also in. Land on the target to win — then share your chain and challenge a friend.</p>
+    <button class="rc-btn" id="obStart">Start playing →</button>
+  </div>
+</div>
+
+<script src="qrcode.js"></script>
 <script>
-const GRAPH = {"films": {"The Godfather": ["Marlon Brando", "Al Pacino", "James Caan", "Robert Duvall", "John Cazale", "Diane Keaton"], "Heat": ["Al Pacino", "Robert De Niro", "Val Kilmer", "Jon Voight", "Tom Sizemore"], "Jackie Brown": ["Pam Grier", "Samuel L. Jackson", "Robert De Niro", "Bridget Fonda", "Michael Keaton", "Chris Tucker"], "Pulp Fiction": ["John Travolta", "Samuel L. Jackson", "Uma Thurman", "Bruce Willis", "Tim Roth", "Harvey Keitel"], "Reservoir Dogs": ["Harvey Keitel", "Tim Roth", "Michael Madsen", "Chris Penn", "Steve Buscemi", "Lawrence Tierney"], "Kill Bill: Vol. 1": ["Uma Thurman", "Lucy Liu", "David Carradine", "Daryl Hannah", "Vivica A. Fox"], "Kill Bill: Vol. 2": ["Uma Thurman", "David Carradine", "Michael Madsen", "Daryl Hannah", "Samuel L. Jackson"], "Inglourious Basterds": ["Brad Pitt", "Diane Kruger", "Christoph Waltz", "Eli Roth", "Michael Fassbender"], "Django Unchained": ["Jamie Foxx", "Christoph Waltz", "Leonardo DiCaprio", "Samuel L. Jackson", "Kerry Washington"], "Once Upon a Time in Hollywood": ["Leonardo DiCaprio", "Brad Pitt", "Margot Robbie", "Al Pacino", "Damian Lewis", "Emile Hirsch", "Margaret Qualley", "Tim Roth", "Kurt Russell"], "GoodFellas": ["Robert De Niro", "Ray Liotta", "Joe Pesci", "Lorraine Bracco", "Paul Sorvino"], "Casino": ["Robert De Niro", "Sharon Stone", "Joe Pesci", "James Woods"], "The Departed": ["Leonardo DiCaprio", "Matt Damon", "Jack Nicholson", "Mark Wahlberg", "Martin Sheen", "Alec Baldwin"], "The Wolf of Wall Street": ["Leonardo DiCaprio", "Jonah Hill", "Margot Robbie", "Matthew McConaughey", "Kyle Chandler"], "Taxi Driver": ["Robert De Niro", "Jodie Foster", "Cybill Shepherd", "Harvey Keitel"], "Raging Bull": ["Robert De Niro", "Cathy Moriarty", "Joe Pesci"], "The Avengers": ["Robert Downey Jr.", "Chris Evans", "Scarlett Johansson", "Mark Ruffalo", "Chris Hemsworth", "Jeremy Renner", "Samuel L. Jackson"], "Avengers: Endgame": ["Robert Downey Jr.", "Chris Evans", "Scarlett Johansson", "Mark Ruffalo", "Chris Hemsworth", "Jeremy Renner", "Samuel L. Jackson", "Brie Larson", "Paul Rudd"], "Iron Man": ["Robert Downey Jr.", "Gwyneth Paltrow", "Terrence Howard", "Jeff Bridges", "Samuel L. Jackson"], "Black Panther": ["Chadwick Boseman", "Michael B. Jordan", "Lupita Nyong'o", "Letitia Wright", "Martin Freeman", "Andy Serkis"], "Captain America: The First Avenger": ["Chris Evans", "Hayley Atwell", "Sebastian Stan", "Hugo Weaving", "Samuel L. Jackson"], "Thor": ["Chris Hemsworth", "Natalie Portman", "Tom Hiddleston", "Anthony Hopkins", "Stellan Skarsgard"], "Guardians of the Galaxy": ["Chris Pratt", "Zoe Saldana", "Dave Bautista", "Bradley Cooper", "Vin Diesel", "Karen Gillan"], "Star Wars": ["Mark Hamill", "Harrison Ford", "Carrie Fisher", "Peter Cushing", "Alec Guinness"], "The Empire Strikes Back": ["Mark Hamill", "Harrison Ford", "Carrie Fisher", "Billy Dee Williams"], "Return of the Jedi": ["Mark Hamill", "Harrison Ford", "Carrie Fisher", "Billy Dee Williams", "Ian McDiarmid"], "The Force Awakens": ["Harrison Ford", "Mark Hamill", "Carrie Fisher", "Daisy Ridley", "John Boyega", "Adam Driver"], "The Dark Knight": ["Christian Bale", "Heath Ledger", "Aaron Eckhart", "Michael Caine", "Gary Oldman", "Morgan Freeman"], "The Dark Knight Rises": ["Christian Bale", "Tom Hardy", "Anne Hathaway", "Michael Caine", "Gary Oldman", "Morgan Freeman"], "Batman Begins": ["Christian Bale", "Michael Caine", "Liam Neeson", "Katie Holmes", "Gary Oldman", "Morgan Freeman"], "Inception": ["Leonardo DiCaprio", "Joseph Gordon-Levitt", "Elliot Page", "Tom Hardy", "Ken Watanabe", "Cillian Murphy", "Michael Caine"], "Interstellar": ["Matthew McConaughey", "Anne Hathaway", "Jessica Chastain", "Michael Caine", "Matt Damon"], "Fight Club": ["Brad Pitt", "Edward Norton", "Helena Bonham Carter", "Meat Loaf"], "Se7en": ["Brad Pitt", "Morgan Freeman", "Kevin Spacey", "Gwyneth Paltrow"], "The Social Network": ["Jesse Eisenberg", "Andrew Garfield", "Justin Timberlake", "Armie Hammer"], "Ocean's Eleven": ["George Clooney", "Brad Pitt", "Matt Damon", "Julia Roberts", "Andy Garcia", "Casey Affleck", "Don Cheadle"], "Ocean's Twelve": ["George Clooney", "Brad Pitt", "Matt Damon", "Julia Roberts", "Catherine Zeta-Jones", "Andy Garcia"], "Ocean's Thirteen": ["George Clooney", "Brad Pitt", "Matt Damon", "Al Pacino", "Andy Garcia", "Don Cheadle", "Elliott Gould"], "Forrest Gump": ["Tom Hanks", "Robin Wright", "Gary Sinise", "Sally Field"], "Saving Private Ryan": ["Tom Hanks", "Matt Damon", "Tom Sizemore", "Edward Burns", "Barry Pepper"], "Catch Me If You Can": ["Leonardo DiCaprio", "Tom Hanks", "Christopher Walken", "Amy Adams"], "Toy Story": ["Tom Hanks", "Tim Allen", "Don Rickles", "Jim Varney"], "Toy Story 3": ["Tom Hanks", "Tim Allen", "Michael Keaton", "Ned Beatty"], "Up": ["Ed Asner", "Christopher Plummer", "Jordan Nagai"], "Knives Out": ["Daniel Craig", "Chris Evans", "Ana de Armas", "Jamie Lee Curtis", "Michael Shannon", "Christopher Plummer"], "Glass Onion": ["Daniel Craig", "Edward Norton", "Janelle Monae", "Kathryn Hahn", "Dave Bautista", "Kate Hudson"], "Skyfall": ["Daniel Craig", "Javier Bardem", "Naomie Harris", "Ralph Fiennes", "Judi Dench"], "Casino Royale": ["Daniel Craig", "Eva Green", "Mads Mikkelsen", "Judi Dench"], "Mad Max: Fury Road": ["Tom Hardy", "Charlize Theron", "Nicholas Hoult", "Hugh Keays-Byrne"], "The Matrix": ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss", "Hugo Weaving", "Joe Pantoliano"], "John Wick": ["Keanu Reeves", "Michael Nyqvist", "Alfie Allen", "Willem Dafoe", "Ian McShane"], "The Shawshank Redemption": ["Tim Robbins", "Morgan Freeman", "Bob Gunton", "William Sadler"], "The Green Mile": ["Tom Hanks", "Michael Clarke Duncan", "David Morse", "Bonnie Hunt", "James Cromwell"], "The Fugitive": ["Harrison Ford", "Tommy Lee Jones", "Sela Ward", "Julianne Moore"], "A Few Good Men": ["Tom Cruise", "Jack Nicholson", "Demi Moore", "Kevin Bacon", "Kiefer Sutherland"], "The Silence of the Lambs": ["Jodie Foster", "Anthony Hopkins", "Scott Glenn", "Ted Levine"], "The Usual Suspects": ["Kevin Spacey", "Gabriel Byrne", "Benicio del Toro", "Stephen Baldwin", "Chazz Palminteri"], "Titanic": ["Leonardo DiCaprio", "Kate Winslet", "Billy Zane", "Kathy Bates"], "Avatar": ["Sam Worthington", "Zoe Saldana", "Sigourney Weaver", "Stephen Lang"], "Aliens": ["Sigourney Weaver", "Michael Biehn", "Carrie Henn", "Lance Henriksen"], "Terminator 2: Judgment Day": ["Arnold Schwarzenegger", "Linda Hamilton", "Edward Furlong", "Robert Patrick"], "The Terminator": ["Arnold Schwarzenegger", "Linda Hamilton", "Michael Biehn", "Paul Winfield"], "Tropic Thunder": ["Ben Stiller", "Robert Downey Jr.", "Jack Black", "Tom Cruise", "Matthew McConaughey"], "The Hangover": ["Bradley Cooper", "Ed Helms", "Zach Galifianakis", "Justin Bartha"], "Silver Linings Playbook": ["Bradley Cooper", "Jennifer Lawrence", "Robert De Niro", "Jacki Weaver", "Chris Tucker"], "American Hustle": ["Christian Bale", "Amy Adams", "Bradley Cooper", "Jennifer Lawrence", "Jeremy Renner", "Robert De Niro"], "No Country for Old Men": ["Tommy Lee Jones", "Javier Bardem", "Josh Brolin", "Woody Harrelson"], "Fargo": ["Frances McDormand", "William H. Macy", "Steve Buscemi", "Peter Stormare"], "The Big Lebowski": ["Jeff Bridges", "John Goodman", "Steve Buscemi", "Julianne Moore", "Sam Elliott"], "True Grit": ["Jeff Bridges", "Hailee Steinfeld", "Matt Damon", "Josh Brolin"], "There Will Be Blood": ["Daniel Day-Lewis", "Paul Dano", "Kevin J. O'Connor", "Ciarán Hinds"], "Boogie Nights": ["Mark Wahlberg", "Julianne Moore", "Burt Reynolds", "John C. Reilly", "Heather Graham", "Don Cheadle"], "Magnolia": ["Tom Cruise", "Jason Robards", "Julianne Moore", "Philip Seymour Hoffman", "John C. Reilly"], "Snatch": ["Jason Statham", "Brad Pitt", "Benicio del Toro", "Vinnie Jones", "Alan Ford"], "Lock, Stock and Two Smoking Barrels": ["Jason Statham", "Nick Moran", "Jason Flemyng", "Dexter Fletcher", "Vinnie Jones"], "Sherlock Holmes": ["Robert Downey Jr.", "Jude Law", "Rachel McAdams", "Mark Strong"], "The Hobbit: An Unexpected Journey": ["Ian McKellen", "Martin Freeman", "Richard Armitage", "Andy Serkis"], "The Lord of the Rings: The Fellowship of the Ring": ["Elijah Wood", "Ian McKellen", "Viggo Mortensen", "Sean Astin", "Orlando Bloom", "Cate Blanchett", "Andy Serkis"], "The Lord of the Rings: The Return of the King": ["Elijah Wood", "Ian McKellen", "Viggo Mortensen", "Sean Astin", "Orlando Bloom", "Cate Blanchett", "Andy Serkis"], "Jurassic Park": ["Sam Neill", "Laura Dern", "Jeff Goldblum", "Richard Attenborough"], "Jurassic World": ["Chris Pratt", "Bryce Dallas Howard", "Vincent D'Onofrio", "BD Wong"], "Indiana Jones and the Raiders of the Lost Ark": ["Harrison Ford", "Karen Allen", "Paul Freeman", "John Rhys-Davies"], "E.T. the Extra-Terrestrial": ["Henry Thomas", "Drew Barrymore", "Dee Wallace", "Peter Coyote"], "Jaws": ["Roy Scheider", "Robert Shaw", "Richard Dreyfuss", "Lorraine Gary"], "Lincoln": ["Daniel Day-Lewis", "Sally Field", "David Strathairn", "Tommy Lee Jones"], "Bridge of Spies": ["Tom Hanks", "Mark Rylance", "Amy Ryan", "Alan Alda"], "The Truman Show": ["Jim Carrey", "Ed Harris", "Laura Linney", "Noah Emmerich"], "Eternal Sunshine of the Spotless Mind": ["Jim Carrey", "Kate Winslet", "Kirsten Dunst", "Mark Ruffalo"], "Step Brothers": ["Will Ferrell", "John C. Reilly", "Richard Jenkins", "Mary Steenburgen"], "Anchorman: The Legend of Ron Burgundy": ["Will Ferrell", "Christina Applegate", "Paul Rudd", "Steve Carell", "David Koechner"], "Talladega Nights: The Ballad of Ricky Bobby": ["Will Ferrell", "John C. Reilly", "Sacha Baron Cohen", "Gary Cole"], "Dodgeball: A True Underdog Story": ["Vince Vaughn", "Ben Stiller", "Christine Taylor", "Rip Torn"], "Due Date": ["Robert Downey Jr.", "Zach Galifianakis", "Michelle Monaghan", "Juliette Lewis"], "American Sniper": ["Bradley Cooper", "Sienna Miller", "Kyle Gallner", "Luke Grimes"], "Sully": ["Tom Hanks", "Aaron Eckhart", "Laura Linney", "Mike O'Malley"], "No Time to Die": ["Daniel Craig", "Ana de Armas", "Rami Malek", "Léa Seydoux", "Ralph Fiennes"], "Spectre": ["Daniel Craig", "Christoph Waltz", "Léa Seydoux", "Ralph Fiennes", "Monica Bellucci"], "Rogue One": ["Felicity Jones", "Diego Luna", "Ben Mendelsohn", "Forest Whitaker", "Mads Mikkelsen"], "The Last Jedi": ["Mark Hamill", "Carrie Fisher", "Daisy Ridley", "John Boyega", "Adam Driver", "Oscar Isaac"], "The Matrix Reloaded": ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss", "Hugo Weaving", "Jada Pinkett Smith"], "John Wick: Chapter 2": ["Keanu Reeves", "Riccardo Scamarcio", "Ian McShane", "Laurence Fishburne", "Common"], "L.A. Confidential": ["Kevin Spacey", "Russell Crowe", "Guy Pearce", "Kim Basinger", "James Cromwell"], "The Rock": ["Sean Connery", "Nicolas Cage", "Ed Harris", "John Spencer"], "Con Air": ["Nicolas Cage", "John Cusack", "John Malkovich", "Steve Buscemi"], "Misery": ["James Caan", "Kathy Bates", "Richard Farnsworth", "Frances Sternhagen"], "Stand by Me": ["Wil Wheaton", "River Phoenix", "Corey Feldman", "Jerry O'Connell", "Kiefer Sutherland"], "True Romance": ["Christian Slater", "Patricia Arquette", "Dennis Hopper", "Val Kilmer", "Samuel L. Jackson", "Brad Pitt", "Christopher Walken"], "Natural Born Killers": ["Woody Harrelson", "Juliette Lewis", "Robert Downey Jr.", "Tom Sizemore", "Tommy Lee Jones"], "Cape Fear": ["Robert De Niro", "Nick Nolte", "Jessica Lange", "Joe Pesci"], "Mean Streets": ["Robert De Niro", "Harvey Keitel", "David Proval", "Amy Robinson"], "Hugo": ["Ben Kingsley", "Sacha Baron Cohen", "Asa Butterfield", "Chloe Grace Moretz"], "Shutter Island": ["Leonardo DiCaprio", "Mark Ruffalo", "Ben Kingsley", "Michelle Williams", "Max von Sydow"], "The Terminal": ["Tom Hanks", "Catherine Zeta-Jones", "Stanley Tucci", "Chi McBride"], "Cast Away": ["Tom Hanks", "Helen Hunt", "Nick Searcy", "Chris Noth"], "WALL-E": ["Ben Burtt", "Elissa Knight", "Jeff Garlin", "Fred Willard"], "Finding Nemo": ["Albert Brooks", "Ellen DeGeneres", "Alexander Gould", "Willem Dafoe"], "The Big Short": ["Christian Bale", "Steve Carell", "Ryan Gosling", "Brad Pitt", "Hamish Linklater"], "Gone Girl": ["Ben Affleck", "Rosamund Pike", "Neil Patrick Harris", "Tyler Perry"]}, "actors": {"Marlon Brando": ["The Godfather"], "Al Pacino": ["The Godfather", "Heat", "Once Upon a Time in Hollywood", "Ocean's Thirteen"], "James Caan": ["The Godfather", "Misery"], "Robert Duvall": ["The Godfather"], "John Cazale": ["The Godfather"], "Diane Keaton": ["The Godfather"], "Robert De Niro": ["Heat", "Jackie Brown", "GoodFellas", "Casino", "Taxi Driver", "Raging Bull", "Silver Linings Playbook", "American Hustle", "Cape Fear", "Mean Streets"], "Val Kilmer": ["Heat", "True Romance"], "Jon Voight": ["Heat"], "Tom Sizemore": ["Heat", "Saving Private Ryan", "Natural Born Killers"], "Pam Grier": ["Jackie Brown"], "Samuel L. Jackson": ["Jackie Brown", "Pulp Fiction", "Kill Bill: Vol. 2", "Django Unchained", "The Avengers", "Avengers: Endgame", "Iron Man", "Captain America: The First Avenger", "True Romance"], "Bridget Fonda": ["Jackie Brown"], "Michael Keaton": ["Jackie Brown", "Toy Story 3"], "Chris Tucker": ["Jackie Brown", "Silver Linings Playbook"], "John Travolta": ["Pulp Fiction"], "Uma Thurman": ["Pulp Fiction", "Kill Bill: Vol. 1", "Kill Bill: Vol. 2"], "Bruce Willis": ["Pulp Fiction"], "Tim Roth": ["Pulp Fiction", "Reservoir Dogs", "Once Upon a Time in Hollywood"], "Harvey Keitel": ["Pulp Fiction", "Reservoir Dogs", "Taxi Driver", "Mean Streets"], "Michael Madsen": ["Reservoir Dogs", "Kill Bill: Vol. 2"], "Chris Penn": ["Reservoir Dogs"], "Steve Buscemi": ["Reservoir Dogs", "Fargo", "The Big Lebowski", "Con Air"], "Lawrence Tierney": ["Reservoir Dogs"], "Lucy Liu": ["Kill Bill: Vol. 1"], "David Carradine": ["Kill Bill: Vol. 1", "Kill Bill: Vol. 2"], "Daryl Hannah": ["Kill Bill: Vol. 1", "Kill Bill: Vol. 2"], "Vivica A. Fox": ["Kill Bill: Vol. 1"], "Brad Pitt": ["Inglourious Basterds", "Once Upon a Time in Hollywood", "Fight Club", "Se7en", "Ocean's Eleven", "Ocean's Twelve", "Ocean's Thirteen", "Snatch", "True Romance", "The Big Short"], "Diane Kruger": ["Inglourious Basterds"], "Christoph Waltz": ["Inglourious Basterds", "Django Unchained", "Spectre"], "Eli Roth": ["Inglourious Basterds"], "Michael Fassbender": ["Inglourious Basterds"], "Jamie Foxx": ["Django Unchained"], "Leonardo DiCaprio": ["Django Unchained", "Once Upon a Time in Hollywood", "The Departed", "The Wolf of Wall Street", "Inception", "Catch Me If You Can", "Titanic", "Shutter Island"], "Kerry Washington": ["Django Unchained"], "Margot Robbie": ["Once Upon a Time in Hollywood", "The Wolf of Wall Street"], "Damian Lewis": ["Once Upon a Time in Hollywood"], "Emile Hirsch": ["Once Upon a Time in Hollywood"], "Margaret Qualley": ["Once Upon a Time in Hollywood"], "Kurt Russell": ["Once Upon a Time in Hollywood"], "Ray Liotta": ["GoodFellas"], "Joe Pesci": ["GoodFellas", "Casino", "Raging Bull", "Cape Fear"], "Lorraine Bracco": ["GoodFellas"], "Paul Sorvino": ["GoodFellas"], "Sharon Stone": ["Casino"], "James Woods": ["Casino"], "Matt Damon": ["The Departed", "Interstellar", "Ocean's Eleven", "Ocean's Twelve", "Ocean's Thirteen", "Saving Private Ryan", "True Grit"], "Jack Nicholson": ["The Departed", "A Few Good Men"], "Mark Wahlberg": ["The Departed", "Boogie Nights"], "Martin Sheen": ["The Departed"], "Alec Baldwin": ["The Departed"], "Jonah Hill": ["The Wolf of Wall Street"], "Matthew McConaughey": ["The Wolf of Wall Street", "Interstellar", "Tropic Thunder"], "Kyle Chandler": ["The Wolf of Wall Street"], "Jodie Foster": ["Taxi Driver", "The Silence of the Lambs"], "Cybill Shepherd": ["Taxi Driver"], "Cathy Moriarty": ["Raging Bull"], "Robert Downey Jr.": ["The Avengers", "Avengers: Endgame", "Iron Man", "Tropic Thunder", "Sherlock Holmes", "Due Date", "Natural Born Killers"], "Chris Evans": ["The Avengers", "Avengers: Endgame", "Captain America: The First Avenger", "Knives Out"], "Scarlett Johansson": ["The Avengers", "Avengers: Endgame"], "Mark Ruffalo": ["The Avengers", "Avengers: Endgame", "Eternal Sunshine of the Spotless Mind", "Shutter Island"], "Chris Hemsworth": ["The Avengers", "Avengers: Endgame", "Thor"], "Jeremy Renner": ["The Avengers", "Avengers: Endgame", "American Hustle"], "Brie Larson": ["Avengers: Endgame"], "Paul Rudd": ["Avengers: Endgame", "Anchorman: The Legend of Ron Burgundy"], "Gwyneth Paltrow": ["Iron Man", "Se7en"], "Terrence Howard": ["Iron Man"], "Jeff Bridges": ["Iron Man", "The Big Lebowski", "True Grit"], "Chadwick Boseman": ["Black Panther"], "Michael B. Jordan": ["Black Panther"], "Lupita Nyong'o": ["Black Panther"], "Letitia Wright": ["Black Panther"], "Martin Freeman": ["Black Panther", "The Hobbit: An Unexpected Journey"], "Andy Serkis": ["Black Panther", "The Hobbit: An Unexpected Journey", "The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Hayley Atwell": ["Captain America: The First Avenger"], "Sebastian Stan": ["Captain America: The First Avenger"], "Hugo Weaving": ["Captain America: The First Avenger", "The Matrix", "The Matrix Reloaded"], "Natalie Portman": ["Thor"], "Tom Hiddleston": ["Thor"], "Anthony Hopkins": ["Thor", "The Silence of the Lambs"], "Stellan Skarsgard": ["Thor"], "Chris Pratt": ["Guardians of the Galaxy", "Jurassic World"], "Zoe Saldana": ["Guardians of the Galaxy", "Avatar"], "Dave Bautista": ["Guardians of the Galaxy", "Glass Onion"], "Bradley Cooper": ["Guardians of the Galaxy", "The Hangover", "Silver Linings Playbook", "American Hustle", "American Sniper"], "Vin Diesel": ["Guardians of the Galaxy"], "Karen Gillan": ["Guardians of the Galaxy"], "Mark Hamill": ["Star Wars", "The Empire Strikes Back", "Return of the Jedi", "The Force Awakens", "The Last Jedi"], "Harrison Ford": ["Star Wars", "The Empire Strikes Back", "Return of the Jedi", "The Force Awakens", "The Fugitive", "Indiana Jones and the Raiders of the Lost Ark"], "Carrie Fisher": ["Star Wars", "The Empire Strikes Back", "Return of the Jedi", "The Force Awakens", "The Last Jedi"], "Peter Cushing": ["Star Wars"], "Alec Guinness": ["Star Wars"], "Billy Dee Williams": ["The Empire Strikes Back", "Return of the Jedi"], "Ian McDiarmid": ["Return of the Jedi"], "Daisy Ridley": ["The Force Awakens", "The Last Jedi"], "John Boyega": ["The Force Awakens", "The Last Jedi"], "Adam Driver": ["The Force Awakens", "The Last Jedi"], "Christian Bale": ["The Dark Knight", "The Dark Knight Rises", "Batman Begins", "American Hustle", "The Big Short"], "Heath Ledger": ["The Dark Knight"], "Aaron Eckhart": ["The Dark Knight", "Sully"], "Michael Caine": ["The Dark Knight", "The Dark Knight Rises", "Batman Begins", "Inception", "Interstellar"], "Gary Oldman": ["The Dark Knight", "The Dark Knight Rises", "Batman Begins"], "Morgan Freeman": ["The Dark Knight", "The Dark Knight Rises", "Batman Begins", "Se7en", "The Shawshank Redemption"], "Tom Hardy": ["The Dark Knight Rises", "Inception", "Mad Max: Fury Road"], "Anne Hathaway": ["The Dark Knight Rises", "Interstellar"], "Liam Neeson": ["Batman Begins"], "Katie Holmes": ["Batman Begins"], "Joseph Gordon-Levitt": ["Inception"], "Elliot Page": ["Inception"], "Ken Watanabe": ["Inception"], "Cillian Murphy": ["Inception"], "Jessica Chastain": ["Interstellar"], "Edward Norton": ["Fight Club", "Glass Onion"], "Helena Bonham Carter": ["Fight Club"], "Meat Loaf": ["Fight Club"], "Kevin Spacey": ["Se7en", "The Usual Suspects", "L.A. Confidential"], "Jesse Eisenberg": ["The Social Network"], "Andrew Garfield": ["The Social Network"], "Justin Timberlake": ["The Social Network"], "Armie Hammer": ["The Social Network"], "George Clooney": ["Ocean's Eleven", "Ocean's Twelve", "Ocean's Thirteen"], "Julia Roberts": ["Ocean's Eleven", "Ocean's Twelve"], "Andy Garcia": ["Ocean's Eleven", "Ocean's Twelve", "Ocean's Thirteen"], "Casey Affleck": ["Ocean's Eleven"], "Don Cheadle": ["Ocean's Eleven", "Ocean's Thirteen", "Boogie Nights"], "Catherine Zeta-Jones": ["Ocean's Twelve", "The Terminal"], "Elliott Gould": ["Ocean's Thirteen"], "Tom Hanks": ["Forrest Gump", "Saving Private Ryan", "Catch Me If You Can", "Toy Story", "Toy Story 3", "The Green Mile", "Bridge of Spies", "Sully", "The Terminal", "Cast Away"], "Robin Wright": ["Forrest Gump"], "Gary Sinise": ["Forrest Gump"], "Sally Field": ["Forrest Gump", "Lincoln"], "Edward Burns": ["Saving Private Ryan"], "Barry Pepper": ["Saving Private Ryan"], "Christopher Walken": ["Catch Me If You Can", "True Romance"], "Amy Adams": ["Catch Me If You Can", "American Hustle"], "Tim Allen": ["Toy Story", "Toy Story 3"], "Don Rickles": ["Toy Story"], "Jim Varney": ["Toy Story"], "Ned Beatty": ["Toy Story 3"], "Ed Asner": ["Up"], "Christopher Plummer": ["Up", "Knives Out"], "Jordan Nagai": ["Up"], "Daniel Craig": ["Knives Out", "Glass Onion", "Skyfall", "Casino Royale", "No Time to Die", "Spectre"], "Ana de Armas": ["Knives Out", "No Time to Die"], "Jamie Lee Curtis": ["Knives Out"], "Michael Shannon": ["Knives Out"], "Janelle Monae": ["Glass Onion"], "Kathryn Hahn": ["Glass Onion"], "Kate Hudson": ["Glass Onion"], "Javier Bardem": ["Skyfall", "No Country for Old Men"], "Naomie Harris": ["Skyfall"], "Ralph Fiennes": ["Skyfall", "No Time to Die", "Spectre"], "Judi Dench": ["Skyfall", "Casino Royale"], "Eva Green": ["Casino Royale"], "Mads Mikkelsen": ["Casino Royale", "Rogue One"], "Charlize Theron": ["Mad Max: Fury Road"], "Nicholas Hoult": ["Mad Max: Fury Road"], "Hugh Keays-Byrne": ["Mad Max: Fury Road"], "Keanu Reeves": ["The Matrix", "John Wick", "The Matrix Reloaded", "John Wick: Chapter 2"], "Laurence Fishburne": ["The Matrix", "The Matrix Reloaded", "John Wick: Chapter 2"], "Carrie-Anne Moss": ["The Matrix", "The Matrix Reloaded"], "Joe Pantoliano": ["The Matrix"], "Michael Nyqvist": ["John Wick"], "Alfie Allen": ["John Wick"], "Willem Dafoe": ["John Wick", "Finding Nemo"], "Ian McShane": ["John Wick", "John Wick: Chapter 2"], "Tim Robbins": ["The Shawshank Redemption"], "Bob Gunton": ["The Shawshank Redemption"], "William Sadler": ["The Shawshank Redemption"], "Michael Clarke Duncan": ["The Green Mile"], "David Morse": ["The Green Mile"], "Bonnie Hunt": ["The Green Mile"], "James Cromwell": ["The Green Mile", "L.A. Confidential"], "Tommy Lee Jones": ["The Fugitive", "No Country for Old Men", "Lincoln", "Natural Born Killers"], "Sela Ward": ["The Fugitive"], "Julianne Moore": ["The Fugitive", "The Big Lebowski", "Boogie Nights", "Magnolia"], "Tom Cruise": ["A Few Good Men", "Tropic Thunder", "Magnolia"], "Demi Moore": ["A Few Good Men"], "Kevin Bacon": ["A Few Good Men"], "Kiefer Sutherland": ["A Few Good Men", "Stand by Me"], "Scott Glenn": ["The Silence of the Lambs"], "Ted Levine": ["The Silence of the Lambs"], "Gabriel Byrne": ["The Usual Suspects"], "Benicio del Toro": ["The Usual Suspects", "Snatch"], "Stephen Baldwin": ["The Usual Suspects"], "Chazz Palminteri": ["The Usual Suspects"], "Kate Winslet": ["Titanic", "Eternal Sunshine of the Spotless Mind"], "Billy Zane": ["Titanic"], "Kathy Bates": ["Titanic", "Misery"], "Sam Worthington": ["Avatar"], "Sigourney Weaver": ["Avatar", "Aliens"], "Stephen Lang": ["Avatar"], "Michael Biehn": ["Aliens", "The Terminator"], "Carrie Henn": ["Aliens"], "Lance Henriksen": ["Aliens"], "Arnold Schwarzenegger": ["Terminator 2: Judgment Day", "The Terminator"], "Linda Hamilton": ["Terminator 2: Judgment Day", "The Terminator"], "Edward Furlong": ["Terminator 2: Judgment Day"], "Robert Patrick": ["Terminator 2: Judgment Day"], "Paul Winfield": ["The Terminator"], "Ben Stiller": ["Tropic Thunder", "Dodgeball: A True Underdog Story"], "Jack Black": ["Tropic Thunder"], "Ed Helms": ["The Hangover"], "Zach Galifianakis": ["The Hangover", "Due Date"], "Justin Bartha": ["The Hangover"], "Jennifer Lawrence": ["Silver Linings Playbook", "American Hustle"], "Jacki Weaver": ["Silver Linings Playbook"], "Josh Brolin": ["No Country for Old Men", "True Grit"], "Woody Harrelson": ["No Country for Old Men", "Natural Born Killers"], "Frances McDormand": ["Fargo"], "William H. Macy": ["Fargo"], "Peter Stormare": ["Fargo"], "John Goodman": ["The Big Lebowski"], "Sam Elliott": ["The Big Lebowski"], "Hailee Steinfeld": ["True Grit"], "Daniel Day-Lewis": ["There Will Be Blood", "Lincoln"], "Paul Dano": ["There Will Be Blood"], "Kevin J. O'Connor": ["There Will Be Blood"], "Ciarán Hinds": ["There Will Be Blood"], "Burt Reynolds": ["Boogie Nights"], "John C. Reilly": ["Boogie Nights", "Magnolia", "Step Brothers", "Talladega Nights: The Ballad of Ricky Bobby"], "Heather Graham": ["Boogie Nights"], "Jason Robards": ["Magnolia"], "Philip Seymour Hoffman": ["Magnolia"], "Jason Statham": ["Snatch", "Lock, Stock and Two Smoking Barrels"], "Vinnie Jones": ["Snatch", "Lock, Stock and Two Smoking Barrels"], "Alan Ford": ["Snatch"], "Nick Moran": ["Lock, Stock and Two Smoking Barrels"], "Jason Flemyng": ["Lock, Stock and Two Smoking Barrels"], "Dexter Fletcher": ["Lock, Stock and Two Smoking Barrels"], "Jude Law": ["Sherlock Holmes"], "Rachel McAdams": ["Sherlock Holmes"], "Mark Strong": ["Sherlock Holmes"], "Ian McKellen": ["The Hobbit: An Unexpected Journey", "The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Richard Armitage": ["The Hobbit: An Unexpected Journey"], "Elijah Wood": ["The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Viggo Mortensen": ["The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Sean Astin": ["The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Orlando Bloom": ["The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Cate Blanchett": ["The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Sam Neill": ["Jurassic Park"], "Laura Dern": ["Jurassic Park"], "Jeff Goldblum": ["Jurassic Park"], "Richard Attenborough": ["Jurassic Park"], "Bryce Dallas Howard": ["Jurassic World"], "Vincent D'Onofrio": ["Jurassic World"], "BD Wong": ["Jurassic World"], "Karen Allen": ["Indiana Jones and the Raiders of the Lost Ark"], "Paul Freeman": ["Indiana Jones and the Raiders of the Lost Ark"], "John Rhys-Davies": ["Indiana Jones and the Raiders of the Lost Ark"], "Henry Thomas": ["E.T. the Extra-Terrestrial"], "Drew Barrymore": ["E.T. the Extra-Terrestrial"], "Dee Wallace": ["E.T. the Extra-Terrestrial"], "Peter Coyote": ["E.T. the Extra-Terrestrial"], "Roy Scheider": ["Jaws"], "Robert Shaw": ["Jaws"], "Richard Dreyfuss": ["Jaws"], "Lorraine Gary": ["Jaws"], "David Strathairn": ["Lincoln"], "Mark Rylance": ["Bridge of Spies"], "Amy Ryan": ["Bridge of Spies"], "Alan Alda": ["Bridge of Spies"], "Jim Carrey": ["The Truman Show", "Eternal Sunshine of the Spotless Mind"], "Ed Harris": ["The Truman Show", "The Rock"], "Laura Linney": ["The Truman Show", "Sully"], "Noah Emmerich": ["The Truman Show"], "Kirsten Dunst": ["Eternal Sunshine of the Spotless Mind"], "Will Ferrell": ["Step Brothers", "Anchorman: The Legend of Ron Burgundy", "Talladega Nights: The Ballad of Ricky Bobby"], "Richard Jenkins": ["Step Brothers"], "Mary Steenburgen": ["Step Brothers"], "Christina Applegate": ["Anchorman: The Legend of Ron Burgundy"], "Steve Carell": ["Anchorman: The Legend of Ron Burgundy", "The Big Short"], "David Koechner": ["Anchorman: The Legend of Ron Burgundy"], "Sacha Baron Cohen": ["Talladega Nights: The Ballad of Ricky Bobby", "Hugo"], "Gary Cole": ["Talladega Nights: The Ballad of Ricky Bobby"], "Vince Vaughn": ["Dodgeball: A True Underdog Story"], "Christine Taylor": ["Dodgeball: A True Underdog Story"], "Rip Torn": ["Dodgeball: A True Underdog Story"], "Michelle Monaghan": ["Due Date"], "Juliette Lewis": ["Due Date", "Natural Born Killers"], "Sienna Miller": ["American Sniper"], "Kyle Gallner": ["American Sniper"], "Luke Grimes": ["American Sniper"], "Mike O'Malley": ["Sully"], "Rami Malek": ["No Time to Die"], "Léa Seydoux": ["No Time to Die", "Spectre"], "Monica Bellucci": ["Spectre"], "Felicity Jones": ["Rogue One"], "Diego Luna": ["Rogue One"], "Ben Mendelsohn": ["Rogue One"], "Forest Whitaker": ["Rogue One"], "Oscar Isaac": ["The Last Jedi"], "Jada Pinkett Smith": ["The Matrix Reloaded"], "Riccardo Scamarcio": ["John Wick: Chapter 2"], "Common": ["John Wick: Chapter 2"], "Russell Crowe": ["L.A. Confidential"], "Guy Pearce": ["L.A. Confidential"], "Kim Basinger": ["L.A. Confidential"], "Sean Connery": ["The Rock"], "Nicolas Cage": ["The Rock", "Con Air"], "John Spencer": ["The Rock"], "John Cusack": ["Con Air"], "John Malkovich": ["Con Air"], "Richard Farnsworth": ["Misery"], "Frances Sternhagen": ["Misery"], "Wil Wheaton": ["Stand by Me"], "River Phoenix": ["Stand by Me"], "Corey Feldman": ["Stand by Me"], "Jerry O'Connell": ["Stand by Me"], "Christian Slater": ["True Romance"], "Patricia Arquette": ["True Romance"], "Dennis Hopper": ["True Romance"], "Nick Nolte": ["Cape Fear"], "Jessica Lange": ["Cape Fear"], "David Proval": ["Mean Streets"], "Amy Robinson": ["Mean Streets"], "Ben Kingsley": ["Hugo", "Shutter Island"], "Asa Butterfield": ["Hugo"], "Chloe Grace Moretz": ["Hugo"], "Michelle Williams": ["Shutter Island"], "Max von Sydow": ["Shutter Island"], "Stanley Tucci": ["The Terminal"], "Chi McBride": ["The Terminal"], "Helen Hunt": ["Cast Away"], "Nick Searcy": ["Cast Away"], "Chris Noth": ["Cast Away"], "Ben Burtt": ["WALL-E"], "Elissa Knight": ["WALL-E"], "Jeff Garlin": ["WALL-E"], "Fred Willard": ["WALL-E"], "Albert Brooks": ["Finding Nemo"], "Ellen DeGeneres": ["Finding Nemo"], "Alexander Gould": ["Finding Nemo"], "Ryan Gosling": ["The Big Short"], "Hamish Linklater": ["The Big Short"], "Ben Affleck": ["Gone Girl"], "Rosamund Pike": ["Gone Girl"], "Neil Patrick Harris": ["Gone Girl"], "Tyler Perry": ["Gone Girl"]}};
+const GRAPH = {"films": {"The Godfather": ["Marlon Brando", "Al Pacino", "James Caan", "Robert Duvall", "John Cazale", "Diane Keaton"], "Heat": ["Al Pacino", "Robert De Niro", "Val Kilmer", "Jon Voight", "Tom Sizemore"], "Jackie Brown": ["Pam Grier", "Samuel L. Jackson", "Robert De Niro", "Bridget Fonda", "Michael Keaton", "Chris Tucker"], "Pulp Fiction": ["John Travolta", "Samuel L. Jackson", "Uma Thurman", "Bruce Willis", "Tim Roth", "Harvey Keitel"], "Reservoir Dogs": ["Harvey Keitel", "Tim Roth", "Michael Madsen", "Chris Penn", "Steve Buscemi", "Lawrence Tierney"], "Kill Bill: Vol. 1": ["Uma Thurman", "Lucy Liu", "David Carradine", "Daryl Hannah", "Vivica A. Fox"], "Kill Bill: Vol. 2": ["Uma Thurman", "David Carradine", "Michael Madsen", "Daryl Hannah", "Samuel L. Jackson"], "Inglourious Basterds": ["Brad Pitt", "Diane Kruger", "Christoph Waltz", "Eli Roth", "Michael Fassbender"], "Django Unchained": ["Jamie Foxx", "Christoph Waltz", "Leonardo DiCaprio", "Samuel L. Jackson", "Kerry Washington"], "Once Upon a Time in Hollywood": ["Leonardo DiCaprio", "Brad Pitt", "Margot Robbie", "Al Pacino", "Damian Lewis", "Emile Hirsch", "Margaret Qualley", "Tim Roth", "Kurt Russell"], "GoodFellas": ["Robert De Niro", "Ray Liotta", "Joe Pesci", "Lorraine Bracco", "Paul Sorvino"], "Casino": ["Robert De Niro", "Sharon Stone", "Joe Pesci", "James Woods"], "The Departed": ["Leonardo DiCaprio", "Matt Damon", "Jack Nicholson", "Mark Wahlberg", "Martin Sheen", "Alec Baldwin"], "The Wolf of Wall Street": ["Leonardo DiCaprio", "Jonah Hill", "Margot Robbie", "Matthew McConaughey", "Kyle Chandler"], "Taxi Driver": ["Robert De Niro", "Jodie Foster", "Cybill Shepherd", "Harvey Keitel"], "Raging Bull": ["Robert De Niro", "Cathy Moriarty", "Joe Pesci"], "The Avengers": ["Robert Downey Jr.", "Chris Evans", "Scarlett Johansson", "Mark Ruffalo", "Chris Hemsworth", "Jeremy Renner", "Samuel L. Jackson"], "Avengers: Endgame": ["Robert Downey Jr.", "Chris Evans", "Scarlett Johansson", "Mark Ruffalo", "Chris Hemsworth", "Jeremy Renner", "Josh Brolin", "Brie Larson"], "Fight Club": ["Brad Pitt", "Edward Norton", "Helena Bonham Carter", "Meat Loaf"], "Se7en": ["Brad Pitt", "Morgan Freeman", "Kevin Spacey", "Gwyneth Paltrow"], "Ocean's Eleven": ["George Clooney", "Brad Pitt", "Matt Damon", "Julia Roberts", "Andy Garcia", "Casey Affleck"], "Ocean's Twelve": ["George Clooney", "Brad Pitt", "Matt Damon", "Julia Roberts", "Catherine Zeta-Jones", "Vincent Cassel"], "The Silence of the Lambs": ["Jodie Foster", "Anthony Hopkins", "Scott Glenn", "Ted Levine"], "Hannibal": ["Anthony Hopkins", "Julianne Moore", "Gary Oldman", "Ray Liotta"], "Alien": ["Sigourney Weaver", "Tom Skerritt", "John Hurt", "Ian Holm", "Harry Dean Stanton"], "Aliens": ["Sigourney Weaver", "Carrie Henn", "Michael Biehn", "Lance Henriksen", "Bill Paxton"], "Terminator": ["Arnold Schwarzenegger", "Linda Hamilton", "Michael Biehn", "Paul Winfield"], "Terminator 2": ["Arnold Schwarzenegger", "Linda Hamilton", "Edward Furlong", "Robert Patrick", "Joe Morton"], "Predator": ["Arnold Schwarzenegger", "Carl Weathers", "Jesse Ventura", "Bill Duke"], "True Lies": ["Arnold Schwarzenegger", "Jamie Lee Curtis", "Tom Arnold", "Bill Paxton"], "The Matrix": ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss", "Hugo Weaving", "Joe Pantoliano"], "The Matrix Reloaded": ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss", "Hugo Weaving", "Jada Pinkett Smith"], "John Wick": ["Keanu Reeves", "Michael Nyqvist", "Alfie Allen", "Willem Dafoe", "Ian McShane"], "Speed": ["Keanu Reeves", "Sandra Bullock", "Dennis Hopper", "Jeff Daniels"], "Point Break": ["Keanu Reeves", "Patrick Swayze", "Lori Petty", "Gary Busey"], "Die Hard": ["Bruce Willis", "Alan Rickman", "Bonnie Bedelia", "Reginald VelJohnson"], "The Sixth Sense": ["Bruce Willis", "Haley Joel Osment", "Toni Collette", "Donnie Wahlberg"], "Unbreakable": ["Bruce Willis", "Samuel L. Jackson", "Robin Wright", "Spencer Treat Clark"], "Looper": ["Bruce Willis", "Joseph Gordon-Levitt", "Emily Blunt", "Paul Dano"], "12 Monkeys": ["Bruce Willis", "Madeleine Stowe", "Brad Pitt", "Christopher Plummer"], "Snatch": ["Jason Statham", "Brad Pitt", "Benicio del Toro", "Vinnie Jones"], "Lock, Stock and Two Smoking Barrels": ["Jason Statham", "Nick Moran", "Jason Flemyng", "Dexter Fletcher"], "The Italian Job": ["Jason Statham", "Mark Wahlberg", "Charlize Theron", "Edward Norton", "Donald Sutherland"], "Mad Max: Fury Road": ["Tom Hardy", "Charlize Theron", "Nicholas Hoult", "Hugh Keays-Byrne"], "The Dark Knight": ["Christian Bale", "Heath Ledger", "Aaron Eckhart", "Gary Oldman", "Michael Caine"], "The Dark Knight Rises": ["Christian Bale", "Tom Hardy", "Anne Hathaway", "Gary Oldman", "Joseph Gordon-Levitt"], "Inception": ["Leonardo DiCaprio", "Joseph Gordon-Levitt", "Elliot Page", "Tom Hardy", "Ken Watanabe", "Cillian Murphy"], "Interstellar": ["Matthew McConaughey", "Anne Hathaway", "Jessica Chastain", "Michael Caine", "Matt Damon"], "The Prestige": ["Hugh Jackman", "Christian Bale", "Michael Caine", "Scarlett Johansson", "Rebecca Hall"], "Shutter Island": ["Leonardo DiCaprio", "Mark Ruffalo", "Ben Kingsley", "Michelle Williams", "Max von Sydow"], "Titanic": ["Leonardo DiCaprio", "Kate Winslet", "Billy Zane", "Kathy Bates"], "Catch Me If You Can": ["Leonardo DiCaprio", "Tom Hanks", "Christopher Walken", "Amy Adams"], "Gangs of New York": ["Leonardo DiCaprio", "Cameron Diaz", "Daniel Day-Lewis", "Liam Neeson"], "The Revenant": ["Leonardo DiCaprio", "Tom Hardy", "Domhnall Gleeson", "Will Poulter"], "Hugo": ["Ben Kingsley", "Sacha Baron Cohen", "Asa Butterfield", "Chloe Grace Moretz"], "The Grand Budapest Hotel": ["Ralph Fiennes", "Tony Revolori", "Adrien Brody", "Saoirse Ronan", "Edward Norton", "Bill Murray"], "Moonrise Kingdom": ["Jared Gilman", "Kara Hayward", "Bruce Willis", "Bill Murray", "Edward Norton"], "The Life Aquatic": ["Bill Murray", "Owen Wilson", "Cate Blanchett", "Anjelica Huston"], "Lost in Translation": ["Bill Murray", "Scarlett Johansson", "Giovanni Ribisi", "Anna Faris"], "Spiderman": ["Tobey Maguire", "Willem Dafoe", "Kirsten Dunst", "James Franco"], "Spiderman 2": ["Tobey Maguire", "Alfred Molina", "Kirsten Dunst", "James Franco"], "Spiderman 3": ["Tobey Maguire", "Kirsten Dunst", "James Franco", "Thomas Haden Church"], "The Social Network": ["Jesse Eisenberg", "Andrew Garfield", "Justin Timberlake", "Armie Hammer"], "Moneyball": ["Brad Pitt", "Jonah Hill", "Philip Seymour Hoffman", "Chris Pratt"], "World War Z": ["Brad Pitt", "Mireille Enos", "Daniella Kertesz", "James Badge Dale"], "Troy": ["Brad Pitt", "Eric Bana", "Orlando Bloom", "Peter O'Toole", "Sean Bean"], "Mr. & Mrs. Smith": ["Brad Pitt", "Angelina Jolie", "Vince Vaughn", "Adam Brody"], "A Star Is Born": ["Bradley Cooper", "Lady Gaga", "Sam Elliott", "Andrew Dice Clay"], "American Sniper": ["Bradley Cooper", "Sienna Miller", "Kyle Gallner", "Luke Grimes"], "The Hangover": ["Bradley Cooper", "Ed Helms", "Zach Galifianakis", "Justin Bartha"], "Silver Linings Playbook": ["Bradley Cooper", "Jennifer Lawrence", "Robert De Niro", "Jacki Weaver"], "Joy": ["Bradley Cooper", "Jennifer Lawrence", "Robert De Niro", "Edgar Ramirez"], "American Hustle": ["Christian Bale", "Bradley Cooper", "Amy Adams", "Jennifer Lawrence", "Jeremy Renner"], "The Fighter": ["Mark Wahlberg", "Christian Bale", "Amy Adams", "Melissa Leo"], "Boogie Nights": ["Mark Wahlberg", "Julianne Moore", "Burt Reynolds", "John C. Reilly", "Heather Graham"], "Ted": ["Mark Wahlberg", "Mila Kunis", "Seth MacFarlane", "Giovanni Ribisi"], "The Other Guys": ["Will Ferrell", "Mark Wahlberg", "Eva Mendes", "Samuel L. Jackson"], "Daddy's Home": ["Will Ferrell", "Mark Wahlberg", "Linda Cardellini", "Scarlett Johansson"], "Step Brothers": ["Will Ferrell", "John C. Reilly", "Mary Steenburgen", "Richard Jenkins"], "Anchorman": ["Will Ferrell", "Christina Applegate", "Paul Rudd", "Steve Carell"], "Talladega Nights": ["Will Ferrell", "John C. Reilly", "Sacha Baron Cohen", "Gary Cole"], "Get Hard": ["Will Ferrell", "Kevin Hart", "Alison Brie", "T.I."], "The Dictator": ["Sacha Baron Cohen", "Anna Faris", "Ben Kingsley", "John C. Reilly"], "Borat": ["Sacha Baron Cohen", "Ken Davitian", "Luenell", "Pamela Anderson"], "Bruno": ["Sacha Baron Cohen", "Gustaf Hammarsten", "Minnie Driver"], "Les Miserables": ["Hugh Jackman", "Russell Crowe", "Anne Hathaway", "Amanda Seyfried", "Eddie Redmayne"], "The Greatest Showman": ["Hugh Jackman", "Zac Efron", "Zendaya", "Michelle Williams"], "Logan": ["Hugh Jackman", "Patrick Stewart", "Dafne Keen", "Boyd Holbrook"], "X-Men": ["Hugh Jackman", "Patrick Stewart", "Ian McKellen", "Famke Janssen", "James Marsden"], "X-Men: Days of Future Past": ["Hugh Jackman", "Patrick Stewart", "Ian McKellen", "Michael Fassbender", "Jennifer Lawrence"], "The Wolverine": ["Hugh Jackman", "Tao Okamoto", "Rila Fukushima", "Svetlana Khodchenkova"], "Prisoners": ["Hugh Jackman", "Jake Gyllenhaal", "Viola Davis", "Paul Dano"], "Les Miserables": ["Hugh Jackman", "Russell Crowe", "Anne Hathaway", "Amanda Seyfried", "Eddie Redmayne"], "Gladiator": ["Russell Crowe", "Joaquin Phoenix", "Connie Nielsen", "Oliver Reed"], "A Beautiful Mind": ["Russell Crowe", "Jennifer Connelly", "Ed Harris", "Paul Bettany"], "Cinderella Man": ["Russell Crowe", "Renee Zellweger", "Paul Giamatti"], "The Nice Guys": ["Russell Crowe", "Ryan Gosling", "Angourie Rice", "Matt Bomer"], "Noah": ["Russell Crowe", "Jennifer Connelly", "Emma Watson", "Anthony Hopkins"], "L.A. Confidential": ["Russell Crowe", "Guy Pearce", "Kim Basinger", "Kevin Spacey"], "The Amazing Spider-Man": ["Andrew Garfield", "Emma Stone", "Rhys Ifans", "Sally Field"], "The Amazing Spider-Man 2": ["Andrew Garfield", "Emma Stone", "Jamie Foxx", "Dane DeHaan"], "Hacksaw Ridge": ["Andrew Garfield", "Sam Worthington", "Vince Vaughn", "Teresa Palmer"], "The Social Network 2": ["Jesse Eisenberg", "Andrew Garfield", "Justin Timberlake", "Armie Hammer"], "The Irishman": ["Robert De Niro", "Al Pacino", "Joe Pesci", "Harvey Keitel", "Ray Liotta"], "Joker": ["Joaquin Phoenix", "Robert De Niro", "Zazie Beetz", "Frances Conroy"], "Her": ["Joaquin Phoenix", "Scarlett Johansson", "Amy Adams", "Rooney Mara"], "Walk the Line": ["Joaquin Phoenix", "Reese Witherspoon", "Ginnifer Goodwin", "Robert Patrick"], "Captain Phillips": ["Tom Hanks", "Barkhad Abdi", "Catherine Keener", "Michael Chernus"], "Forrest Gump": ["Tom Hanks", "Robin Wright", "Gary Sinise", "Sally Field"], "Cast Away": ["Tom Hanks", "Helen Hunt", "Nick Searcy"], "Saving Private Ryan": ["Tom Hanks", "Matt Damon", "Tom Sizemore", "Edward Burns"], "The Green Mile": ["Tom Hanks", "Michael Clarke Duncan", "David Morse", "Bonnie Hunt"], "Big": ["Tom Hanks", "Elizabeth Perkins", "Robert Loggia", "John Heard"], "Sleepless in Seattle": ["Tom Hanks", "Meg Ryan", "Rita Wilson", "Bill Pullman"], "Philadelphia": ["Tom Hanks", "Denzel Washington", "Jason Robards", "Antonio Banderas"], "Road to Perdition": ["Tom Hanks", "Paul Newman", "Jude Law", "Daniel Craig"], "Cloud Atlas": ["Tom Hanks", "Halle Berry", "Hugh Grant", "Hugo Weaving"], "The Da Vinci Code": ["Tom Hanks", "Audrey Tautou", "Ian McKellen", "Jean Reno"], "Angels & Demons": ["Tom Hanks", "Ayelet Zurer", "Ewan McGregor", "Stellan Skarsgard"], "Inferno": ["Tom Hanks", "Felicity Jones", "Omar Sy", "Irrfan Khan"], "Bridge of Spies": ["Tom Hanks", "Mark Rylance", "Amy Ryan", "Alan Alda"], "The Post": ["Tom Hanks", "Meryl Streep", "Sarah Paulson", "Bob Odenkirk"], "A Quiet Place": ["Emily Blunt", "John Krasinski", "Millicent Simmonds", "Noah Jupe"], "A Quiet Place Part II": ["Emily Blunt", "Cillian Murphy", "Millicent Simmonds", "Noah Jupe"], "Edge of Tomorrow": ["Tom Cruise", "Emily Blunt", "Bill Paxton", "Brendan Gleeson"], "Sicario": ["Emily Blunt", "Benicio del Toro", "Josh Brolin", "Victor Garber"], "The Girl on the Train": ["Emily Blunt", "Rebecca Ferguson", "Haley Bennett", "Justin Theroux"], "Mary Poppins Returns": ["Emily Blunt", "Lin-Manuel Miranda", "Ben Whishaw", "Julie Walters"], "Knives Out": ["Daniel Craig", "Ana de Armas", "Chris Evans", "Jamie Lee Curtis", "Christopher Plummer"], "Glass Onion": ["Daniel Craig", "Edward Norton", "Janelle Monae", "Kathryn Hahn", "Dave Bautista"], "Skyfall": ["Daniel Craig", "Javier Bardem", "Naomie Harris", "Ralph Fiennes"], "Casino Royale": ["Daniel Craig", "Eva Green", "Mads Mikkelsen", "Judi Dench"], "Spectre": ["Daniel Craig", "Christoph Waltz", "Lea Seydoux", "Ralph Fiennes"], "Logan Lucky": ["Channing Tatum", "Adam Driver", "Daniel Craig", "Seth MacFarlane"], "Cowboys & Aliens": ["Daniel Craig", "Harrison Ford", "Olivia Wilde", "Sam Rockwell"], "The Girl with the Dragon Tattoo": ["Daniel Craig", "Rooney Mara", "Christopher Plummer", "Stellan Skarsgard"], "Layer Cake": ["Daniel Craig", "Sienna Miller", "Michael Gambon", "Tom Hardy"], "Defiance": ["Daniel Craig", "Liev Schreiber", "Jamie Bell", "George MacKay"], "Solo: A Star Wars Story": ["Alden Ehrenreich", "Woody Harrelson", "Emilia Clarke", "Donald Glover"], "Star Wars": ["Mark Hamill", "Harrison Ford", "Carrie Fisher", "Peter Cushing"], "The Empire Strikes Back": ["Mark Hamill", "Harrison Ford", "Carrie Fisher", "Billy Dee Williams"], "Return of the Jedi": ["Mark Hamill", "Harrison Ford", "Carrie Fisher", "Billy Dee Williams"], "Indiana Jones": ["Harrison Ford", "Karen Allen", "Paul Freeman", "John Rhys-Davies"], "Indiana Jones and the Last Crusade": ["Harrison Ford", "Sean Connery", "Alison Doody", "John Rhys-Davies"], "Blade Runner 2049": ["Ryan Gosling", "Harrison Ford", "Ana de Armas", "Jared Leto"], "The Fugitive": ["Harrison Ford", "Tommy Lee Jones", "Sela Ward", "Julianne Moore"], "Air Force One": ["Harrison Ford", "Gary Oldman", "Wendy Crewson", "Harrison Ford"], "What Lies Beneath": ["Harrison Ford", "Michelle Pfeiffer", "Diana Scarwid", "James Remar"], "Clear and Present Danger": ["Harrison Ford", "Willem Dafoe", "Anne Archer", "James Earl Jones"], "Patriot Games": ["Harrison Ford", "Anne Archer", "Patrick Bergin", "Sean Bean"], "Witness": ["Harrison Ford", "Kelly McGillis", "Lukas Haas", "Patti LuPone"], "The Notebook": ["Ryan Gosling", "Rachel McAdams", "James Garner", "Gena Rowlands"], "La La Land": ["Ryan Gosling", "Emma Stone", "John Legend", "Rosemarie DeWitt"], "Crazy, Stupid, Love": ["Steve Carell", "Ryan Gosling", "Julianne Moore", "Emma Stone"], "Drive": ["Ryan Gosling", "Carey Mulligan", "Bryan Cranston", "Albert Brooks"], "Blue Valentine": ["Ryan Gosling", "Michelle Williams", "Mike Vogel", "John Doman"], "Half Nelson": ["Ryan Gosling", "Shareeka Epps", "Anthony Mackie", "Tina Holmes"], "Lars and the Real Girl": ["Ryan Gosling", "Emily Mortimer", "Paul Schneider", "Kelli Garner"], "Fracture": ["Anthony Hopkins", "Ryan Gosling", "David Strathairn", "Rosamund Pike"], "The Place Beyond the Pines": ["Ryan Gosling", "Bradley Cooper", "Eva Mendes", "Ray Liotta"], "Only God Forgives": ["Ryan Gosling", "Kristin Scott Thomas", "Vithaya Pansringarm"], "Song to Song": ["Ryan Gosling", "Rooney Mara", "Michael Fassbender", "Natalie Portman"], "First Man": ["Ryan Gosling", "Claire Foy", "Jason Clarke", "Kyle Chandler"], "Blade Runner": ["Harrison Ford", "Rutger Hauer", "Sean Young", "Edward James Olmos"], "The Truman Show": ["Jim Carrey", "Ed Harris", "Laura Linney", "Noah Emmerich"], "Eternal Sunshine of the Spotless Mind": ["Jim Carrey", "Kate Winslet", "Kirsten Dunst", "Mark Ruffalo"], "The Mask": ["Jim Carrey", "Cameron Diaz", "Peter Riegert", "Amy Yasbeck"], "Ace Ventura": ["Jim Carrey", "Courteney Cox", "Sean Young", "Tone Loc"], "Dumb and Dumber": ["Jim Carrey", "Jeff Daniels", "Lauren Holly", "Mike Starr"], "Yes Man": ["Jim Carrey", "Zooey Deschanel", "Bradley Cooper", "John Michael Higgins"], "Bruce Almighty": ["Jim Carrey", "Jennifer Aniston", "Morgan Freeman", "Steve Carell"], "Liar Liar": ["Jim Carrey", "Maura Tierney", "Justin Cooper", "Anne Hathaway"], "Fun with Dick and Jane": ["Jim Carrey", "Tea Leoni", "Alec Baldwin", "Richard Jenkins"], "Me, Myself & Irene": ["Jim Carrey", "Renee Zellweger", "Chris Cooper", "Robert Forster"], "The Cable Guy": ["Jim Carrey", "Matthew Broderick", "Leslie Mann", "Jack Black"], "I Love You, Philip Morris": ["Jim Carrey", "Ewan McGregor", "Rodrigo Santoro", "Antoni Corone"], "The Number 23": ["Jim Carrey", "Virginia Madsen", "Danny Huston", "Logan Lerman"], "Mr. Popper's Penguins": ["Jim Carrey", "Carla Gugino", "Angela Lansbury", "Ophelia Lovibond"], "Horton Hears a Who!": ["Jim Carrey", "Steve Carell", "Carol Burnett", "Will Arnett"], "Once Bitten": ["Jim Carrey", "Lauren Hutton", "Cleavon Little", "Karen Kopins"], "A Christmas Carol": ["Jim Carrey", "Gary Oldman", "Colin Firth", "Robin Wright"], "The Majestic": ["Jim Carrey", "Bob Balaban", "Jeff Daniels", "Hal Holbrook"], "Man on the Moon": ["Jim Carrey", "Danny DeVito", "Courtney Love", "Paul Giamatti"], "Andy's Airplane Adventure": ["Andy Gaukrodger", "Test Actor", "Demo Star", "Sample Lead"]}};
 const FILMS = GRAPH.films;
 const ACTORS = {};
 for (const f in FILMS) for (const a of FILMS[f]) (ACTORS[a] = ACTORS[a] || []).push(f);
@@ -208,6 +254,8 @@ for (const f in FILMS) for (const a of FILMS[f]) (ACTORS[a] = ACTORS[a] || []).p
 const $ = id => document.getElementById(id);
 const filmKeys = Object.keys(FILMS);
 const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+const ORIGIN = location.origin;        // real deployed URL, no hardcoded domain
+const HASH = location.hash;            // for deep-linked challenge puzzles
 
 // ---------- BFS solver ----------
 function bfs(start, target) {
@@ -236,13 +284,58 @@ function bfs(start, target) {
   return null;
 }
 
+// ---------- Daily challenge (deterministic, date-seeded) ----------
+function dailyKey() {
+  const d = new Date();
+  return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
+}
+function dailyPair() {
+  // deterministic hash of today's date -> a connected pair
+  let h = 0; const s = dailyKey();
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < 5000; i++) {
+    const a = filmKeys[(h + i*7) % filmKeys.length];
+    const b = filmKeys[(h*3 + i*13) % filmKeys.length];
+    if (a === b) continue;
+    const r = bfs(a, b);
+    if (r && r.steps >= 2) return [a, b];
+  }
+  return [filmKeys[0], filmKeys[1]];
+}
+function streakGet() {
+  try { return JSON.parse(localStorage.getItem("rc_streak") || "{}"); } catch(e){ return {}; }
+}
+function updateStreakBox() {
+  const st = streakGet();
+  const k = dailyKey();
+  const solvedToday = st.last === k;
+  $("streakBox").textContent = st.count ? ("🔥 " + st.count + " day streak" + (solvedToday ? " (today ✓)" : "")) : "";
+}
+
 // ---------- State ----------
 let state = null;
 let difficulty = "easy";
+let mode = "endless";   // 'endless' | 'daily' | 'challenge'
+let challengeScore = null;  // opponent score when in challenge mode
 let timer = null, startTs = 0, elapsed = 0;
 
+function applyHash() {
+  // #c=<start>|<target>|<opponentLinks>  e.g. #c=Hugo|The Wolf of Wall Street|2
+  if (HASH.startsWith("#c=")) {
+    const parts = decodeURIComponent(HASH.slice(3)).split("|");
+    const a = parts[0], b = parts[1];
+    if (a && b && FILMS[a] && FILMS[b] && a !== b) {
+      challengeScore = parts[2] ? parseInt(parts[2], 10) : null;
+      mode = "challenge";
+      return [a, b];
+    }
+  }
+  return null;
+}
+
 function newPuzzle(a, b) {
-  if (!a || !b) {
+  if (mode === "daily") { const p = dailyPair(); a = p[0]; b = p[1]; }
+  else if (!a || !b) {
     const r = pickPair(difficulty);
     a = r[0]; b = r[1];
   }
@@ -260,6 +353,11 @@ function newPuzzle(a, b) {
   hideActorPanel();
   render();
   startTimer();
+  if (mode === "challenge") {
+    setMsg("info", challengeScore != null
+      ? "🏆 Challenge! Beat " + challengeScore + " link" + (challengeScore===1?"":"s") + " to win this puzzle."
+      : "🏆 Challenge puzzle — solve it to win!");
+  }
 }
 
 function pickPair(band) {
@@ -283,9 +381,7 @@ function pickPair(band) {
 
 // ---------- Rendering ----------
 function render() {
-  // path chain
   const pc = $("pathChain"); pc.innerHTML = "";
-  const total = state.pathFilms.length + state.pathActors.length;
   let idx = 0;
   for (let i = 0; i < state.pathFilms.length; i++) {
     const f = state.pathFilms[i];
@@ -298,17 +394,14 @@ function render() {
     }
     idx++;
   }
-  // cast of current film
   $("curName").textContent = state.current;
   const cast = $("castChips"); cast.innerHTML = "";
-  const prevFilm = state.pathFilms[state.pathFilms.length - 2];
   for (const a of (FILMS[state.current] || [])) {
     const c = mkChip("actor", a);
     if (state.selectedActor === a) c.classList.add("rc-picked");
     c.onclick = () => chooseActor(a);
     cast.appendChild(c);
   }
-  // meta
   $("stepsTaken").textContent = state.pathActors.length;
   $("optimal").textContent = state.optimal == null ? "—" : state.optimal;
   const rem = bfs(state.current, state.target);
@@ -319,7 +412,9 @@ function render() {
 function updateModeBar() {
   const bar = $("modeBar");
   if (!bar) return;
-  bar.innerHTML = "∞ Endless mode — keep solving for a new puzzle each round.";
+  if (mode === "daily") bar.innerHTML = "📅 <b>Daily Challenge</b> — same puzzle for everyone today. Solve it, then share your streak!";
+  else if (mode === "challenge") bar.innerHTML = "🏆 <b>Challenge mode</b> — this is a friend's puzzle. Beat their score!";
+  else bar.innerHTML = "∞ Endless mode — keep solving for a new puzzle each round.";
 }
 
 function mkNode(type, name) {
@@ -400,16 +495,13 @@ function setMsg(kind, txt) {
 function hint() {
   const r = bfs(state.current, state.target);
   if (!r) { setMsg("err", "No path from here — try Undo."); return; }
-  // find first actor on optimal path from current
   const chain = r.chain;
-  // chain: film, actor, film, ... starting at current
   let actor = null, film = null;
   for (let i = 0; i < chain.length; i++) {
     if (chain[i].type === "actor") { actor = chain[i].name; film = chain[i + 1].name; break; }
   }
   if (actor && film) {
     setMsg("info", "💡 Try: " + actor + " → " + film);
-    // also pre-select that actor to help
     chooseActor(actor);
   }
 }
@@ -427,11 +519,20 @@ function win() {
   const steps = state.pathActors.length;
   const optimal = state.optimal || steps;
   const perfect = (steps === optimal);
-  $("winTitle").textContent = perfect ? "Perfect! 🎯" : "Connected! 🎉";
+  let wonGame = true;
+  let sub;
+  if (mode === "challenge" && challengeScore != null && steps > challengeScore) {
+    wonGame = false;
+    sub = "You used " + steps + " links — your friend used " + challengeScore + ". So close! Try again?";
+  } else if (mode === "challenge") {
+    sub = "You beat the challenge" + (challengeScore!=null ? " (" + challengeScore + " links)!" : "!") + " 🏆";
+  } else {
+    sub = perfect ? "Fewest possible — nicely done."
+                  : ("Best possible was " + optimal + ". " + (steps - optimal) + " extra.");
+  }
+  if (elapsed && wonGame) sub += "  ⏱ " + fmt(elapsed);
+  $("winTitle").textContent = (mode === "challenge" && !wonGame) ? "Almost! 🤏" : (perfect && wonGame ? "Perfect! 🎯" : "Connected! 🎉");
   $("winSteps").textContent = steps + (steps === 1 ? " link" : " links");
-  let sub = perfect ? "Fewest possible — nicely done."
-                    : ("Best possible was " + optimal + ". " + (steps - optimal) + " extra.");
-  if (elapsed) sub += "  ⏱ " + fmt(elapsed);
   $("winSub").textContent = sub;
   const wc = $("winChain"); wc.innerHTML = "";
   state.pathFilms.forEach((f, i) => {
@@ -443,13 +544,32 @@ function win() {
     }
   });
   // stats
-  let won = +(localStorage.getItem("rc_won") || 0) + 1;
+  let won = +(localStorage.getItem("rc_won") || 0) + (wonGame ? 1 : 0);
   localStorage.setItem("rc_won", won);
   let best = +(localStorage.getItem("rc_best") || 0);
-  if (!best || elapsed < best) { best = elapsed; localStorage.setItem("rc_best", best); }
+  if (wonGame && (!best || elapsed < best)) { best = elapsed; localStorage.setItem("rc_best", best); }
+  // streak (daily only)
+  if (mode === "daily" && wonGame) {
+    const st = streakGet();
+    const k = dailyKey();
+    if (st.last !== k) {
+      st.count = (st.last === yesterdayKey()) ? (st.count || 0) + 1 : 1;
+      st.last = k;
+      localStorage.setItem("rc_streak", JSON.stringify(st));
+    }
+  }
+  // challenge link (share this exact puzzle with your score)
+  const chalLink = ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + steps);
+  $("chalLink").value = chalLink;
+  $("challengeBox").style.display = (mode === "challenge") ? "none" : "block";
   refreshStats();
+  updateStreakBox();
   updateModeBar();
   $("overlay").classList.add("rc-open");
+}
+function yesterdayKey() {
+  const d = new Date(); d.setDate(d.getDate() - 1);
+  return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
 }
 
 function refreshStats() {
@@ -485,30 +605,6 @@ function fillCustom() {
   if (filmKeys.length > 1) b.selectedIndex = 1;
 }
 
-// ---------- Wire up ----------
-document.querySelectorAll("#diff button").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll("#diff button").forEach(x => x.classList.remove("rc-active"));
-    btn.classList.add("rc-active");
-    difficulty = btn.dataset.d;
-    newPuzzle();
-  };
-});
-$("newBtn").onclick = () => newPuzzle();
-$("hintBtn").onclick = hint;
-$("revealBtn").onclick = reveal;
-$("shareBtn").onclick = shareCard;
-$("flipBtn").onclick = () => { if (state) newPuzzle(state.target, state.start); };
-$("undoBtn").onclick = undo;
-$("resetBtn").onclick = reset;
-$("winNext").onclick = () => { $("overlay").classList.remove("rc-open"); newPuzzle(); };
-$("customGo").onclick = () => {
-  const a = $("customA").value, b = $("customB").value;
-  if (a === b) { setMsg("err", "Pick two different films."); return; }
-  $("overlay").classList.remove("rc-open");
-  newPuzzle(a, b);
-};
-
 // ---------- Share card (client-side canvas, no server) ----------
 function buildShareCard() {
   if (!state) return null;
@@ -520,7 +616,6 @@ function buildShareCard() {
     if (i < state.pathActors.length) chain.push({ type: "actor", name: state.pathActors[i] }); });
   const W = 600;
   const nodeH = 40, padTop = 92, gap = 10, padX = 28;
-  // wrap rows
   const ctx0 = document.createElement("canvas").getContext("2d");
   ctx0.font = "600 15px -apple-system, Arial, sans-serif";
   let rows = [], x = padX, y = padTop, cur = [];
@@ -531,7 +626,7 @@ function buildShareCard() {
     cur.push({ ...n, w, label }); x += w + 10;
   });
   if (cur.length) { rows.push(cur); y += nodeH + gap; }
-  const H = y + 64;
+  const H = y + 132;   // extra room for QR + URL
   const c = document.createElement("canvas");
   c.width = W; c.height = H;
   const x2 = c.getContext("2d");
@@ -540,8 +635,7 @@ function buildShareCard() {
   x2.fillStyle = "#ff4d6d"; x2.font = "800 30px -apple-system, Arial, sans-serif";
   x2.fillText("ReelChain", 24, 44);
   x2.fillStyle = "#8a90a6"; x2.font = "15px -apple-system, Arial, sans-serif";
-  const dateLabel = "Puzzle";
-  x2.fillText(dateLabel, 24, 68);
+  x2.fillText("My solve — can you beat it?", 24, 68);
   // verdict
   x2.fillStyle = "#ffb84d";
   x2.fillText(perfect ? "PERFECT — matched the optimal link!" : (steps - optimal) + " over optimal", 24, 88);
@@ -550,7 +644,8 @@ function buildShareCard() {
   const drawRounded = (rx, ry, rw, rh, r, stroke, fill) => {
     x2.beginPath(); x2.moveTo(rx + r, ry);
     x2.arcTo(rx + rw, ry, rx + rw, ry + rh, r); x2.arcTo(rx + rw, ry + rh, rx, ry + rh, r);
-    x2.arcTo(rx, ry + rh, rx, ry, r); x2.arcTo(rx, ry, rx + rw, ry, r); x2.closePath();
+    x2.arcTo(rx, ry + rh, rx, ry, r); x2.arcTo(rx, ry, rx + rw, ry, r);
+    x2.closePath();
     x2.fillStyle = fill; x2.fill(); x2.strokeStyle = stroke; x2.lineWidth = 2; x2.stroke();
   };
   rows.forEach(row => {
@@ -564,32 +659,120 @@ function buildShareCard() {
     });
     yy += nodeH + gap;
   });
-  // footer
+  // footer: real URL + QR (no hardcoded domain)
   x2.fillStyle = "#8a90a6"; x2.font = "13px -apple-system, Arial, sans-serif";
-  x2.fillText("Connect two films through the actors they share", 24, H - 30);
-  x2.fillText("reelchain.app", 24, H - 14);
+  x2.fillText("Connect two films through the actors they share", 24, H - 78);
+  const urlText = ORIGIN.replace(/^https?:\/\//, "");
+  x2.fillStyle = "#9db8ff"; x2.font = "bold 16px -apple-system, Arial, sans-serif";
+  x2.fillText(urlText, 24, H - 56);
+  // QR code
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + steps));
+    qr.make();
+    const mod = qr.getModuleCount();
+    const qsize = 84, ox = W - qsize - 24, oy = H - qsize - 16, cell = qsize / mod;
+    x2.fillStyle = "#ffffff"; x2.fillRect(ox - 4, oy - 4, qsize + 8, qsize + 8);
+    for (let r = 0; r < mod; r++) for (let col = 0; col < mod; col++) {
+      if (qr.isDark(r, col)) { x2.fillStyle = "#0d0f17"; x2.fillRect(ox + col*cell, oy + r*cell, Math.ceil(cell), Math.ceil(cell)); }
+    }
+  } catch (e) { /* QR optional */ }
   return c.toDataURL("image/png");
 }
 
-async function shareCard() {
+async function doShare(opts) {
+  opts = opts || {};
+  // Pre-solve: if no state, share the current puzzle (challenge link) instead of dead-ending.
+  if (!state && !opts.forceCard) {
+    const a = $("startName").textContent, b = $("targetName").textContent;
+    if (a && b && a !== "—") {
+      const link = ORIGIN + "/#c=" + encodeURIComponent(a + "|" + b);
+      await copyOrShare(link, "ReelChain challenge: can you connect " + a + " → " + b + "?");
+      return;
+    }
+    alert("Start a puzzle first, then share!"); return;
+  }
   const dataUrl = buildShareCard();
-  if (!dataUrl) { alert("Solve a puzzle first, then share!"); return; }
+  if (!dataUrl) { alert("Start a puzzle first, then share!"); return; }
   const blob = await (await fetch(dataUrl)).blob();
   const file = new File([blob], "reelchain_card.png", { type: "image/png" });
+  const text = "I connected " + state.start + " → " + state.target + " in " + state.pathActors.length + " link" + (state.pathActors.length===1?"":"s") + " on ReelChain! Can you beat it?";
   try {
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: "ReelChain", text: "I solved a ReelChain puzzle!" });
+      await navigator.share({ files: [file], title: "ReelChain", text });
       return;
     }
   } catch (e) { /* user cancelled */ }
+  // Fallback: download card + copy challenge link
   const a = document.createElement("a");
   a.href = dataUrl; a.download = "reelchain_card.png"; a.click();
+  const link = ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + state.pathActors.length);
+  await copyText(link);
+  setMsg("ok", "Result card downloaded & challenge link copied — paste it anywhere to challenge a friend!");
 }
+
+async function copyOrShare(link, text) {
+  try {
+    if (navigator.share) { await navigator.share({ title: "ReelChain", text, url: link }); return; }
+  } catch(e) {}
+  await copyText(link);
+  setMsg("ok", "Challenge link copied — send it to a friend!");
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); } catch(e) {
+    const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch(_){} document.body.removeChild(ta);
+  }
+}
+
+// ---------- Wire up ----------
+document.querySelectorAll("#diff button").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll("#diff button").forEach(x => x.classList.remove("rc-active"));
+    btn.classList.add("rc-active");
+    difficulty = btn.dataset.d;
+    mode = "endless";
+    newPuzzle();
+  };
+});
+$("dailyBtn").onclick = () => { mode = "daily"; newPuzzle(); };
+$("newBtn").onclick = () => { mode = "endless"; newPuzzle(); };
+$("hintBtn").onclick = hint;
+$("revealBtn").onclick = reveal;
+$("shareBtn").onclick = () => doShare();
+$("flipBtn").onclick = () => { if (state) newPuzzle(state.target, state.start); };
+$("undoBtn").onclick = undo;
+$("resetBtn").onclick = reset;
+$("winNext").onclick = () => { $("overlay").classList.remove("rc-open"); mode = "endless"; newPuzzle(); };
+$("winShare").onclick = () => doShare({ forceCard: true });
+$("chalCopy").onclick = () => { copyText($("chalLink").value); setMsg("ok", "Challenge link copied!"); };
+$("customGo").onclick = () => {
+  const a = $("customA").value, b = $("customB").value;
+  if (a === b) { setMsg("err", "Pick two different films."); return; }
+  $("overlay").classList.remove("rc-open");
+  mode = "endless";
+  newPuzzle(a, b);
+};
+// onboarding
+$("obStart").onclick = () => { $("rc-onboard").classList.add("rc-hidden"); localStorage.setItem("rc_seen_onboard", "1"); newPuzzle(); };
 
 // ---------- Boot ----------
 fillCustom();
 refreshStats();
-newPuzzle();
+updateStreakBox();
+const deep = applyHash();
+const seen = localStorage.getItem("rc_seen_onboard");
+if (deep) {
+  // challenge deep-link: skip onboarding, jump straight into the puzzle
+  $("rc-onboard").classList.add("rc-hidden");
+  mode = "challenge";
+  newPuzzle(deep[0], deep[1]);
+} else if (seen) {
+  $("rc-onboard").classList.add("rc-hidden");
+  newPuzzle();
+} else {
+  // first visit: onboarding overlay is visible by default; game starts after "Start playing"
+}
 </script>
 </body>
 </html>
