@@ -5,8 +5,11 @@ __pycache__/
 node_modules/
 .wrangler/
 
-# Secrets (never commit)
+cloudflared.exe
 cloudflare_token.txt
+qrcode.js
+gif.js
+gif.worker.js
 
 # Optional screenshots
 sample_card.png
