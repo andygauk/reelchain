@@ -1,0 +1,10 @@
+name = "reelchain"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "deploy"
+
+# Analytics KV store. Bind this in Cloudflare Pages → Settings → Functions → KV namespace
+# named "RC_ANALYTICS" (the binding name the functions expect is RC_ANALYTICS).
+# Create the namespace once: `wrangler kv namespace create RC_ANALYTICS`
+[[kv_namespaces]]
+binding = "RC_ANALYTICS"
+id = "REPLACE_WITH_RC_ANALYTICS_ID"
