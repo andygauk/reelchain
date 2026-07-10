@@ -219,7 +219,7 @@
 
   <div class="rc-panel" id="progressPanel" style="margin-top:14px">
     <details>
-      <summary>📈 My progress</summary>
+      <summary>📈 My progress — <a href="#" id="pgDnaLink" style="color:var(--accent2);text-decoration:none">build my DNA card 🧬</a></summary>
       <div class="rc-progress" id="progressBody">
         <span>🎬 Solved: <b id="pgWins">0</b></span>
         <span>🔥 Streak: <b id="pgStreak">0</b> <small>(best <b id="pgBest">0</b>)</small></span>
@@ -260,6 +260,7 @@
         <button class="rc-btn" id="winNext">🎲 Next puzzle</button>
         <button class="rc-btn ghost" id="winShare">📤 Share my result</button>
         <button class="rc-btn reelplay-btn" id="winReelPlay">🎬 Instant ReelPlay</button>
+        <button class="rc-btn ghost" id="winDna">🧬 My ReelChain DNA</button>
       </div>
       <div class="rc-render" id="reelPlayRender"><span class="rc-spin"></span><span id="reelPlayStatus">Rendering your Instant ReelPlay…</span></div>
       <div class="rc-challenge" id="challengeBox" style="display:none">
@@ -279,6 +280,19 @@
       <div class="rc-winbtns">
         <button class="rc-btn ghost" id="rpClose">← Back</button>
         <button class="rc-btn reelplay-btn" id="rpShare">📤 Share / Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ReelChain DNA card preview-before-share -->
+  <div class="rc-overlay" id="dnaOverlay">
+    <div class="rc-modal">
+      <h2>🧬 ReelChain DNA</h2>
+      <p class="rc-sub" style="text-align:center">Your film-taste identity — preview it, then share.</p>
+      <img id="dnaImg" alt="ReelChain DNA card" style="max-width:92vw;max-height:60vh;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#0d0f17;display:block;margin:8px auto;">
+      <div class="rc-winbtns">
+        <button class="rc-btn ghost" id="dnaClose">← Back</button>
+        <button class="rc-btn reelplay-btn" id="dnaShare">📤 Share / Download</button>
       </div>
     </div>
   </div>
@@ -887,6 +901,97 @@ function buildShareCard() {
       if (qr.isDark(r, col)) { x2.fillStyle = "#0d0f17"; x2.fillRect(ox + col*cell, oy + r*cell, Math.ceil(cell), Math.ceil(cell)); }
     }
   } catch (e) { /* QR optional */ }
+  return c.toDataURL("image/png");
+}
+
+// ---------- ReelChain DNA card (Stage 2: identity artifact) ----------
+// Auto-generated taste archetype from the player's favourite connector actor.
+// Flattering + argument-baiting = the line people post unprompted.
+const RC_ARCHETYPES = [
+  // [matcher film keywords in favFilm OR connector actor name, line]
+  { needs: f => /departed|goodfellas|casino|scarface|godfather|gangster|mob/i.test(f || ""), line: "You think in Scorsese." },
+  { needs: f => /pulp fiction|reservoir|kill bill|django|hateful eight/i.test(f || ""), line: "Certified Tarantino-brain." },
+  { needs: (f, a) => /dicaprio|de niro|pesci|packer|pitt|damon/i.test((f||"")+" "+(a||"")), line: "You connect through Hollywood royalty." },
+  { needs: (f, a) => /johansson|lawrence|stone|robbie|blunt|emma/i.test((f||"")+" "+(a||"")), line: "You run on A-list energy." },
+  { needs: (f, a) => /nolan|inception|dark knight|interstellar|tenet/i.test((f||"")+" "+(a||"")), line: "You build mind-bending chains." },
+  { needs: (f, a) => /marvel|avengers|endgame|infinity|mcu/i.test((f||"")+" "+(a||"")), line: "You live for the cinematic universe." },
+  { needs: (f, a) => /a24|hereditary|midsommar|everything everywhere/i.test((f||"")+" "+(a||"")), line: "The A24 Whisperer." },
+  { needs: (f, a) => /fincher|fight club|social network|gone girl/i.test((f||"")+" "+(a||"")), line: "You like your chains dark and precise." },
+  { needs: (f, a) => /spielberg|indiana|jurassic|et|schindler/i.test((f||"")+" "+(a||"")), line: "You grew up on blockbuster magic." },
+  { needs: (f, a) => /wes anderson|grand budapest|royal tenenbaums/i.test((f||"")+" "+(a||"")), line: "Symmetry is your love language." },
+  { needs: (f, a) => /christmas|holiday|love actually|home alone/i.test((f||"")+" "+(a||"")), line: "You keep the cosy classics close." }
+];
+function dnaArchetype(favFilm, favActor) {
+  for (const a of RC_ARCHETYPES) {
+    try { if (a.needs(favFilm || "", favActor || "")) return a.line; } catch (e) {}
+  }
+  return "You build chains no one else sees.";  // graceful default
+}
+
+// Build the DNA card as a PNG data URL (client-side canvas, no server).
+function buildDnaCard(st) {
+  const W = 600, H = 760;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const x = c.getContext("2d");
+  // background
+  x.fillStyle = "#0d0f17"; x.fillRect(0, 0, W, H);
+  // subtle top accent bar
+  const grad = x.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, "#ff4d6d"); grad.addColorStop(1, "#ffb84d");
+  x.fillStyle = grad; x.fillRect(0, 0, W, 6);
+  // header
+  x.fillStyle = "#ff4d6d"; x.font = "800 34px -apple-system, Arial, sans-serif";
+  x.fillText("ReelChain", 30, 62);
+  x.fillStyle = "#8a90a6"; x.font = "16px -apple-system, Arial, sans-serif";
+  x.fillText("My ReelChain DNA", 30, 86);
+  // stat tiles
+  const tile = (tx, ty, big, label, sub) => {
+    x.fillStyle = "#141a2b"; x.fillRect(tx, ty, 250, 120);
+    x.strokeStyle = "#2b3142"; x.lineWidth = 1; x.strokeRect(tx, ty, 250, 120);
+    x.fillStyle = "#ffb84d"; x.font = "800 40px -apple-system, Arial, sans-serif";
+    x.fillText(big, tx + 18, ty + 54);
+    x.fillStyle = "#cdd2e0"; x.font = "600 14px -apple-system, Arial, sans-serif";
+    x.fillText(label, tx + 18, ty + 78);
+    if (sub) { x.fillStyle = "#8a90a6"; x.font = "12px -apple-system, Arial, sans-serif"; x.fillText(sub, tx + 18, ty + 98); }
+  };
+  const avg = st.avgLinks != null ? st.avgLinks.toFixed(1) : "—";
+  tile(30, 120, String(st.streak || 0), "DAY STREAK", "best " + (st.bestStreak || 0));
+  tile(320, 120, String(st.totalWins || 0), "SOLVED", "all-time wins");
+  tile(30, 256, avg, "AVG LINKS", "per solve");
+  tile(320, 256, String((st.favActor && st.favActor.count) || 0), "CONNECTOR USES", "signature actor");
+  // signature connector (favourite actor)
+  x.fillStyle = "#8a90a6"; x.font = "600 13px -apple-system, Arial, sans-serif";
+  x.fillText("🎭 SIGNATURE CONNECTOR", 30, 420);
+  x.fillStyle = "#5b8cff"; x.font = "800 30px -apple-system, Arial, sans-serif";
+  x.fillText(st.favActor ? st.favActor.name : "—", 30, 458);
+  // home film (favourite chain intersection)
+  x.fillStyle = "#8a90a6"; x.font = "600 13px -apple-system, Arial, sans-serif";
+  x.fillText("🎬 HOME FILM", 30, 510);
+  x.fillStyle = "#5b8cff"; x.font = "800 30px -apple-system, Arial, sans-serif";
+  x.fillText(st.favFilm ? st.favFilm.name : "—", 30, 548);
+  // archetype kicker (the viral line)
+  x.fillStyle = "#ffffff"; x.font = "800 24px -apple-system, Arial, sans-serif";
+  const arch = dnaArchetype(st.favFilm && st.favFilm.name, st.favActor && st.favActor.name);
+  // wrap if long
+  if (x.measureText(arch).width > W - 60) x.font = "800 19px -apple-system, Arial, sans-serif";
+  x.fillText(arch, 30, 612);
+  // footer
+  x.fillStyle = "#8a90a6"; x.font = "13px -apple-system, Arial, sans-serif";
+  x.fillText("What's your ReelChain DNA?", 30, 700);
+  const urlText = ORIGIN.replace(/^https?:\/\//, "");
+  x.fillStyle = "#9db8ff"; x.font = "bold 16px -apple-system, Arial, sans-serif";
+  x.fillText(urlText, 30, 724);
+  // QR
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(ORIGIN); qr.make();
+    const mod = qr.getModuleCount(), qsize = 84, ox = W - qsize - 24, oy = H - qsize - 16, cell = qsize / mod;
+    x.fillStyle = "#ffffff"; x.fillRect(ox - 4, oy - 4, qsize + 8, qsize + 8);
+    for (let r = 0; r < mod; r++) for (let col = 0; col < mod; col++) {
+      if (qr.isDark(r, col)) { x.fillStyle = "#0d0f17"; x.fillRect(ox + col*cell, oy + r*cell, Math.ceil(cell), Math.ceil(cell)); }
+    }
+  } catch (e) {}
   return c.toDataURL("image/png");
 }
 
