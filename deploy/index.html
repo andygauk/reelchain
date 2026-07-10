@@ -370,8 +370,8 @@ function applyRoundToRun(steps, optimal, secs, usedSecondTake) {
   earn -= run.hints * 4;                                          // hint cost
   if (usedSecondTake) earn = Math.round(earn * 0.9);              // small assist cost
   earn = Math.max(1, earn);
-  // at-risk stake: disclosed before the round; a perfect/hard round keeps it and
-  // banks it as lifetime Fame; give-up would have lost it (handled in giveUp()).
+  // at-risk stake (DIFF[].risk) is disclosed before each round as a flavour of
+  // tension; completing the round banks Fame. Lifetime Fame is never reduced.
   run.fame += earn;
   saveFame(run.fame);
   lastRound = {
@@ -383,18 +383,6 @@ function applyRoundToRun(steps, optimal, secs, usedSecondTake) {
   renderHof();
   updateHUD();
   return earn;
-}
-
-function giveUp() {
-  const d = DIFF[run.difficulty] || DIFF.easy;
-  // disclose: lose the at-risk stake for this chain (a modest, proportionate amount)
-  // Lifetime Fame is NOT reduced — long-term progress is preserved.
-  const lost = d.risk;
-  run.streak = 0;
-  run.hints = 0;
-  track("round_given_up", { difficulty: run.difficulty, par: state.optimal, moves: state.pathActors.length, fameLost: lost });
-  setMsg("err", "Chain abandoned — you lost " + lost + " at-risk Fame. Your lifetime Fame is safe.");
-  newPuzzle();
 }
 
 function newPuzzle(a, b) {
