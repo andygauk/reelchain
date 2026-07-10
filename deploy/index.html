@@ -110,16 +110,18 @@
   .rc-app .rc-stat .rc-pb{font-size:10px;color:var(--muted);margin-top:1px}
   .rc-app .rc-stat .rc-pb b{color:var(--good)}
 
-  /* ---- Live genome ---- */
-  .rc-app .rc-genome{background:linear-gradient(160deg,#141826,#0e111b);border:1px solid #232838;border-radius:14px;padding:12px 14px;margin-bottom:14px;overflow:hidden}
-  .rc-app .rc-genome .rc-gh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-  .rc-app .rc-genome .rc-gh h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
-  .rc-app .rc-genome .rc-gh .rc-rarity{font-size:12px;font-weight:700;color:var(--accent2)}
-  .rc-app .rc-genome .rc-svgwrap{overflow-x:auto;overflow-y:hidden}
-  .rc-app .rc-genome svg{display:block;height:92px}
-  .rc-app .rc-genome .rc-empty{color:var(--muted);font-size:13px;padding:26px 0;text-align:center}
+  /* ---- Hall of Fame progress ---- */
+  .rc-app .rc-hof{background:linear-gradient(160deg,#141826,#0e111b);border:1px solid #232838;border-radius:14px;padding:12px 14px;margin-bottom:14px;overflow:hidden}
+  .rc-app .rc-hof .rc-hof-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
+  .rc-app .rc-hof .rc-hof-head h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+  .rc-app .rc-hof .rc-hof-head span{font-size:12px;color:var(--muted)}
+  .rc-app .rc-hof .rc-hof-bar{position:relative;height:14px;background:#0e111b;border:1px solid #2b3142;border-radius:8px;overflow:hidden}
+  .rc-app .rc-hof .rc-hof-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#ff4d6d,#ffb84d);transition:width .5s ease}
+  .rc-app .rc-hof .rc-hof-label{position:absolute;right:8px;top:0;line-height:14px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .rc-app .rc-stat.rc-fame .rc-v{color:var(--accent)}
+  .rc-app .rc-stat.rc-hof .rc-v{color:var(--accent2)}
+  .rc-app .rc-stat.rc-hof{border-color:rgba(157,184,255,.4)}
 
-  /* ---- Preview-before-share modal ---- */
   .rc-preview{position:fixed;inset:0;background:rgba(8,10,16,.9);display:none;align-items:center;justify-content:center;z-index:2147483647;padding:20px;
         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
   .rc-preview.rc-open{display:flex}
@@ -133,12 +135,13 @@
 <body>
 <div class="rc-app">
   <h1>Reel<span class="rc-c">Chain</span></h1>
-  <div class="rc-tag">Just one more round. Connect two films, grow your genome.</div>
+  <div class="rc-tag">One more round. Connect two films through shared cast — build your Fame.</div>
 
   <div class="rc-hud" id="hud">
-    <div class="rc-stat rc-round"><div class="rc-k">Round</div><div class="rc-v" id="hudRound">0</div><div class="rc-pb">best run <b id="hudPBRun">0</b></div></div>
-    <div class="rc-stat rc-combo" id="hudComboBox"><div class="rc-k">Combo</div><div class="rc-v" id="hudCombo">1.0×</div><div class="rc-pb" id="hudStreakLbl">warm up</div></div>
-    <div class="rc-stat rc-dna"><div class="rc-k">DNA</div><div class="rc-v" id="hudDNA">0</div><div class="rc-pb">best <b id="hudPBDNA">0</b></div></div>
+    <div class="rc-stat rc-round"><div class="rc-k">Round</div><div class="rc-v" id="hudRound">0</div><div class="rc-pb">this run</div></div>
+    <div class="rc-stat rc-combo" id="hudComboBox"><div class="rc-k">Run streak</div><div class="rc-v" id="hudCombo">0</div><div class="rc-pb" id="hudStreakLbl">warm up</div></div>
+    <div class="rc-stat rc-fame"><div class="rc-k">Fame</div><div class="rc-v" id="hudFame">0</div><div class="rc-pb">lifetime</div></div>
+    <div class="rc-stat rc-hof" id="hudHofBox"><div class="rc-k">Status</div><div class="rc-v" id="hudHof">—</div><div class="rc-pb"><b id="hudNext">0</b> to next</div></div>
   </div>
 
   <div class="rc-toolbar">
@@ -146,18 +149,20 @@
       <button data-d="easy" class="rc-active">Easy</button>
       <button data-d="medium">Medium</button>
       <button data-d="hard">Hard</button>
-      <button data-d="any">Surprise</button>
+      <button data-d="surprise">Surprise</button>
     </div>
     <button class="rc-btn ghost" id="hintBtn">💡 Hint</button>
-    <button class="rc-btn ghost" id="shareBtn">🧬 Share genome</button>
-    <button class="rc-btn ghost" id="endBtn">■ End run</button>
+    <button class="rc-btn ghost" id="avatarBtn">⭐ Avatar</button>
+    <button class="rc-btn ghost" id="secondTakeBtn" style="display:none">↩ Second Take</button>
+    <button class="rc-btn ghost" id="shareBtn">📤 Challenge</button>
+    <button class="rc-btn ghost" id="endBtn">■ End</button>
     <span class="rc-spacer"></span>
     <span class="rc-clock" id="clock">00:00</span>
   </div>
 
-  <div class="rc-genome" id="genome">
-    <div class="rc-gh"><h3>Run genome</h3><span class="rc-rarity" id="rarity"></span></div>
-    <div class="rc-svgwrap"><div class="rc-empty" id="genomeEmpty">Solve a round to grow your first strand.</div><svg id="genomeSvg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  <div class="rc-hof" id="hof">
+    <div class="rc-hof-head"><h3>Hall of Fame</h3><span id="hofLine">Solve a chain to grow your standing.</span></div>
+    <div class="rc-hof-bar"><div class="rc-hof-fill" id="hofFill"></div><div class="rc-hof-label" id="hofPct">0%</div></div>
   </div>
 
   <div class="rc-puzzle">
@@ -233,44 +238,48 @@
       <div class="rc-big" id="winSteps">0</div>
       <div class="rc-sub" id="winSub"></div>
     <div class="rc-chain" id="winChain"></div>
+    <div class="rc-reel" id="winReel"></div>
     <div class="rc-row" style="justify-content:center;margin-top:10px">
       <button class="rc-btn" id="winNext">▶ One more round</button>
-      <button class="rc-btn ghost" id="winShare">🧬 Share genome</button>
+      <button class="rc-btn ghost" id="winShare">📤 Challenge a friend</button>
     </div>
-    <div class="rc-sub" id="winEndHint" style="margin-top:12px;margin-bottom:0">Stop now and you lock in your genome — but the combo resets.</div>
+    <div class="rc-sub" id="winEndHint" style="margin-top:12px;margin-bottom:0"></div>
   </div>
   </div>
 
   <div class="rc-overlay" id="endOverlay">
     <div class="rc-modal">
-      <h2 id="endTitle">Run ended 🧬</h2>
+      <h2 id="endTitle">Run ended 🎬</h2>
       <div class="rc-big" id="endBig">0</div>
       <div class="rc-sub" id="endSub"></div>
-      <div class="rc-chain" id="endGenome" style="justify-content:center;margin:10px 0"></div>
+      <div class="rc-chain" id="endChain" style="justify-content:center;margin:10px 0"></div>
       <div class="rc-row" style="justify-content:center;margin-top:8px">
         <button class="rc-btn" id="endNewRun">▶ Start a new run</button>
-        <button class="rc-btn ghost" id="endShare">🧬 Share genome</button>
+        <button class="rc-btn ghost" id="endShare">📤 Challenge a friend</button>
       </div>
     </div>
   </div>
 
   <div class="rc-preview" id="preview">
     <div class="rc-pv-box">
-      <h2>Your run genome</h2>
+      <h2>Your Instant ReelPlay</h2>
       <div class="rc-pv-sub">Preview before you share — nothing leaves your device until you tap Share.</div>
-      <img id="pvImg" alt="ReelChain genome card">
+      <img id="pvImg" alt="ReelChain ReelPlay">
       <div class="rc-pv-row">
         <button class="rc-btn" id="pvShare">📤 Share</button>
         <button class="rc-btn ghost" id="pvDownload">⬇ Download</button>
+        <button class="rc-btn ghost" id="pvCopy">🔗 Copy link</button>
         <button class="rc-btn ghost" id="pvClose">Close</button>
       </div>
     </div>
   </div>
-</div>
+
 
 <script>
 const GRAPH = {"films": {"The Godfather": ["Marlon Brando", "Al Pacino", "James Caan", "Robert Duvall", "John Cazale", "Diane Keaton"], "Heat": ["Al Pacino", "Robert De Niro", "Val Kilmer", "Jon Voight", "Tom Sizemore"], "Jackie Brown": ["Pam Grier", "Samuel L. Jackson", "Robert De Niro", "Bridget Fonda", "Michael Keaton", "Chris Tucker"], "Pulp Fiction": ["John Travolta", "Samuel L. Jackson", "Uma Thurman", "Bruce Willis", "Tim Roth", "Harvey Keitel"], "Reservoir Dogs": ["Harvey Keitel", "Tim Roth", "Michael Madsen", "Chris Penn", "Steve Buscemi", "Lawrence Tierney"], "Kill Bill: Vol. 1": ["Uma Thurman", "Lucy Liu", "David Carradine", "Daryl Hannah", "Vivica A. Fox"], "Kill Bill: Vol. 2": ["Uma Thurman", "David Carradine", "Michael Madsen", "Daryl Hannah", "Samuel L. Jackson"], "Inglourious Basterds": ["Brad Pitt", "Diane Kruger", "Christoph Waltz", "Eli Roth", "Michael Fassbender"], "Django Unchained": ["Jamie Foxx", "Christoph Waltz", "Leonardo DiCaprio", "Samuel L. Jackson", "Kerry Washington"], "Once Upon a Time in Hollywood": ["Leonardo DiCaprio", "Brad Pitt", "Margot Robbie", "Al Pacino", "Damian Lewis", "Emile Hirsch", "Margaret Qualley", "Tim Roth", "Kurt Russell"], "GoodFellas": ["Robert De Niro", "Ray Liotta", "Joe Pesci", "Lorraine Bracco", "Paul Sorvino"], "Casino": ["Robert De Niro", "Sharon Stone", "Joe Pesci", "James Woods"], "The Departed": ["Leonardo DiCaprio", "Matt Damon", "Jack Nicholson", "Mark Wahlberg", "Martin Sheen", "Alec Baldwin"], "The Wolf of Wall Street": ["Leonardo DiCaprio", "Jonah Hill", "Margot Robbie", "Matthew McConaughey", "Kyle Chandler"], "Taxi Driver": ["Robert De Niro", "Jodie Foster", "Cybill Shepherd", "Harvey Keitel"], "Raging Bull": ["Robert De Niro", "Cathy Moriarty", "Joe Pesci"], "The Avengers": ["Robert Downey Jr.", "Chris Evans", "Scarlett Johansson", "Mark Ruffalo", "Chris Hemsworth", "Jeremy Renner", "Samuel L. Jackson"], "Avengers: Endgame": ["Robert Downey Jr.", "Chris Evans", "Scarlett Johansson", "Mark Ruffalo", "Chris Hemsworth", "Jeremy Renner", "Samuel L. Jackson", "Brie Larson", "Paul Rudd"], "Iron Man": ["Robert Downey Jr.", "Gwyneth Paltrow", "Terrence Howard", "Jeff Bridges", "Samuel L. Jackson"], "Black Panther": ["Chadwick Boseman", "Michael B. Jordan", "Lupita Nyong'o", "Letitia Wright", "Martin Freeman", "Andy Serkis"], "Captain America: The First Avenger": ["Chris Evans", "Hayley Atwell", "Sebastian Stan", "Hugo Weaving", "Samuel L. Jackson"], "Thor": ["Chris Hemsworth", "Natalie Portman", "Tom Hiddleston", "Anthony Hopkins", "Stellan Skarsgard"], "Guardians of the Galaxy": ["Chris Pratt", "Zoe Saldana", "Dave Bautista", "Bradley Cooper", "Vin Diesel", "Karen Gillan"], "Star Wars": ["Mark Hamill", "Harrison Ford", "Carrie Fisher", "Peter Cushing", "Alec Guinness"], "The Empire Strikes Back": ["Mark Hamill", "Harrison Ford", "Carrie Fisher", "Billy Dee Williams"], "Return of the Jedi": ["Mark Hamill", "Harrison Ford", "Carrie Fisher", "Billy Dee Williams", "Ian McDiarmid"], "The Force Awakens": ["Harrison Ford", "Mark Hamill", "Carrie Fisher", "Daisy Ridley", "John Boyega", "Adam Driver"], "The Dark Knight": ["Christian Bale", "Heath Ledger", "Aaron Eckhart", "Michael Caine", "Gary Oldman", "Morgan Freeman"], "The Dark Knight Rises": ["Christian Bale", "Tom Hardy", "Anne Hathaway", "Michael Caine", "Gary Oldman", "Morgan Freeman"], "Batman Begins": ["Christian Bale", "Michael Caine", "Liam Neeson", "Katie Holmes", "Gary Oldman", "Morgan Freeman"], "Inception": ["Leonardo DiCaprio", "Joseph Gordon-Levitt", "Elliot Page", "Tom Hardy", "Ken Watanabe", "Cillian Murphy", "Michael Caine"], "Interstellar": ["Matthew McConaughey", "Anne Hathaway", "Jessica Chastain", "Michael Caine", "Matt Damon"], "Fight Club": ["Brad Pitt", "Edward Norton", "Helena Bonham Carter", "Meat Loaf"], "Se7en": ["Brad Pitt", "Morgan Freeman", "Kevin Spacey", "Gwyneth Paltrow"], "The Social Network": ["Jesse Eisenberg", "Andrew Garfield", "Justin Timberlake", "Armie Hammer"], "Ocean's Eleven": ["George Clooney", "Brad Pitt", "Matt Damon", "Julia Roberts", "Andy Garcia", "Casey Affleck", "Don Cheadle"], "Ocean's Twelve": ["George Clooney", "Brad Pitt", "Matt Damon", "Julia Roberts", "Catherine Zeta-Jones", "Andy Garcia"], "Ocean's Thirteen": ["George Clooney", "Brad Pitt", "Matt Damon", "Al Pacino", "Andy Garcia", "Don Cheadle", "Elliott Gould"], "Forrest Gump": ["Tom Hanks", "Robin Wright", "Gary Sinise", "Sally Field"], "Saving Private Ryan": ["Tom Hanks", "Matt Damon", "Tom Sizemore", "Edward Burns", "Barry Pepper"], "Catch Me If You Can": ["Leonardo DiCaprio", "Tom Hanks", "Christopher Walken", "Amy Adams"], "Toy Story": ["Tom Hanks", "Tim Allen", "Don Rickles", "Jim Varney"], "Toy Story 3": ["Tom Hanks", "Tim Allen", "Michael Keaton", "Ned Beatty"], "Up": ["Ed Asner", "Christopher Plummer", "Jordan Nagai"], "Knives Out": ["Daniel Craig", "Chris Evans", "Ana de Armas", "Jamie Lee Curtis", "Michael Shannon", "Christopher Plummer"], "Glass Onion": ["Daniel Craig", "Edward Norton", "Janelle Monae", "Kathryn Hahn", "Dave Bautista", "Kate Hudson"], "Skyfall": ["Daniel Craig", "Javier Bardem", "Naomie Harris", "Ralph Fiennes", "Judi Dench"], "Casino Royale": ["Daniel Craig", "Eva Green", "Mads Mikkelsen", "Judi Dench"], "Mad Max: Fury Road": ["Tom Hardy", "Charlize Theron", "Nicholas Hoult", "Hugh Keays-Byrne"], "The Matrix": ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss", "Hugo Weaving", "Joe Pantoliano"], "John Wick": ["Keanu Reeves", "Michael Nyqvist", "Alfie Allen", "Willem Dafoe", "Ian McShane"], "The Shawshank Redemption": ["Tim Robbins", "Morgan Freeman", "Bob Gunton", "William Sadler"], "The Green Mile": ["Tom Hanks", "Michael Clarke Duncan", "David Morse", "Bonnie Hunt", "James Cromwell"], "The Fugitive": ["Harrison Ford", "Tommy Lee Jones", "Sela Ward", "Julianne Moore"], "A Few Good Men": ["Tom Cruise", "Jack Nicholson", "Demi Moore", "Kevin Bacon", "Kiefer Sutherland"], "The Silence of the Lambs": ["Jodie Foster", "Anthony Hopkins", "Scott Glenn", "Ted Levine"], "The Usual Suspects": ["Kevin Spacey", "Gabriel Byrne", "Benicio del Toro", "Stephen Baldwin", "Chazz Palminteri"], "Titanic": ["Leonardo DiCaprio", "Kate Winslet", "Billy Zane", "Kathy Bates"], "Avatar": ["Sam Worthington", "Zoe Saldana", "Sigourney Weaver", "Stephen Lang"], "Aliens": ["Sigourney Weaver", "Michael Biehn", "Carrie Henn", "Lance Henriksen"], "Terminator 2: Judgment Day": ["Arnold Schwarzenegger", "Linda Hamilton", "Edward Furlong", "Robert Patrick"], "The Terminator": ["Arnold Schwarzenegger", "Linda Hamilton", "Michael Biehn", "Paul Winfield"], "Tropic Thunder": ["Ben Stiller", "Robert Downey Jr.", "Jack Black", "Tom Cruise", "Matthew McConaughey"], "The Hangover": ["Bradley Cooper", "Ed Helms", "Zach Galifianakis", "Justin Bartha"], "Silver Linings Playbook": ["Bradley Cooper", "Jennifer Lawrence", "Robert De Niro", "Jacki Weaver", "Chris Tucker"], "American Hustle": ["Christian Bale", "Amy Adams", "Bradley Cooper", "Jennifer Lawrence", "Jeremy Renner", "Robert De Niro"], "No Country for Old Men": ["Tommy Lee Jones", "Javier Bardem", "Josh Brolin", "Woody Harrelson"], "Fargo": ["Frances McDormand", "William H. Macy", "Steve Buscemi", "Peter Stormare"], "The Big Lebowski": ["Jeff Bridges", "John Goodman", "Steve Buscemi", "Julianne Moore", "Sam Elliott"], "True Grit": ["Jeff Bridges", "Hailee Steinfeld", "Matt Damon", "Josh Brolin"], "There Will Be Blood": ["Daniel Day-Lewis", "Paul Dano", "Kevin J. O'Connor", "Ciarán Hinds"], "Boogie Nights": ["Mark Wahlberg", "Julianne Moore", "Burt Reynolds", "John C. Reilly", "Heather Graham", "Don Cheadle"], "Magnolia": ["Tom Cruise", "Jason Robards", "Julianne Moore", "Philip Seymour Hoffman", "John C. Reilly"], "Snatch": ["Jason Statham", "Brad Pitt", "Benicio del Toro", "Vinnie Jones", "Alan Ford"], "Lock, Stock and Two Smoking Barrels": ["Jason Statham", "Nick Moran", "Jason Flemyng", "Dexter Fletcher", "Vinnie Jones"], "Sherlock Holmes": ["Robert Downey Jr.", "Jude Law", "Rachel McAdams", "Mark Strong"], "The Hobbit: An Unexpected Journey": ["Ian McKellen", "Martin Freeman", "Richard Armitage", "Andy Serkis"], "The Lord of the Rings: The Fellowship of the Ring": ["Elijah Wood", "Ian McKellen", "Viggo Mortensen", "Sean Astin", "Orlando Bloom", "Cate Blanchett", "Andy Serkis"], "The Lord of the Rings: The Return of the King": ["Elijah Wood", "Ian McKellen", "Viggo Mortensen", "Sean Astin", "Orlando Bloom", "Cate Blanchett", "Andy Serkis"], "Jurassic Park": ["Sam Neill", "Laura Dern", "Jeff Goldblum", "Richard Attenborough"], "Jurassic World": ["Chris Pratt", "Bryce Dallas Howard", "Vincent D'Onofrio", "BD Wong"], "Indiana Jones and the Raiders of the Lost Ark": ["Harrison Ford", "Karen Allen", "Paul Freeman", "John Rhys-Davies"], "E.T. the Extra-Terrestrial": ["Henry Thomas", "Drew Barrymore", "Dee Wallace", "Peter Coyote"], "Jaws": ["Roy Scheider", "Robert Shaw", "Richard Dreyfuss", "Lorraine Gary"], "Lincoln": ["Daniel Day-Lewis", "Sally Field", "David Strathairn", "Tommy Lee Jones"], "Bridge of Spies": ["Tom Hanks", "Mark Rylance", "Amy Ryan", "Alan Alda"], "The Truman Show": ["Jim Carrey", "Ed Harris", "Laura Linney", "Noah Emmerich"], "Eternal Sunshine of the Spotless Mind": ["Jim Carrey", "Kate Winslet", "Kirsten Dunst", "Mark Ruffalo"], "Step Brothers": ["Will Ferrell", "John C. Reilly", "Richard Jenkins", "Mary Steenburgen"], "Anchorman: The Legend of Ron Burgundy": ["Will Ferrell", "Christina Applegate", "Paul Rudd", "Steve Carell", "David Koechner"], "Talladega Nights: The Ballad of Ricky Bobby": ["Will Ferrell", "John C. Reilly", "Sacha Baron Cohen", "Gary Cole"], "Dodgeball: A True Underdog Story": ["Vince Vaughn", "Ben Stiller", "Christine Taylor", "Rip Torn"], "Due Date": ["Robert Downey Jr.", "Zach Galifianakis", "Michelle Monaghan", "Juliette Lewis"], "American Sniper": ["Bradley Cooper", "Sienna Miller", "Kyle Gallner", "Luke Grimes"], "Sully": ["Tom Hanks", "Aaron Eckhart", "Laura Linney", "Mike O'Malley"], "No Time to Die": ["Daniel Craig", "Ana de Armas", "Rami Malek", "Léa Seydoux", "Ralph Fiennes"], "Spectre": ["Daniel Craig", "Christoph Waltz", "Léa Seydoux", "Ralph Fiennes", "Monica Bellucci"], "Rogue One": ["Felicity Jones", "Diego Luna", "Ben Mendelsohn", "Forest Whitaker", "Mads Mikkelsen"], "The Last Jedi": ["Mark Hamill", "Carrie Fisher", "Daisy Ridley", "John Boyega", "Adam Driver", "Oscar Isaac"], "The Matrix Reloaded": ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss", "Hugo Weaving", "Jada Pinkett Smith"], "John Wick: Chapter 2": ["Keanu Reeves", "Riccardo Scamarcio", "Ian McShane", "Laurence Fishburne", "Common"], "L.A. Confidential": ["Kevin Spacey", "Russell Crowe", "Guy Pearce", "Kim Basinger", "James Cromwell"], "The Rock": ["Sean Connery", "Nicolas Cage", "Ed Harris", "John Spencer"], "Con Air": ["Nicolas Cage", "John Cusack", "John Malkovich", "Steve Buscemi"], "Misery": ["James Caan", "Kathy Bates", "Richard Farnsworth", "Frances Sternhagen"], "Stand by Me": ["Wil Wheaton", "River Phoenix", "Corey Feldman", "Jerry O'Connell", "Kiefer Sutherland"], "True Romance": ["Christian Slater", "Patricia Arquette", "Dennis Hopper", "Val Kilmer", "Samuel L. Jackson", "Brad Pitt", "Christopher Walken"], "Natural Born Killers": ["Woody Harrelson", "Juliette Lewis", "Robert Downey Jr.", "Tom Sizemore", "Tommy Lee Jones"], "Cape Fear": ["Robert De Niro", "Nick Nolte", "Jessica Lange", "Joe Pesci"], "Mean Streets": ["Robert De Niro", "Harvey Keitel", "David Proval", "Amy Robinson"], "Hugo": ["Ben Kingsley", "Sacha Baron Cohen", "Asa Butterfield", "Chloe Grace Moretz"], "Shutter Island": ["Leonardo DiCaprio", "Mark Ruffalo", "Ben Kingsley", "Michelle Williams", "Max von Sydow"], "The Terminal": ["Tom Hanks", "Catherine Zeta-Jones", "Stanley Tucci", "Chi McBride"], "Cast Away": ["Tom Hanks", "Helen Hunt", "Nick Searcy", "Chris Noth"], "WALL-E": ["Ben Burtt", "Elissa Knight", "Jeff Garlin", "Fred Willard"], "Finding Nemo": ["Albert Brooks", "Ellen DeGeneres", "Alexander Gould", "Willem Dafoe"], "The Big Short": ["Christian Bale", "Steve Carell", "Ryan Gosling", "Brad Pitt", "Hamish Linklater"], "Gone Girl": ["Ben Affleck", "Rosamund Pike", "Neil Patrick Harris", "Tyler Perry"]}, "actors": {"Marlon Brando": ["The Godfather"], "Al Pacino": ["The Godfather", "Heat", "Once Upon a Time in Hollywood", "Ocean's Thirteen"], "James Caan": ["The Godfather", "Misery"], "Robert Duvall": ["The Godfather"], "John Cazale": ["The Godfather"], "Diane Keaton": ["The Godfather"], "Robert De Niro": ["Heat", "Jackie Brown", "GoodFellas", "Casino", "Taxi Driver", "Raging Bull", "Silver Linings Playbook", "American Hustle", "Cape Fear", "Mean Streets"], "Val Kilmer": ["Heat", "True Romance"], "Jon Voight": ["Heat"], "Tom Sizemore": ["Heat", "Saving Private Ryan", "Natural Born Killers"], "Pam Grier": ["Jackie Brown"], "Samuel L. Jackson": ["Jackie Brown", "Pulp Fiction", "Kill Bill: Vol. 2", "Django Unchained", "The Avengers", "Avengers: Endgame", "Iron Man", "Captain America: The First Avenger", "True Romance"], "Bridget Fonda": ["Jackie Brown"], "Michael Keaton": ["Jackie Brown", "Toy Story 3"], "Chris Tucker": ["Jackie Brown", "Silver Linings Playbook"], "John Travolta": ["Pulp Fiction"], "Uma Thurman": ["Pulp Fiction", "Kill Bill: Vol. 1", "Kill Bill: Vol. 2"], "Bruce Willis": ["Pulp Fiction"], "Tim Roth": ["Pulp Fiction", "Reservoir Dogs", "Once Upon a Time in Hollywood"], "Harvey Keitel": ["Pulp Fiction", "Reservoir Dogs", "Taxi Driver", "Mean Streets"], "Michael Madsen": ["Reservoir Dogs", "Kill Bill: Vol. 2"], "Chris Penn": ["Reservoir Dogs"], "Steve Buscemi": ["Reservoir Dogs", "Fargo", "The Big Lebowski", "Con Air"], "Lawrence Tierney": ["Reservoir Dogs"], "Lucy Liu": ["Kill Bill: Vol. 1"], "David Carradine": ["Kill Bill: Vol. 1", "Kill Bill: Vol. 2"], "Daryl Hannah": ["Kill Bill: Vol. 1", "Kill Bill: Vol. 2"], "Vivica A. Fox": ["Kill Bill: Vol. 1"], "Brad Pitt": ["Inglourious Basterds", "Once Upon a Time in Hollywood", "Fight Club", "Se7en", "Ocean's Eleven", "Ocean's Twelve", "Ocean's Thirteen", "Snatch", "True Romance", "The Big Short"], "Diane Kruger": ["Inglourious Basterds"], "Christoph Waltz": ["Inglourious Basterds", "Django Unchained", "Spectre"], "Eli Roth": ["Inglourious Basterds"], "Michael Fassbender": ["Inglourious Basterds"], "Jamie Foxx": ["Django Unchained"], "Leonardo DiCaprio": ["Django Unchained", "Once Upon a Time in Hollywood", "The Departed", "The Wolf of Wall Street", "Inception", "Catch Me If You Can", "Titanic", "Shutter Island"], "Kerry Washington": ["Django Unchained"], "Margot Robbie": ["Once Upon a Time in Hollywood", "The Wolf of Wall Street"], "Damian Lewis": ["Once Upon a Time in Hollywood"], "Emile Hirsch": ["Once Upon a Time in Hollywood"], "Margaret Qualley": ["Once Upon a Time in Hollywood"], "Kurt Russell": ["Once Upon a Time in Hollywood"], "Ray Liotta": ["GoodFellas"], "Joe Pesci": ["GoodFellas", "Casino", "Raging Bull", "Cape Fear"], "Lorraine Bracco": ["GoodFellas"], "Paul Sorvino": ["GoodFellas"], "Sharon Stone": ["Casino"], "James Woods": ["Casino"], "Matt Damon": ["The Departed", "Interstellar", "Ocean's Eleven", "Ocean's Twelve", "Ocean's Thirteen", "Saving Private Ryan", "True Grit"], "Jack Nicholson": ["The Departed", "A Few Good Men"], "Mark Wahlberg": ["The Departed", "Boogie Nights"], "Martin Sheen": ["The Departed"], "Alec Baldwin": ["The Departed"], "Jonah Hill": ["The Wolf of Wall Street"], "Matthew McConaughey": ["The Wolf of Wall Street", "Interstellar", "Tropic Thunder"], "Kyle Chandler": ["The Wolf of Wall Street"], "Jodie Foster": ["Taxi Driver", "The Silence of the Lambs"], "Cybill Shepherd": ["Taxi Driver"], "Cathy Moriarty": ["Raging Bull"], "Robert Downey Jr.": ["The Avengers", "Avengers: Endgame", "Iron Man", "Tropic Thunder", "Sherlock Holmes", "Due Date", "Natural Born Killers"], "Chris Evans": ["The Avengers", "Avengers: Endgame", "Captain America: The First Avenger", "Knives Out"], "Scarlett Johansson": ["The Avengers", "Avengers: Endgame"], "Mark Ruffalo": ["The Avengers", "Avengers: Endgame", "Eternal Sunshine of the Spotless Mind", "Shutter Island"], "Chris Hemsworth": ["The Avengers", "Avengers: Endgame", "Thor"], "Jeremy Renner": ["The Avengers", "Avengers: Endgame", "American Hustle"], "Brie Larson": ["Avengers: Endgame"], "Paul Rudd": ["Avengers: Endgame", "Anchorman: The Legend of Ron Burgundy"], "Gwyneth Paltrow": ["Iron Man", "Se7en"], "Terrence Howard": ["Iron Man"], "Jeff Bridges": ["Iron Man", "The Big Lebowski", "True Grit"], "Chadwick Boseman": ["Black Panther"], "Michael B. Jordan": ["Black Panther"], "Lupita Nyong'o": ["Black Panther"], "Letitia Wright": ["Black Panther"], "Martin Freeman": ["Black Panther", "The Hobbit: An Unexpected Journey"], "Andy Serkis": ["Black Panther", "The Hobbit: An Unexpected Journey", "The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Hayley Atwell": ["Captain America: The First Avenger"], "Sebastian Stan": ["Captain America: The First Avenger"], "Hugo Weaving": ["Captain America: The First Avenger", "The Matrix", "The Matrix Reloaded"], "Natalie Portman": ["Thor"], "Tom Hiddleston": ["Thor"], "Anthony Hopkins": ["Thor", "The Silence of the Lambs"], "Stellan Skarsgard": ["Thor"], "Chris Pratt": ["Guardians of the Galaxy", "Jurassic World"], "Zoe Saldana": ["Guardians of the Galaxy", "Avatar"], "Dave Bautista": ["Guardians of the Galaxy", "Glass Onion"], "Bradley Cooper": ["Guardians of the Galaxy", "The Hangover", "Silver Linings Playbook", "American Hustle", "American Sniper"], "Vin Diesel": ["Guardians of the Galaxy"], "Karen Gillan": ["Guardians of the Galaxy"], "Mark Hamill": ["Star Wars", "The Empire Strikes Back", "Return of the Jedi", "The Force Awakens", "The Last Jedi"], "Harrison Ford": ["Star Wars", "The Empire Strikes Back", "Return of the Jedi", "The Force Awakens", "The Fugitive", "Indiana Jones and the Raiders of the Lost Ark"], "Carrie Fisher": ["Star Wars", "The Empire Strikes Back", "Return of the Jedi", "The Force Awakens", "The Last Jedi"], "Peter Cushing": ["Star Wars"], "Alec Guinness": ["Star Wars"], "Billy Dee Williams": ["The Empire Strikes Back", "Return of the Jedi"], "Ian McDiarmid": ["Return of the Jedi"], "Daisy Ridley": ["The Force Awakens", "The Last Jedi"], "John Boyega": ["The Force Awakens", "The Last Jedi"], "Adam Driver": ["The Force Awakens", "The Last Jedi"], "Christian Bale": ["The Dark Knight", "The Dark Knight Rises", "Batman Begins", "American Hustle", "The Big Short"], "Heath Ledger": ["The Dark Knight"], "Aaron Eckhart": ["The Dark Knight", "Sully"], "Michael Caine": ["The Dark Knight", "The Dark Knight Rises", "Batman Begins", "Inception", "Interstellar"], "Gary Oldman": ["The Dark Knight", "The Dark Knight Rises", "Batman Begins"], "Morgan Freeman": ["The Dark Knight", "The Dark Knight Rises", "Batman Begins", "Se7en", "The Shawshank Redemption"], "Tom Hardy": ["The Dark Knight Rises", "Inception", "Mad Max: Fury Road"], "Anne Hathaway": ["The Dark Knight Rises", "Interstellar"], "Liam Neeson": ["Batman Begins"], "Katie Holmes": ["Batman Begins"], "Joseph Gordon-Levitt": ["Inception"], "Elliot Page": ["Inception"], "Ken Watanabe": ["Inception"], "Cillian Murphy": ["Inception"], "Jessica Chastain": ["Interstellar"], "Edward Norton": ["Fight Club", "Glass Onion"], "Helena Bonham Carter": ["Fight Club"], "Meat Loaf": ["Fight Club"], "Kevin Spacey": ["Se7en", "The Usual Suspects", "L.A. Confidential"], "Jesse Eisenberg": ["The Social Network"], "Andrew Garfield": ["The Social Network"], "Justin Timberlake": ["The Social Network"], "Armie Hammer": ["The Social Network"], "George Clooney": ["Ocean's Eleven", "Ocean's Twelve", "Ocean's Thirteen"], "Julia Roberts": ["Ocean's Eleven", "Ocean's Twelve"], "Andy Garcia": ["Ocean's Eleven", "Ocean's Twelve", "Ocean's Thirteen"], "Casey Affleck": ["Ocean's Eleven"], "Don Cheadle": ["Ocean's Eleven", "Ocean's Thirteen", "Boogie Nights"], "Catherine Zeta-Jones": ["Ocean's Twelve", "The Terminal"], "Elliott Gould": ["Ocean's Thirteen"], "Tom Hanks": ["Forrest Gump", "Saving Private Ryan", "Catch Me If You Can", "Toy Story", "Toy Story 3", "The Green Mile", "Bridge of Spies", "Sully", "The Terminal", "Cast Away"], "Robin Wright": ["Forrest Gump"], "Gary Sinise": ["Forrest Gump"], "Sally Field": ["Forrest Gump", "Lincoln"], "Edward Burns": ["Saving Private Ryan"], "Barry Pepper": ["Saving Private Ryan"], "Christopher Walken": ["Catch Me If You Can", "True Romance"], "Amy Adams": ["Catch Me If You Can", "American Hustle"], "Tim Allen": ["Toy Story", "Toy Story 3"], "Don Rickles": ["Toy Story"], "Jim Varney": ["Toy Story"], "Ned Beatty": ["Toy Story 3"], "Ed Asner": ["Up"], "Christopher Plummer": ["Up", "Knives Out"], "Jordan Nagai": ["Up"], "Daniel Craig": ["Knives Out", "Glass Onion", "Skyfall", "Casino Royale", "No Time to Die", "Spectre"], "Ana de Armas": ["Knives Out", "No Time to Die"], "Jamie Lee Curtis": ["Knives Out"], "Michael Shannon": ["Knives Out"], "Janelle Monae": ["Glass Onion"], "Kathryn Hahn": ["Glass Onion"], "Kate Hudson": ["Glass Onion"], "Javier Bardem": ["Skyfall", "No Country for Old Men"], "Naomie Harris": ["Skyfall"], "Ralph Fiennes": ["Skyfall", "No Time to Die", "Spectre"], "Judi Dench": ["Skyfall", "Casino Royale"], "Eva Green": ["Casino Royale"], "Mads Mikkelsen": ["Casino Royale", "Rogue One"], "Charlize Theron": ["Mad Max: Fury Road"], "Nicholas Hoult": ["Mad Max: Fury Road"], "Hugh Keays-Byrne": ["Mad Max: Fury Road"], "Keanu Reeves": ["The Matrix", "John Wick", "The Matrix Reloaded", "John Wick: Chapter 2"], "Laurence Fishburne": ["The Matrix", "The Matrix Reloaded", "John Wick: Chapter 2"], "Carrie-Anne Moss": ["The Matrix", "The Matrix Reloaded"], "Joe Pantoliano": ["The Matrix"], "Michael Nyqvist": ["John Wick"], "Alfie Allen": ["John Wick"], "Willem Dafoe": ["John Wick", "Finding Nemo"], "Ian McShane": ["John Wick", "John Wick: Chapter 2"], "Tim Robbins": ["The Shawshank Redemption"], "Bob Gunton": ["The Shawshank Redemption"], "William Sadler": ["The Shawshank Redemption"], "Michael Clarke Duncan": ["The Green Mile"], "David Morse": ["The Green Mile"], "Bonnie Hunt": ["The Green Mile"], "James Cromwell": ["The Green Mile", "L.A. Confidential"], "Tommy Lee Jones": ["The Fugitive", "No Country for Old Men", "Lincoln", "Natural Born Killers"], "Sela Ward": ["The Fugitive"], "Julianne Moore": ["The Fugitive", "The Big Lebowski", "Boogie Nights", "Magnolia"], "Tom Cruise": ["A Few Good Men", "Tropic Thunder", "Magnolia"], "Demi Moore": ["A Few Good Men"], "Kevin Bacon": ["A Few Good Men"], "Kiefer Sutherland": ["A Few Good Men", "Stand by Me"], "Scott Glenn": ["The Silence of the Lambs"], "Ted Levine": ["The Silence of the Lambs"], "Gabriel Byrne": ["The Usual Suspects"], "Benicio del Toro": ["The Usual Suspects", "Snatch"], "Stephen Baldwin": ["The Usual Suspects"], "Chazz Palminteri": ["The Usual Suspects"], "Kate Winslet": ["Titanic", "Eternal Sunshine of the Spotless Mind"], "Billy Zane": ["Titanic"], "Kathy Bates": ["Titanic", "Misery"], "Sam Worthington": ["Avatar"], "Sigourney Weaver": ["Avatar", "Aliens"], "Stephen Lang": ["Avatar"], "Michael Biehn": ["Aliens", "The Terminator"], "Carrie Henn": ["Aliens"], "Lance Henriksen": ["Aliens"], "Arnold Schwarzenegger": ["Terminator 2: Judgment Day", "The Terminator"], "Linda Hamilton": ["Terminator 2: Judgment Day", "The Terminator"], "Edward Furlong": ["Terminator 2: Judgment Day"], "Robert Patrick": ["Terminator 2: Judgment Day"], "Paul Winfield": ["The Terminator"], "Ben Stiller": ["Tropic Thunder", "Dodgeball: A True Underdog Story"], "Jack Black": ["Tropic Thunder"], "Ed Helms": ["The Hangover"], "Zach Galifianakis": ["The Hangover", "Due Date"], "Justin Bartha": ["The Hangover"], "Jennifer Lawrence": ["Silver Linings Playbook", "American Hustle"], "Jacki Weaver": ["Silver Linings Playbook"], "Josh Brolin": ["No Country for Old Men", "True Grit"], "Woody Harrelson": ["No Country for Old Men", "Natural Born Killers"], "Frances McDormand": ["Fargo"], "William H. Macy": ["Fargo"], "Peter Stormare": ["Fargo"], "John Goodman": ["The Big Lebowski"], "Sam Elliott": ["The Big Lebowski"], "Hailee Steinfeld": ["True Grit"], "Daniel Day-Lewis": ["There Will Be Blood", "Lincoln"], "Paul Dano": ["There Will Be Blood"], "Kevin J. O'Connor": ["There Will Be Blood"], "Ciarán Hinds": ["There Will Be Blood"], "Burt Reynolds": ["Boogie Nights"], "John C. Reilly": ["Boogie Nights", "Magnolia", "Step Brothers", "Talladega Nights: The Ballad of Ricky Bobby"], "Heather Graham": ["Boogie Nights"], "Jason Robards": ["Magnolia"], "Philip Seymour Hoffman": ["Magnolia"], "Jason Statham": ["Snatch", "Lock, Stock and Two Smoking Barrels"], "Vinnie Jones": ["Snatch", "Lock, Stock and Two Smoking Barrels"], "Alan Ford": ["Snatch"], "Nick Moran": ["Lock, Stock and Two Smoking Barrels"], "Jason Flemyng": ["Lock, Stock and Two Smoking Barrels"], "Dexter Fletcher": ["Lock, Stock and Two Smoking Barrels"], "Jude Law": ["Sherlock Holmes"], "Rachel McAdams": ["Sherlock Holmes"], "Mark Strong": ["Sherlock Holmes"], "Ian McKellen": ["The Hobbit: An Unexpected Journey", "The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Richard Armitage": ["The Hobbit: An Unexpected Journey"], "Elijah Wood": ["The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Viggo Mortensen": ["The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Sean Astin": ["The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Orlando Bloom": ["The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Cate Blanchett": ["The Lord of the Rings: The Fellowship of the Ring", "The Lord of the Rings: The Return of the King"], "Sam Neill": ["Jurassic Park"], "Laura Dern": ["Jurassic Park"], "Jeff Goldblum": ["Jurassic Park"], "Richard Attenborough": ["Jurassic Park"], "Bryce Dallas Howard": ["Jurassic World"], "Vincent D'Onofrio": ["Jurassic World"], "BD Wong": ["Jurassic World"], "Karen Allen": ["Indiana Jones and the Raiders of the Lost Ark"], "Paul Freeman": ["Indiana Jones and the Raiders of the Lost Ark"], "John Rhys-Davies": ["Indiana Jones and the Raiders of the Lost Ark"], "Henry Thomas": ["E.T. the Extra-Terrestrial"], "Drew Barrymore": ["E.T. the Extra-Terrestrial"], "Dee Wallace": ["E.T. the Extra-Terrestrial"], "Peter Coyote": ["E.T. the Extra-Terrestrial"], "Roy Scheider": ["Jaws"], "Robert Shaw": ["Jaws"], "Richard Dreyfuss": ["Jaws"], "Lorraine Gary": ["Jaws"], "David Strathairn": ["Lincoln"], "Mark Rylance": ["Bridge of Spies"], "Amy Ryan": ["Bridge of Spies"], "Alan Alda": ["Bridge of Spies"], "Jim Carrey": ["The Truman Show", "Eternal Sunshine of the Spotless Mind"], "Ed Harris": ["The Truman Show", "The Rock"], "Laura Linney": ["The Truman Show", "Sully"], "Noah Emmerich": ["The Truman Show"], "Kirsten Dunst": ["Eternal Sunshine of the Spotless Mind"], "Will Ferrell": ["Step Brothers", "Anchorman: The Legend of Ron Burgundy", "Talladega Nights: The Ballad of Ricky Bobby"], "Richard Jenkins": ["Step Brothers"], "Mary Steenburgen": ["Step Brothers"], "Christina Applegate": ["Anchorman: The Legend of Ron Burgundy"], "Steve Carell": ["Anchorman: The Legend of Ron Burgundy", "The Big Short"], "David Koechner": ["Anchorman: The Legend of Ron Burgundy"], "Sacha Baron Cohen": ["Talladega Nights: The Ballad of Ricky Bobby", "Hugo"], "Gary Cole": ["Talladega Nights: The Ballad of Ricky Bobby"], "Vince Vaughn": ["Dodgeball: A True Underdog Story"], "Christine Taylor": ["Dodgeball: A True Underdog Story"], "Rip Torn": ["Dodgeball: A True Underdog Story"], "Michelle Monaghan": ["Due Date"], "Juliette Lewis": ["Due Date", "Natural Born Killers"], "Sienna Miller": ["American Sniper"], "Kyle Gallner": ["American Sniper"], "Luke Grimes": ["American Sniper"], "Mike O'Malley": ["Sully"], "Rami Malek": ["No Time to Die"], "Léa Seydoux": ["No Time to Die", "Spectre"], "Monica Bellucci": ["Spectre"], "Felicity Jones": ["Rogue One"], "Diego Luna": ["Rogue One"], "Ben Mendelsohn": ["Rogue One"], "Forest Whitaker": ["Rogue One"], "Oscar Isaac": ["The Last Jedi"], "Jada Pinkett Smith": ["The Matrix Reloaded"], "Riccardo Scamarcio": ["John Wick: Chapter 2"], "Common": ["John Wick: Chapter 2"], "Russell Crowe": ["L.A. Confidential"], "Guy Pearce": ["L.A. Confidential"], "Kim Basinger": ["L.A. Confidential"], "Sean Connery": ["The Rock"], "Nicolas Cage": ["The Rock", "Con Air"], "John Spencer": ["The Rock"], "John Cusack": ["Con Air"], "John Malkovich": ["Con Air"], "Richard Farnsworth": ["Misery"], "Frances Sternhagen": ["Misery"], "Wil Wheaton": ["Stand by Me"], "River Phoenix": ["Stand by Me"], "Corey Feldman": ["Stand by Me"], "Jerry O'Connell": ["Stand by Me"], "Christian Slater": ["True Romance"], "Patricia Arquette": ["True Romance"], "Dennis Hopper": ["True Romance"], "Nick Nolte": ["Cape Fear"], "Jessica Lange": ["Cape Fear"], "David Proval": ["Mean Streets"], "Amy Robinson": ["Mean Streets"], "Ben Kingsley": ["Hugo", "Shutter Island"], "Asa Butterfield": ["Hugo"], "Chloe Grace Moretz": ["Hugo"], "Michelle Williams": ["Shutter Island"], "Max von Sydow": ["Shutter Island"], "Stanley Tucci": ["The Terminal"], "Chi McBride": ["The Terminal"], "Helen Hunt": ["Cast Away"], "Nick Searcy": ["Cast Away"], "Chris Noth": ["Cast Away"], "Ben Burtt": ["WALL-E"], "Elissa Knight": ["WALL-E"], "Jeff Garlin": ["WALL-E"], "Fred Willard": ["WALL-E"], "Albert Brooks": ["Finding Nemo"], "Ellen DeGeneres": ["Finding Nemo"], "Alexander Gould": ["Finding Nemo"], "Ryan Gosling": ["The Big Short"], "Hamish Linklater": ["The Big Short"], "Ben Affleck": ["Gone Girl"], "Rosamund Pike": ["Gone Girl"], "Neil Patrick Harris": ["Gone Girl"], "Tyler Perry": ["Gone Girl"]}};
 const FILMS = GRAPH.films;
+const DATASET_VERSION = "v3.0";
+const APP_VERSION = "v3.0.0";
 const ACTORS = {};
 for (const f in FILMS) for (const a of FILMS[f]) (ACTORS[a] = ACTORS[a] || []).push(f);
 
@@ -311,59 +320,81 @@ let difficulty = "easy";
 let timer = null, startTs = 0, elapsed = 0;
 
 // ---------- Run (the "one more round" spine) ----------
-// A run is a session of back-to-back rounds. Each solved round adds a "strand"
-// to a live genome and feeds a combo multiplier. Ending the run locks the genome
-// in and resets the combo — that felt loss is what drives "just one more round".
+// A run is a session of back-to-back rounds. Each solved round earns Fame and
+// advances the persistent Hall of Fame status. Lifetime Fame is secured; a
+// smaller "at-risk" stake rides each round and is lost only on give-up.
 let run = null;
+const HOF = [
+  { name: "Supporting Player", min: 0 },
+  { name: "Breakthrough Star", min: 80 },
+  { name: "Leading Role",      min: 200 },
+  { name: "A-Lister",          min: 400 },
+  { name: "Screen Legend",     min: 700 },
+  { name: "Hollywood Royalty", min: 1100 },
+];
+const DIFF = {
+  easy:     { earn: 12, risk: 0,  parBand: "easy" },
+  medium:   { earn: 28, risk: 12, parBand: "medium" },
+  hard:     { earn: 55, risk: 25, parBand: "hard" },
+  surprise: { earn: 40, risk: 20, parBand: "surprise" },
+};
+
+function loadFame() { return +(localStorage.getItem("rc_fame") || 0); }
+function saveFame(v) { localStorage.setItem("rc_fame", v); }
+
+function hofIndex(fame) {
+  let idx = 0;
+  for (let i = 0; i < HOF.length; i++) if (fame >= HOF[i].min) idx = i;
+  return idx;
+}
+function hofStatus(fame) { const i = hofIndex(fame); return { i, name: HOF[i].name, next: HOF[i + 1] || null }; }
+
+let lastRound = null; // last completed round details (for result screen + share)
 
 function newRun() {
-  run = { rounds: 0, dna: 0, combo: 1, streak: 0, best: 0, strands: [] };
-  renderGenome();
+  run = { rounds: 0, streak: 0, atRisk: 0, hints: 0, fame: loadFame() };
+  renderHof();
   updateHUD();
 }
 
-// deterministic per-strand signature so the genome is legible ("that's how I played")
-function makeStrand(steps, optimal, secs) {
-  const over = Math.max(0, steps - optimal);
-  const perfect = over === 0;
-  const fast = secs > 0 && secs < 20;
-  // hue derived from the round shape; perfect rounds skew warm/gold, sloppy skew cool
-  const hue = perfect ? 42 : (over === 1 ? 12 : 205 + Math.min(over, 4) * 12);
-  return {
-    steps, optimal, over, perfect, fast, secs,
-    hue,
-    sat: perfect ? 85 : 60,
-    amp: 10 + Math.min(steps, 8) * 3,       // taller wave = longer chain
-    speed: fast ? 1.6 : 1,
-  };
-}
-
-// combo grows with consecutive perfect rounds, decays a touch on sloppy ones
-function applyRoundToRun(strand) {
+// resolve difficulty reward/risk, factoring difficulty + efficiency + streak
+function applyRoundToRun(steps, optimal, secs, usedSecondTake) {
   run.rounds += 1;
-  if (strand.perfect) { run.streak += 1; run.combo = Math.min(5, +(run.combo + 0.5).toFixed(1)); }
-  else { run.streak = 0; run.combo = Math.max(1, +(run.combo - 0.5).toFixed(1)); }
-  // DNA points: base for solving + efficiency + speed, all times combo
-  let base = 10 + Math.max(0, 6 - strand.over) * 3 + (strand.fast ? 6 : 0);
-  const gain = Math.round(base * run.combo);
-  run.dna += gain;
-  strand.gain = gain;
-  run.strands.push(strand);
-  // personal bests
-  const pbRun = +(localStorage.getItem("rc_pb_run") || 0);
-  const pbDNA = +(localStorage.getItem("rc_pb_dna") || 0);
-  if (run.rounds > pbRun) localStorage.setItem("rc_pb_run", run.rounds);
-  if (run.dna > pbDNA) localStorage.setItem("rc_pb_dna", run.dna);
-  return gain;
+  if (steps === optimal) run.streak += 1; else run.streak = 0;
+  const d = DIFF[run.difficulty] || DIFF.easy;
+  const perfect = steps === optimal;
+  let earn = d.earn;
+  if (perfect) earn = Math.round(earn * 1.3);
+  earn += Math.max(0, 6 - Math.max(0, steps - optimal)) * 2;      // efficiency
+  earn += Math.min(run.streak, 5) * 3;                            // streak reward
+  earn -= run.hints * 4;                                          // hint cost
+  if (usedSecondTake) earn = Math.round(earn * 0.9);              // small assist cost
+  earn = Math.max(1, earn);
+  // at-risk stake: disclosed before the round; a perfect/hard round keeps it and
+  // banks it as lifetime Fame; give-up would have lost it (handled in giveUp()).
+  run.fame += earn;
+  saveFame(run.fame);
+  lastRound = {
+    steps, optimal, perfect, secs: Math.round(secs),
+    earn, streak: run.streak, difficulty: run.difficulty,
+    start: state.start, target: state.target, pathFilms: state.pathFilms.slice(), pathActors: state.pathActors.slice(),
+    avatar: run.avatar,
+  };
+  renderHof();
+  updateHUD();
+  return earn;
 }
 
-function rarityLabel() {
-  const n = run.rounds;
-  if (n >= 20) return "🧬 LEGENDARY GENOME";
-  if (n >= 12) return "🧬 Rare genome";
-  if (n >= 7) return "🧬 Uncommon genome";
-  if (n >= 3) return "🧬 Common genome";
-  return n > 0 ? "🧬 Nascent" : "";
+function giveUp() {
+  const d = DIFF[run.difficulty] || DIFF.easy;
+  // disclose: lose the at-risk stake for this chain (a modest, proportionate amount)
+  // Lifetime Fame is NOT reduced — long-term progress is preserved.
+  const lost = d.risk;
+  run.streak = 0;
+  run.hints = 0;
+  track("round_given_up", { difficulty: run.difficulty, par: state.optimal, moves: state.pathActors.length, fameLost: lost });
+  setMsg("err", "Chain abandoned — you lost " + lost + " at-risk Fame. Your lifetime Fame is safe.");
+  newPuzzle();
 }
 
 function newPuzzle(a, b) {
@@ -372,6 +403,7 @@ function newPuzzle(a, b) {
     a = r[0]; b = r[1];
   }
   const opt = bfs(a, b);
+  if (run) { run.difficulty = difficulty; run.hints = 0; run.usedSecondTake = false; run.atRisk = (DIFF[difficulty] || DIFF.easy).risk; }
   state = {
     start: a, target: b,
     current: a,
@@ -382,7 +414,12 @@ function newPuzzle(a, b) {
   $("startName").textContent = a;
   $("targetName").textContent = b;
   $("msg").innerHTML = "";
+  // disclose the round's reward + at-risk stake before play begins (T1.2)
+  const d = DIFF[difficulty] || DIFF.easy;
+  const riskNote = d.risk > 0 ? (" · give up loses <b>" + d.risk + "</b> at-risk Fame") : "";
+  setMsg("info", "Earn up to <b>+" + Math.round(d.earn * 1.3 + 10) + " Fame</b>" + riskNote);
   hideActorPanel();
+  $("secondTakeBtn").style.display = (run && run.avatar) ? "inline-block" : "none";
   render();
   startTimer();
 }
@@ -445,66 +482,43 @@ function updateModeBar() {
   const bar = $("modeBar");
   if (!bar) return;
   if (run && run.rounds > 0) {
-    bar.innerHTML = "∞ Endless run — round <b>" + (run.rounds + 1) + "</b>. Keep the combo alive.";
+    bar.innerHTML = "∞ Keep the run alive — round <b>" + (run.rounds + 1) + "</b>. Build your Fame.";
   } else {
-    bar.innerHTML = "∞ Endless run — solve rounds back to back to grow your genome.";
+    bar.innerHTML = "∞ Connect two films through shared cast. Build your Fame.";
   }
 }
 
 function updateHUD() {
   if (!run) return;
+  const st = hofStatus(run.fame);
   $("hudRound").textContent = run.rounds;
-  $("hudCombo").textContent = run.combo.toFixed(1) + "×";
-  $("hudDNA").textContent = run.dna;
-  $("hudPBRun").textContent = localStorage.getItem("rc_pb_run") || 0;
-  $("hudPBDNA").textContent = localStorage.getItem("rc_pb_dna") || 0;
+  $("hudCombo").textContent = run.streak;
+  $("hudFame").textContent = run.fame;
+  $("hudHof").textContent = st.name;
+  const need = st.next ? (st.next.min - run.fame) : 0;
+  $("hudNext").textContent = st.next ? need : "MAX";
   const box = $("hudComboBox");
   if (run.streak >= 3) { box.classList.add("rc-hot"); $("hudStreakLbl").innerHTML = "🔥 " + run.streak + " perfect"; }
   else { box.classList.remove("rc-hot"); $("hudStreakLbl").textContent = run.streak > 0 ? run.streak + " streak" : "warm up"; }
 }
 
-// Draws the live genome as a double-helix of strands; grows each round.
-function renderGenome() {
-  const svg = $("genomeSvg"), empty = $("genomeEmpty"), rar = $("rarity");
-  if (!run || run.strands.length === 0) {
-    svg.innerHTML = ""; svg.removeAttribute("width");
-    empty.style.display = "block"; rar.textContent = "";
-    return;
+// Compact Hall of Fame progress — current status, Fame total, progress to next status.
+// Never a finite horizontal ladder; always shows the next attainable step.
+function renderHof() {
+  if (!run) return;
+  const st = hofStatus(run.fame);
+  const base = HOF[st.i].min;
+  const top = st.next ? st.next.min : HOF[HOF.length - 1].min;
+  const span = st.next ? (top - base) : 1;
+  const pct = st.next ? Math.min(100, Math.round((run.fame - base) / span * 100)) : 100;
+  $("hofFill").style.width = pct + "%";
+  $("hofPct").textContent = pct + "%";
+  if (st.next) {
+    const need = st.next.min - run.fame;
+    $("hofLine").textContent = st.name + " · " + run.fame + " Fame · " + need + " to " + st.next.name;
+  } else {
+    $("hofLine").textContent = st.name + " · " + run.fame + " Fame · top of the ladder";
   }
-  empty.style.display = "none";
-  rar.textContent = rarityLabel();
-  const step = 30, padX = 16, H = 92, midY = H / 2;
-  const W = padX * 2 + run.strands.length * step;
-  svg.setAttribute("width", W);
-  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-  const NS = "http://www.w3.org/2000/svg";
-  let parts = "";
-  // backbone (two sine strands)
-  const pts = (phase) => {
-    let d = "";
-    for (let i = 0; i <= run.strands.length; i++) {
-      const s = run.strands[Math.min(i, run.strands.length - 1)];
-      const x = padX + i * step;
-      const y = midY + Math.sin(i * 0.9 + phase) * (s ? s.amp : 12);
-      d += (i === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1) + " ";
-    }
-    return d;
-  };
-  parts += '<path d="' + pts(0) + '" fill="none" stroke="#3a4160" stroke-width="2" opacity="0.5"/>';
-  parts += '<path d="' + pts(Math.PI) + '" fill="none" stroke="#3a4160" stroke-width="2" opacity="0.5"/>';
-  // rungs + nodes per strand
-  run.strands.forEach((s, i) => {
-    const x = padX + i * step;
-    const y1 = midY + Math.sin(i * 0.9) * s.amp;
-    const y2 = midY + Math.sin(i * 0.9 + Math.PI) * s.amp;
-    const col = "hsl(" + s.hue + "," + s.sat + "%,60%)";
-    parts += '<line x1="' + x + '" y1="' + y1.toFixed(1) + '" x2="' + x + '" y2="' + y2.toFixed(1) + '" stroke="' + col + '" stroke-width="2" opacity="0.7"/>';
-    const r = s.perfect ? 6 : 4;
-    parts += '<circle cx="' + x + '" cy="' + y1.toFixed(1) + '" r="' + r + '" fill="' + col + '"/>';
-    parts += '<circle cx="' + x + '" cy="' + y2.toFixed(1) + '" r="' + (r - 1) + '" fill="' + col + '" opacity="0.85"/>';
-    if (s.fast) parts += '<circle cx="' + x + '" cy="' + y1.toFixed(1) + '" r="' + (r + 3) + '" fill="none" stroke="' + col + '" stroke-width="1" opacity="0.6"/>';
-  });
-  svg.innerHTML = parts;
 }
 
 function mkNode(type, name) {
@@ -614,19 +628,30 @@ function win() {
   const perfect = (steps === optimal);
   const secs = Math.round(elapsed / 1000);
 
-  const strand = makeStrand(steps, optimal, secs);
-  const gain = applyRoundToRun(strand);
-  renderGenome();
+  const gain = applyRoundToRun(steps, optimal, secs, run.usedSecondTake);
   updateHUD();
 
-  $("winTitle").textContent = perfect ? "Perfect round! 🎯" : "Round solved! 🎉";
-  $("winSteps").textContent = "+" + gain + " DNA";
-  let sub = perfect ? "Fewest possible" : ("Best was " + optimal + " (" + (steps - optimal) + " over)");
-  sub += "  ·  combo " + run.combo.toFixed(1) + "×";
+  track("round_completed", {
+    difficulty: run.difficulty, par: optimal, moves: steps, timeMs: elapsed,
+    perfect, fameEarned: gain, fameTotal: run.fame, hofLevel: hofStatus(run.fame).name,
+  });
+  // the resulting screen generates an Instant ReelPlay (T1.5)
+  queueReelPlay();
+
+  const st = hofStatus(run.fame);
+  const justLeveled = (st.i > (lastRound ? hofIndex((run.fame - gain)) : 0));
+  $("winTitle").textContent = perfect ? "PERFECT CHAIN 🎯" : "CHAIN COMPLETE 🎉";
+  $("winSteps").textContent = "+" + gain + " Fame";
+  let sub;
+  if (perfect) sub = steps + " moves — par " + optimal + " (fewest possible)";
+  else sub = steps + " moves — perfect is " + optimal + " (+" + (steps - optimal) + " over par)";
+  const need = st.next ? (st.next.min - run.fame) : 0;
+  if (justLeveled && st.next) sub += "  ·  🏆 You reached " + st.name + "!";
+  else if (st.next) sub += "  ·  " + need + " Fame to " + st.next.name;
   if (run.streak >= 2) sub += "  ·  🔥 " + run.streak + " perfect in a row";
-  sub += "  ·  round " + run.rounds + " of this run";
   $("winSub").textContent = sub;
 
+  // (1) chain outcome + (2) animated route recap
   const wc = $("winChain"); wc.innerHTML = "";
   state.pathFilms.forEach((f, i) => {
     wc.appendChild(mkNode("film", f));
@@ -636,39 +661,37 @@ function win() {
       wc.appendChild(arrow());
     }
   });
+  // (3) Fame +(4) HoF progress (already reflected in HUD); (5) next-round choices live in buttons.
+  $("winEndHint").textContent = need > 0
+    ? "One more " + run.difficulty + " round could push you toward " + st.next.name + "."
+    : "You're at the top of the Hall of Fame — keep building your legend.";
 
-  $("winEndHint").textContent = run.rounds >= 3
-    ? "Stop now and you lock in a " + rarityLabel().replace("🧬 ", "").toLowerCase() + " — but the combo resets."
-    : "Stop now and you lock in your genome — but the combo resets.";
-
-  // best time (per round) is still fun to track
   let best = +(localStorage.getItem("rc_best") || 0);
   if (!best || elapsed < best) { best = elapsed; localStorage.setItem("rc_best", best); }
   refreshStats();
   updateModeBar();
+  track("hall_of_fame_progress_viewed", { hofLevel: st.name, fame: run.fame });
   $("overlay").classList.add("rc-open");
 }
 
-// ---------- End run (the felt loss) ----------
+// ---------- End run (lock in lifetime Fame) ----------
 function endRun() {
-  if (!run || run.rounds === 0) { setMsg("info", "Solve at least one round to build a genome."); return; }
+  if (!run || run.rounds === 0) { setMsg("info", "Solve at least one round to build your Fame."); return; }
   $("overlay").classList.remove("rc-open");
-  // count completed runs
   let runs = +(localStorage.getItem("rc_won") || 0) + 1;
   localStorage.setItem("rc_won", runs);
   refreshStats();
-  const pbRun = +(localStorage.getItem("rc_pb_run") || 0);
-  const pbDNA = +(localStorage.getItem("rc_pb_dna") || 0);
-  $("endTitle").textContent = rarityLabel() + " locked in";
-  $("endBig").textContent = run.dna + " DNA";
-  let sub = run.rounds + (run.rounds === 1 ? " round" : " rounds") + " · peak combo hit along the way";
-  const beatRun = run.rounds >= pbRun, beatDNA = run.dna >= pbDNA;
-  if (beatRun || beatDNA) sub += "  ·  🏆 new personal best!";
-  else sub += "  ·  best run " + pbRun + " rounds / " + pbDNA + " DNA";
+  const st = hofStatus(run.fame);
+  const pbFame = +(localStorage.getItem("rc_pb_fame") || 0);
+  $("endTitle").textContent = st.name + " locked in";
+  $("endBig").textContent = run.fame + " Fame";
+  let sub = run.rounds + (run.rounds === 1 ? " round" : " rounds") + " · Hall of Fame: " + st.name;
+  sub += (run.fame >= pbFame) ? "  ·  🏆 new Fame best!" : "  ·  best " + pbFame + " Fame";
   $("endSub").textContent = sub;
-  // render final genome inline
-  const eg = $("endGenome"); eg.innerHTML = "";
-  eg.appendChild($("genomeSvg").cloneNode(true));
+  const eg = $("endChain"); eg.innerHTML = "";
+  eg.appendChild(mkNode("film", state.start));
+  eg.appendChild(arrow());
+  eg.appendChild(mkNode("film", state.target));
   $("endOverlay").classList.add("rc-open");
 }
 
@@ -705,27 +728,96 @@ function fillCustom() {
   if (filmKeys.length > 1) b.selectedIndex = 1;
 }
 
+// ---------- Instrumentation (T1.7) ----------
+// Lightweight client-side event queue; beacon to /api/event if present, else no-op.
+let EVENTS = [];
+function track(event, props) {
+  const p = Object.assign({
+    anonId: anonId(), sessionId: sessionId(),
+    pairId: state ? [state.start, state.target].sort().join("|") : "",
+    difficulty: run ? run.difficulty : "",
+    datasetVersion: DATASET_VERSION,
+    appVersion: APP_VERSION,
+    ts: Date.now(),
+  }, props || {});
+  EVENTS.push({ event, props: p });
+  try {
+    if (navigator.sendBeacon) navigator.sendBeacon("/api/event", JSON.stringify({ event, props: p }));
+  } catch (e) {}
+}
+function anonId() { let a = localStorage.getItem("rc_anon"); if (!a) { a = "u" + Math.random().toString(36).slice(2, 10); localStorage.setItem("rc_anon", a); } return a; }
+function sessionId() { if (!window.__sid) window.__sid = "s" + Math.random().toString(36).slice(2, 10); return window.__sid; }
+
+// ---------- Avatar + Second Take (T1.4) ----------
+// Actor to a simple unicode token; pick a favourite actor as your Star Avatar.
+const AVATAR_TOKENS = { "Al Pacino": "🎭", "Robert De Niro": "🎩", "Brad Pitt": "🔥", "Leonardo DiCaprio": "🌟", "Tom Hanks": "🤝", "Samuel L. Jackson": "🗣", "Morgan Freeman": "🦉", "Christian Bale": "🦇", "Keanu Reeves": "🕶", "Daniel Craig": "🍸", "Jennifer Lawrence": "💫", "Margot Robbie": "💖", "Matt Damon": "🎲", "Chris Evans": "🛡", "Scarlett Johansson": "🐝" };
+function avatarToken(name) { return AVATAR_TOKENS[name] || "⭐"; }
+function pickAvatar() {
+  const choices = Object.keys(AVATAR_TOKENS).filter(a => FILMS[state.start] && FILMS[state.target] && (FILMS[state.start].includes(a) || FILMS[state.target].includes(a) || true));
+  const a = prompt("Pick your Star Avatar (type an actor name):\n" + Object.keys(AVATAR_TOKENS).join(", "), run.avatar || "");
+  if (a && AVATAR_TOKENS[a]) { run.avatar = a; setMsg("ok", avatarToken(a) + " " + a + " is your Star Avatar."); $("secondTakeBtn").style.display = "inline-block"; }
+  else if (a) setMsg("err", "Unknown actor — try one from the list.");
+}
+function secondTake() {
+  if (!run || !run.avatar) { setMsg("info", "Pick a Star Avatar first (⭐ Avatar)."); return; }
+  if (run.usedSecondTake) { setMsg("info", "Second Take already used this run."); return; }
+  if (state.pathActors.length === 0) { setMsg("info", "Nothing to rewind yet."); return; }
+  run.usedSecondTake = true;
+  undo();
+  track("avatar_assist_used", { avatar: run.avatar });
+  setMsg("ok", avatarToken(run.avatar) + " Second Take — one move rewound, Perfect Chain bonus kept.");
+  $("secondTakeBtn").style.display = "none";
+}
+
+// ---------- Instant ReelPlay (T1.5) — animated GIF (defined at end of script) ----------
+let reelPlayBlob = null;
+
+// ---------- Challenge links (T1.6) — URL-encoded, spoiler-safe, no backend ----------
+// Encode start/target/par/difficulty/sender counts/dataset version into the URL.
+function b64e(s) { return btoa(unescape(encodeURIComponent(s))); }
+function b64d(s) { return decodeURIComponent(escape(atob(s))); }
+function makeChallenge() {
+  if (!lastRound) { setMsg("info", "Solve a round first to create a challenge."); return null; }
+  const c = {
+    s: lastRound.start, t: lastRound.target, p: lastRound.optimal,
+    d: lastRound.difficulty, m: lastRound.steps, time: lastRound.secs,
+    h: run.hints, a: run.avatar || "", v: DATASET_VERSION,
+  };
+  const enc = b64e(JSON.stringify(c)).replace(/=+$/, "");
+  const url = location.origin + location.pathname + "#ch=" + enc;
+  return { url, c };
+}
+function parseChallenge() {
+  const m = location.hash.match(/ch=([^&]+)/);
+  if (!m) return null;
+  try { return JSON.parse(b64d(m[1])); } catch (e) { return null; }
+}
+
 // ---------- Wire up ----------
 document.querySelectorAll("#diff button").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll("#diff button").forEach(x => x.classList.remove("rc-active"));
     btn.classList.add("rc-active");
     difficulty = btn.dataset.d;
+    track("next_round_selected", { difficulty });
     newPuzzle();
   };
 });
-$("hintBtn").onclick = hint;
+$("hintBtn").onclick = () => { run.hints++; track("hint_used", { difficulty: run.difficulty }); hint(); };
 $("revealBtn").onclick = reveal;
 $("shareBtn").onclick = shareCard;
+$("avatarBtn").onclick = pickAvatar;
+$("secondTakeBtn").onclick = secondTake;
 $("endBtn").onclick = endRun;
 $("flipBtn").onclick = () => { if (state) newPuzzle(state.target, state.start); };
-$("undoBtn").onclick = undo;
-$("winNext").onclick = () => { $("overlay").classList.remove("rc-open"); newPuzzle(); };
+$("undoBtn").onclick = () => { track("undo_used", {}); undo(); };
+$("winNext").onclick = () => { track("next_round_selected", { from: "win" }); $("overlay").classList.remove("rc-open"); newPuzzle(); };
 $("winShare").onclick = shareCard;
 $("endNewRun").onclick = () => { $("endOverlay").classList.remove("rc-open"); newRun(); newPuzzle(); };
 $("endShare").onclick = shareCard;
 $("pvShare").onclick = doShare;
 $("pvDownload").onclick = doDownload;
+$("pvCopy").onclick = copyChallengeLink;
 $("pvClose").onclick = closePreview;
 $("customGo").onclick = () => {
   const a = $("customA").value, b = $("customB").value;
@@ -734,14 +826,13 @@ $("customGo").onclick = () => {
   newPuzzle(a, b);
 };
 
-// ---------- Genome share card (client-side canvas, no server) ----------
+// ---------- Challenge share card (spoiler-safe, client-side canvas) ----------
 function buildShareCard() {
-  if (!run || run.strands.length === 0) return null;
-  const W = 600, H = 560;
+  if (!lastRound) return null;
+  const W = 600, H = 420;
   const c = document.createElement("canvas");
   c.width = W; c.height = H;
   const g = c.getContext("2d");
-  // background
   g.fillStyle = "#0d0f17"; g.fillRect(0, 0, W, H);
   const grad = g.createRadialGradient(W/2, 40, 40, W/2, 40, 500);
   grad.addColorStop(0, "rgba(40,50,80,0.5)"); grad.addColorStop(1, "rgba(13,15,23,0)");
@@ -750,105 +841,174 @@ function buildShareCard() {
   g.fillStyle = "#ff4d6d"; g.font = "800 34px -apple-system, Arial, sans-serif";
   g.fillText("ReelChain", 30, 52);
   g.fillStyle = "#8a90a6"; g.font = "15px -apple-system, Arial, sans-serif";
-  g.fillText("My run genome", 30, 76);
-  g.fillStyle = "#ffb84d"; g.font = "700 15px -apple-system, Arial, sans-serif";
-  g.fillText(rarityLabel().replace("🧬 ", ""), 30, 100);
-
-  // big stats row
-  const stats = [["ROUNDS", run.rounds], ["DNA", run.dna], ["PEAK COMBO", maxCombo() + "×"]];
-  const colW = (W - 60) / 3;
-  stats.forEach((s, i) => {
-    const x = 30 + i * colW;
-    g.fillStyle = "#8a90a6"; g.font = "600 11px -apple-system, Arial, sans-serif";
-    g.fillText(s[0], x, 138);
-    g.fillStyle = "#e8eaf2"; g.font = "800 34px -apple-system, Arial, sans-serif";
-    g.fillText(String(s[1]), x, 174);
-  });
-
-  // genome helix
-  const gy = 300, amp0 = 70, padX = 40;
-  const n = run.strands.length;
-  const step = Math.min(46, (W - padX * 2) / Math.max(1, n));
-  const xAt = i => padX + i * step + (W - padX * 2 - (n - 1) * step) / 2;
-  const yAt = (i, phase) => gy + Math.sin(i * 0.9 + phase) * Math.min(amp0, run.strands[Math.min(i, n-1)].amp * 3.2);
-  // backbones
-  g.strokeStyle = "#3a4160"; g.lineWidth = 2.5;
-  [0, Math.PI].forEach(phase => {
-    g.beginPath();
-    for (let i = 0; i < n; i++) { const x = xAt(i), y = yAt(i, phase); i ? g.lineTo(x, y) : g.moveTo(x, y); }
-    g.stroke();
-  });
-  // rungs + nodes
-  run.strands.forEach((s, i) => {
-    const x = xAt(i), y1 = yAt(i, 0), y2 = yAt(i, Math.PI);
-    const col = "hsl(" + s.hue + "," + s.sat + "%,62%)";
-    g.strokeStyle = col; g.lineWidth = 2; g.globalAlpha = 0.8;
-    g.beginPath(); g.moveTo(x, y1); g.lineTo(x, y2); g.stroke();
-    g.globalAlpha = 1; g.fillStyle = col;
-    const r = s.perfect ? 8 : 5;
-    g.beginPath(); g.arc(x, y1, r, 0, 7); g.fill();
-    g.beginPath(); g.arc(x, y2, r - 1, 0, 7); g.fill();
-    if (s.fast) { g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y1, r + 4, 0, 7); g.stroke(); }
-  });
-  // legend
-  g.fillStyle = "#8a90a6"; g.font = "13px -apple-system, Arial, sans-serif";
-  g.fillText("● gold = perfect round   ○ ring = fast   height = chain length", 30, 470);
+  g.fillText(lastRound.perfect ? "PERFECT CHAIN" : "CHAIN COMPLETE", 30, 76);
+  // start + target (spoiler-safe: show the pair, conceal the middle)
+  g.fillStyle = "#e8eaf2"; g.font = "800 24px -apple-system, Arial, sans-serif";
+  g.fillText(lastRound.start, 30, 140);
+  g.fillStyle = "#9db8ff"; g.font = "16px -apple-system, Arial, sans-serif";
+  g.fillText("↓ connect through shared cast ↓", 30, 170);
+  g.fillStyle = "#e8eaf2"; g.font = "800 24px -apple-system, Arial, sans-serif";
+  g.fillText(lastRound.target, 30, 210);
+  // par + sender result (counts only — route hidden)
+  g.fillStyle = "#ffb84d"; g.font = "700 18px -apple-system, Arial, sans-serif";
+  g.fillText("Perfect is " + lastRound.optimal + " moves · I did it in " + lastRound.steps, 30, 270);
+  if (run.avatar) { g.fillText(avatarToken(run.avatar) + " " + run.avatar, 30, 298); }
+  // challenge copy
+  g.fillStyle = "#e8eaf2"; g.font = "600 16px -apple-system, Arial, sans-serif";
+  const copy = lastRound.perfect
+    ? "Can you match my Perfect Chain — without hints?"
+    : "Can you find the Perfect Chain? (I needed " + lastRound.steps + ")";
+  g.fillText(copy.slice(0, 52), 30, 340);
   // footer
   g.fillStyle = "#8a90a6"; g.font = "13px -apple-system, Arial, sans-serif";
-  g.fillText("Just one more round — connect two films through shared cast", 30, H - 34);
-  g.fillStyle = "#ff4d6d"; g.font = "700 15px -apple-system, Arial, sans-serif";
-  g.fillText("reelchain.app", 30, H - 14);
+  g.fillText("reelchain.app — connect two films through shared cast", 30, H - 20);
   return c.toDataURL("image/png");
-}
-
-function maxCombo() {
-  // reconstruct peak combo from perfect streaks (combo caps at 5)
-  let combo = 1, peak = 1;
-  run.strands.forEach(s => {
-    combo = s.perfect ? Math.min(5, combo + 0.5) : Math.max(1, combo - 0.5);
-    if (combo > peak) peak = combo;
-  });
-  return peak.toFixed(1);
 }
 
 // ---------- Preview-before-share flow ----------
 let pvDataUrl = null;
 function shareCard() {
   const dataUrl = buildShareCard();
-  if (!dataUrl) { setMsg("info", "Solve a round first — your genome needs at least one strand."); return; }
+  if (!dataUrl) { setMsg("info", "Solve a round first to create a challenge."); return; }
   pvDataUrl = dataUrl;
   $("pvImg").src = dataUrl;
+  const ch = makeChallenge();
+  if (ch) { $("pvImg").alt = ch.url; track("challenge_created", { difficulty: lastRound.difficulty, par: lastRound.optimal, moves: lastRound.steps }); }
   $("overlay").classList.remove("rc-open");
   $("endOverlay").classList.remove("rc-open");
   $("preview").classList.add("rc-open");
 }
-
+function copyChallengeLink() {
+  const ch = makeChallenge();
+  if (!ch) return;
+  if (navigator.clipboard) navigator.clipboard.writeText(ch.url).then(() => setMsg("ok", "Challenge link copied."), () => setMsg("err", "Copy failed."));
+  else setMsg("info", ch.url);
+  track("share_completed", { channel: "copy_link" });
+}
 function closePreview() { $("preview").classList.remove("rc-open"); }
 
 async function doShare() {
   if (!pvDataUrl) return;
+  const ch = makeChallenge();
   const blob = await (await fetch(pvDataUrl)).blob();
-  const file = new File([blob], "reelchain_genome.png", { type: "image/png" });
+  const file = new File([blob], "reelchain-challenge.png", { type: "image/png" });
   try {
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: "ReelChain", text: "My ReelChain run genome — just one more round." });
+      await navigator.share({ files: [file], title: "ReelChain", text: "Can you find the Perfect Chain?" });
+      track("share_completed", { channel: "native_share" });
       return;
     }
   } catch (e) { /* user cancelled */ return; }
-  doDownload(); // fallback when Web Share unavailable
+  doDownload();
+  track("share_completed", { channel: "download" });
 }
-
 function doDownload() {
   if (!pvDataUrl) return;
   const a = document.createElement("a");
-  a.href = pvDataUrl; a.download = "reelchain_genome.png"; a.click();
+  a.href = pvDataUrl; a.download = "reelchain-challenge.png"; a.click();
 }
 
 // ---------- Boot ----------
 fillCustom();
 refreshStats();
 newRun();
-newPuzzle();
+// If arriving on a challenge link, lock the pair and show the challenge.
+const ch = parseChallenge();
+if (ch && ch.s && ch.t) {
+  difficulty = ch.d || "easy";
+  document.querySelectorAll("#diff button").forEach(x => x.classList.toggle("rc-active", x.dataset.d === difficulty));
+  newPuzzle(ch.s, ch.t);
+  const hintTxt = ch.p ? (" Challenger's Perfect Chain is " + ch.p + " moves.") : "";
+  setMsg("info", "📨 Challenge! Connect " + ch.s + " → " + ch.t + "." + hintTxt + " Solve it without revealing the route.");
+  track("challenge_landed", { difficulty: ch.d, par: ch.p });
+} else {
+  newPuzzle();
+}
+
+// ---------- Instant ReelPlay (T1.5) — animated GIF of the chain route ----------
+// Spoiler-safe: it animates the start → target route the player JUST solved
+// (their own route, not a challenge's hidden route). Perfect = gold pulse,
+// over-par = amber "beat my chain?" treatment.
+function buildReelPlay(frames) {
+  return new Promise((resolve) => {
+    if (typeof GIF === "undefined") { resolve(null); return; }
+    const w = 480, h = 270, delay = 90;
+    const gif = new GIF({ workers: 2, quality: 10, width: w, height: h, workerScript: "gif.worker.js" });
+    frames.forEach(f => gif.addFrame(f, { delay, copy: true }));
+    gif.on("finished", (blob) => resolve(blob));
+    gif.render();
+  });
+}
+async function queueReelPlay() {
+  // build frames: start film, then each actor→film step, then finish flourish
+  try {
+    const w = 480, h = 270;
+    const perfect = lastRound.perfect;
+    const accent = perfect ? "#ffd24d" : "#ffb84d";
+    const frames = [];
+    const films = lastRound.pathFilms, acts = lastRound.pathActors;
+    const total = films.length;
+    // frame 0: title card
+    frames.push(drawReelFrame(w, h, { films, acts, upto: 0, accent, perfect, label: perfect ? "PERFECT CHAIN" : "CHAIN COMPLETE" }));
+    // animate building the chain
+    for (let i = 1; i <= total - 1; i++) {
+      frames.push(drawReelFrame(w, h, { films, acts, upto: i, accent, perfect, label: null }));
+    }
+    // final flourish frame (held longer)
+    const last = drawReelFrame(w, h, { films, acts, upto: total - 1, accent, perfect, label: (perfect ? "⭐ Perfect · " : "") + lastRound.steps + " moves · par " + lastRound.optimal });
+    frames.push(last); frames.push(last);
+    const blob = await buildReelPlay(frames);
+    if (!blob) return;
+    reelPlayBlob = blob;
+    const url = URL.createObjectURL(blob);
+    const reel = document.getElementById("winReel");
+    reel.innerHTML = "";
+    const img = document.createElement("img");
+    img.src = url; img.alt = "Instant ReelPlay"; img.style.maxWidth = "100%"; img.style.borderRadius = "12px";
+    reel.appendChild(img);
+    const dl = document.createElement("button");
+    dl.className = "rc-btn ghost"; dl.textContent = "⬇ Save ReelPlay";
+    dl.onclick = () => { const a = document.createElement("a"); a.href = url; a.download = "reelchain-reelplay.gif"; a.click(); track("instant_reelplay_downloaded", { perfect }); };
+    reel.appendChild(dl);
+    track("instant_reelplay_generated", { perfect, moves: lastRound.steps, par: lastRound.optimal });
+  } catch (e) { /* GIF unavailable — result screen still works without it */ }
+}
+function drawReelFrame(w, h, o) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d");
+  g.fillStyle = "#0d0f17"; g.fillRect(0, 0, w, h);
+  const grad = g.createRadialGradient(w/2, 30, 30, w/2, 30, 500);
+  grad.addColorStop(0, "rgba(40,50,80,0.5)"); grad.addColorStop(1, "rgba(13,15,23,0)");
+  g.fillStyle = grad; g.fillRect(0, 0, w, h);
+  g.fillStyle = "#ff4d6d"; g.font = "800 22px -apple-system,Arial,sans-serif"; g.fillText("ReelChain", 18, 32);
+  if (o.label) { g.fillStyle = (o.perfect ? "#ffd24d" : "#ffb84d"); g.font = "700 15px -apple-system,Arial,sans-serif"; g.fillText(o.label, 18, 54); }
+  // chain nodes
+  const n = o.films.length;
+  const x0 = 40, x1 = w - 40, midY = h - 70;
+  const stepX = (x1 - x0) / Math.max(1, n - 1);
+  o.films.forEach((f, i) => {
+    if (i > o.upto) return;
+    const x = x0 + i * stepX;
+    g.fillStyle = "#e8eaf2"; g.beginPath(); g.arc(x, midY, 7, 0, 7); g.fill();
+    if (i < o.films.length - 1 && i < o.upto) {
+      const x2 = x0 + (i + 1) * stepX;
+      g.strokeStyle = o.accent; g.lineWidth = 3; g.beginPath(); g.moveTo(x, midY); g.lineTo(x2, midY); g.stroke();
+      // actor label
+      const a = o.acts[i];
+      g.fillStyle = o.accent; g.font = "11px -apple-system,Arial,sans-serif";
+      g.fillText(a.length > 16 ? a.slice(0,15)+"…" : a, (x + x2)/2 - 30, midY - 12);
+    }
+    g.fillStyle = "#8a90a6"; g.font = "11px -apple-system,Arial,sans-serif";
+    const label = f.length > 18 ? f.slice(0,17)+"…" : f;
+    g.fillText(label, x - 30, midY + 22);
+  });
+  // progress text
+  g.fillStyle = "#8a90a6"; g.font = "12px -apple-system,Arial,sans-serif";
+  g.fillText((o.upto + 1) + " / " + n + " films", 18, h - 16);
+  return c;
+}
+
 </script>
+<script src="gif.js"></script>
 </body>
 </html>
