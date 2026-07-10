@@ -62,6 +62,13 @@
   .rc-app .rc-node.rc-actor{background:rgba(255,184,77,.15);color:#ffce8a;border:1px solid rgba(255,184,77,.4)}
   .rc-app .rc-node.rc-current{outline:2px solid var(--accent);box-shadow:0 0 0 3px rgba(255,77,109,.25)}
   .rc-app .rc-arrow{color:var(--muted);font-size:15px}
+  .rc-app .rc-compare{background:rgba(255,184,77,.08);border:1px solid rgba(255,184,77,.35);border-radius:12px;padding:12px 14px;margin:10px 0;text-align:left}
+  .rc-app .rc-compare .rc-cmp-head{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--accent2);font-weight:700;margin-bottom:8px}
+  .rc-app .rc-compare .rc-cmp-row{display:flex;justify-content:space-between;font-size:14px;margin:3px 0;color:var(--text)}
+  .rc-app .rc-compare .rc-cmp-row b{color:#fff}
+  .rc-app .rc-compare .rc-cmp-foot{margin-top:8px;font-size:13px;font-weight:600;padding-top:8px;border-top:1px solid rgba(255,184,77,.25)}
+  .rc-app .rc-compare .rc-cmp-foot.rc-win{color:var(--good)}
+  .rc-app .rc-compare .rc-cmp-foot.rc-lose{color:var(--bad)}
 
   .rc-app .rc-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:4px}
   .rc-app .rc-meta b{color:var(--accent2)}
@@ -237,6 +244,7 @@
       <h2 id="winTitle">Round solved! 🎉</h2>
       <div class="rc-big" id="winSteps">0</div>
       <div class="rc-sub" id="winSub"></div>
+      <div class="rc-compare" id="winCompare" style="display:none"></div>
     <div class="rc-chain" id="winChain"></div>
     <div class="rc-reel" id="winReel"></div>
     <div class="rc-row" style="justify-content:center;margin-top:10px">
@@ -350,6 +358,7 @@ function hofIndex(fame) {
 function hofStatus(fame) { const i = hofIndex(fame); return { i, name: HOF[i].name, next: HOF[i + 1] || null }; }
 
 let lastRound = null; // last completed round details (for result screen + share)
+let activeChallenge = null; // the challenge this run was launched from (for beat-my-score compare)
 
 function newRun() {
   run = { rounds: 0, streak: 0, atRisk: 0, hints: 0, fame: loadFame() };
@@ -639,6 +648,34 @@ function win() {
   if (run.streak >= 2) sub += "  ·  🔥 " + run.streak + " perfect in a row";
   $("winSub").textContent = sub;
 
+  // (0b) Beat-my-score comparison vs the sender's challenge (if this run came from one)
+  const cmp = $("winCompare");
+  if (activeChallenge && activeChallenge.m) {
+    const theirMoves = activeChallenge.m;
+    const theirPar = activeChallenge.p || theirMoves;
+    const beat = steps <= theirMoves;
+    const msg = beat
+      ? ("🏆 You beat the challenger: " + steps + " vs their " + theirMoves + " moves!")
+      : ("Their chain held: " + theirMoves + " vs your " + steps + ". Rematch to take the crown.");
+    cmp.innerHTML =
+      "<div class='rc-cmp-head'>⚔️ Beat-my-score</div>" +
+      "<div class='rc-cmp-row'><span>You</span><b>" + steps + " moves</b></div>" +
+      "<div class='rc-cmp-row'><span>Challenger" +
+        (activeChallenge.a ? (" (" + avatarToken(activeChallenge.a) + " " + activeChallenge.a + ")") : "") +
+        "</span><b>" + theirMoves + " moves</b></div>" +
+      "<div class='rc-cmp-foot " + (beat ? "rc-win" : "rc-lose") + "'>" + msg +
+        (activeChallenge.time ? ("  ·  They took " + activeChallenge.time + "s") : "") + "</div>";
+    cmp.style.display = "block";
+    track("challenge_completed", {
+      beat, myMoves: steps, theirMoves, myPar: optimal, theirPar,
+      myDifficulty: run.difficulty, sameDataset: activeChallenge.v === DATASET_VERSION,
+    });
+    // a rematch: flip the pair so the sender gets a fresh duel on the same films
+    activeChallenge = null; // consume so it shows once
+  } else {
+    cmp.style.display = "none";
+  }
+
   // (1) chain outcome + (2) animated route recap
   const wc = $("winChain"); wc.innerHTML = "";
   state.pathFilms.forEach((f, i) => {
@@ -903,11 +940,12 @@ newRun();
 // If arriving on a challenge link, lock the pair and show the challenge.
 const ch = parseChallenge();
 if (ch && ch.s && ch.t) {
+  activeChallenge = ch;
   difficulty = ch.d || "easy";
   document.querySelectorAll("#diff button").forEach(x => x.classList.toggle("rc-active", x.dataset.d === difficulty));
   newPuzzle(ch.s, ch.t);
   const hintTxt = ch.p ? (" Challenger's Perfect Chain is " + ch.p + " moves.") : "";
-  setMsg("info", "📨 Challenge! Connect " + ch.s + " → " + ch.t + "." + hintTxt + " Solve it without revealing the route.");
+  setMsg("info", "📨 Challenge! Connect " + ch.s + " → " + ch.t + "." + hintTxt + " Solve it without revealing the route.  ⚔️ Beat their score to send a rematch.");
   track("challenge_landed", { difficulty: ch.d, par: ch.p });
 } else {
   newPuzzle();
