@@ -95,6 +95,10 @@
   .rc-app .rc-stats{display:flex;gap:18px;font-size:13px;color:var(--muted)}
   .rc-app .rc-stats b{color:var(--text)}
   .rc-app .rc-streak{font-size:13px;color:var(--accent2);font-weight:600}
+  .rc-app .rc-progress{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:13px;color:var(--muted)}
+  .rc-app .rc-progress b{color:var(--text)}
+  .rc-app .rc-progress small{color:var(--muted);opacity:.8}
+  .rc-app #progressPanel summary{cursor:pointer;font-weight:600;color:var(--text)}
 
   .rc-overlay{position:fixed;inset:0;background:rgba(8,10,16,.85);display:none;align-items:center;justify-content:center;z-index:2147483647;
          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);line-height:1.5}
@@ -208,8 +212,22 @@
     <div class="rc-stats">
       <span>Won: <b id="statWon">0</b></span>
       <span>Best time: <b id="statBest">—</b></span>
+      <span>Avg links: <b id="statAvg">—</b></span>
     </div>
     <span class="rc-streak" id="streakBox"></span>
+  </div>
+
+  <div class="rc-panel" id="progressPanel" style="margin-top:14px">
+    <details>
+      <summary>📈 My progress</summary>
+      <div class="rc-progress" id="progressBody">
+        <span>🎬 Solved: <b id="pgWins">0</b></span>
+        <span>🔥 Streak: <b id="pgStreak">0</b> <small>(best <b id="pgBest">0</b>)</small></span>
+        <span>🔗 Avg links: <b id="pgAvg">—</b></span>
+        <span>🎭 Signature connector: <b id="pgActor">—</b></span>
+        <span>🎬 Home film: <b id="pgFilm">—</b></span>
+      </div>
+    </details>
   </div>
 
   <div class="rc-panel" style="margin-top:14px">
@@ -290,6 +308,150 @@ const rand = arr => arr[Math.floor(Math.random() * arr.length)];
 const ORIGIN = location.origin;        // real deployed URL, no hardcoded domain
 const HASH = location.hash;            // for deep-linked challenge puzzles
 
+// ================= RCData: single client-side data layer =================
+// Versioned solve history + derived aggregates. Everything else (streak box,
+// stats, DNA card later, duel later) reads from HERE, never from ad-hoc keys.
+// Stage-1 also lays the leaderboard PLUMBING (RCSync) so the global board is a
+// switch-on, not a rewrite: recordSolve() already emits a normalized payload to
+// RCSync.push(); RCSync is a no-op stub until RCSync.enabled is flipped true.
+const RCData = (function () {
+  const KEY = "rc_data_v1";
+  const MAX_HISTORY = 200;   // keep last N solves (prune old)
+  const DEFAULT = { v: 1, anonId: null, solves: [], streak: { count: 0, last: null, best: 0 } };
+
+  function _load() {
+    try {
+      const d = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (d && d.v === 1) return d;
+    } catch (e) {}
+    // migrate legacy keys (rc_won/rc_best/rc_streak) if present
+    const d = JSON.parse(JSON.stringify(DEFAULT));
+    try {
+      const ls = JSON.parse(localStorage.getItem("rc_streak") || "{}");
+      if (ls && ls.count) { d.streak.count = ls.count; d.streak.last = ls.last || null; d.streak.best = ls.count; }
+    } catch (e) {}
+    return d;
+  }
+  function _save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
+  function _anonId(d) {
+    if (!d.anonId) { d.anonId = "rc_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
+    return d.anonId;
+  }
+
+  // record one completed solve. entry: {won, mode, tier, start, target, links, optimal, timeMs, films[], actors[], dateKey}
+  function recordSolve(e) {
+    const d = _load();
+    _anonId(d);
+    const rec = {
+      t: Date.now(),
+      date: e.dateKey || null,
+      won: !!e.won, mode: e.mode || "endless", tier: e.tier || null,
+      start: e.start, target: e.target,
+      links: e.links, optimal: (e.optimal == null ? e.links : e.optimal),
+      timeMs: e.timeMs || 0,
+      films: (e.films || []).slice(),   // intermediate + endpoint films of the chain
+      actors: (e.actors || []).slice()  // connector actors
+    };
+    d.solves.push(rec);
+    if (d.solves.length > MAX_HISTORY) d.solves = d.solves.slice(-MAX_HISTORY);
+
+    // streak: only daily wins advance it (grace: same day no change, +1 if yesterday, else reset)
+    if (rec.won && rec.mode === "daily" && rec.date) {
+      const s = d.streak;
+      if (s.last !== rec.date) {
+        s.count = (s.last === _yesterdayKey(rec.date)) ? (s.count || 0) + 1 : 1;
+        s.last = rec.date;
+        if (s.count > (s.best || 0)) s.best = s.count;
+      }
+    }
+    _save(d);
+    // ---- leaderboard plumbing: emit normalized payload (no-op until enabled) ----
+    try { RCSync.push({ anonId: d.anonId, date: rec.date, mode: rec.mode, tier: rec.tier,
+                        puzzle: rec.start + "|" + rec.target, links: rec.links,
+                        optimal: rec.optimal, timeMs: rec.timeMs, t: rec.t }); } catch (e2) {}
+    return rec;
+  }
+
+  function _yesterdayKey(key) {
+    // key format: YYYY-M-D (matches dailyKey()). Recompute from parts.
+    if (!key) return null;
+    const p = key.split("-").map(Number);
+    const d = new Date(p[0], p[1] - 1, p[2]); d.setDate(d.getDate() - 1);
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+
+  // ---- aggregates (power the DNA card in Stage 2) ----
+  function stats() {
+    const d = _load();
+    const wins = d.solves.filter(s => s.won);
+    const filmCount = {}, actorCount = {};
+    let linkSum = 0, linkN = 0;
+    wins.forEach(s => {
+      // "intersection" films = chain films excluding the two endpoints (start/target)
+      (s.films || []).forEach((f, i) => {
+        if (f === s.start || f === s.target) return;
+        filmCount[f] = (filmCount[f] || 0) + 1;
+      });
+      (s.actors || []).forEach(a => { actorCount[a] = (actorCount[a] || 0) + 1; });
+      if (typeof s.links === "number") { linkSum += s.links; linkN++; }
+    });
+    const top = obj => { let k = null, n = 0; for (const x in obj) if (obj[x] > n) { n = obj[x]; k = x; } return k ? { name: k, count: n } : null; };
+    return {
+      totalWins: wins.length,
+      totalPlays: d.solves.length,
+      streak: d.streak.count || 0,
+      bestStreak: d.streak.best || 0,
+      avgLinks: linkN ? (linkSum / linkN) : null,
+      favFilm: top(filmCount),
+      favActor: top(actorCount),
+      filmCount, actorCount,
+      anonId: d.anonId
+    };
+  }
+
+  return { recordSolve, stats, _load, _save, load: _load };
+})();
+
+// ================= RCSync: leaderboard plumbing (DEFERRED, stubbed) =================
+// Flip RCSync.enabled=true + set ENDPOINT to a Cloudflare Worker to switch on the
+// global leaderboard. Until then push()/fetchBoard() are safe no-ops.
+const RCSync = (function () {
+  const CFG = {
+    enabled: false,                       // <-- the single switch-on flag
+    endpoint: "",                         // e.g. "https://reelchain-board.<acct>.workers.dev"
+    queueKey: "rc_sync_queue_v1"
+  };
+  function _queue() { try { return JSON.parse(localStorage.getItem(CFG.queueKey) || "[]"); } catch (e) { return []; } }
+  function _setQueue(q) { try { localStorage.setItem(CFG.queueKey, JSON.stringify(q.slice(-100))); } catch (e) {} }
+
+  function push(payload) {
+    if (!CFG.enabled || !CFG.endpoint) return;   // no-op until enabled
+    const q = _queue(); q.push(payload); _setQueue(q);
+    flush();
+  }
+  async function flush() {
+    if (!CFG.enabled || !CFG.endpoint) return;
+    let q = _queue(); if (!q.length) return;
+    try {
+      const r = await fetch(CFG.endpoint + "/submit", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ batch: q })
+      });
+      if (r.ok) _setQueue([]);   // clear on success
+    } catch (e) { /* keep queued, retry next push */ }
+  }
+  async function fetchBoard(puzzleId) {
+    if (!CFG.enabled || !CFG.endpoint) return null;
+    try {
+      const r = await fetch(CFG.endpoint + "/board?puzzle=" + encodeURIComponent(puzzleId));
+      return r.ok ? await r.json() : null;
+    } catch (e) { return null; }
+  }
+  return { push, flush, fetchBoard,
+           get enabled() { return CFG.enabled; }, set enabled(v) { CFG.enabled = v; },
+           get endpoint() { return CFG.endpoint; }, set endpoint(v) { CFG.endpoint = v; } };
+})();
+
 // ---------- BFS solver ----------
 function bfs(start, target) {
   if (start === target) return { steps: 0, chain: [{ type: "film", name: start }] };
@@ -339,10 +501,10 @@ function streakGet() {
   try { return JSON.parse(localStorage.getItem("rc_streak") || "{}"); } catch(e){ return {}; }
 }
 function updateStreakBox() {
-  const st = streakGet();
+  const st = RCData.stats();
   const k = dailyKey();
-  const solvedToday = st.last === k;
-  $("streakBox").textContent = st.count ? ("🔥 " + st.count + " day streak" + (solvedToday ? " (today ✓)" : "")) : "";
+  const solvedToday = RCData.load().streak.last === k;
+  $("streakBox").textContent = st.streak ? ("🔥 " + st.streak + " day streak" + (solvedToday ? " (today ✓)" : "")) : "";
 }
 
 // ---------- State ----------
@@ -577,20 +739,20 @@ function win() {
       wc.appendChild(arrow());
     }
   });
-  // stats
-  let won = +(localStorage.getItem("rc_won") || 0) + (wonGame ? 1 : 0);
-  localStorage.setItem("rc_won", won);
-  let best = +(localStorage.getItem("rc_best") || 0);
-  if (wonGame && (!best || elapsed < best)) { best = elapsed; localStorage.setItem("rc_best", best); }
-  // streak (daily only)
-  if (mode === "daily" && wonGame) {
-    const st = streakGet();
-    const k = dailyKey();
-    if (st.last !== k) {
-      st.count = (st.last === yesterdayKey()) ? (st.count || 0) + 1 : 1;
-      st.last = k;
-      localStorage.setItem("rc_streak", JSON.stringify(st));
-    }
+  // ---- record solve into the single data layer (also emits leaderboard payload) ----
+  RCData.recordSolve({
+    won: wonGame, mode: mode, tier: difficulty,
+    start: state.start, target: state.target,
+    links: steps, optimal: optimal, timeMs: elapsed,
+    films: state.pathFilms.slice(), actors: state.pathActors.slice(),
+    dateKey: (mode === "daily") ? dailyKey() : null
+  });
+  // keep legacy "won"/"best time" header stats working off the new layer
+  {
+    const st = RCData.stats();
+    localStorage.setItem("rc_won", st.totalWins);
+    let best = +(localStorage.getItem("rc_best") || 0);
+    if (wonGame && (!best || elapsed < best)) { best = elapsed; localStorage.setItem("rc_best", best); }
   }
   // challenge link (share this exact puzzle with your score)
   const chalLink = ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + steps);
@@ -607,9 +769,21 @@ function yesterdayKey() {
 }
 
 function refreshStats() {
-  $("statWon").textContent = localStorage.getItem("rc_won") || 0;
+  const st = RCData.stats();
+  $("statWon").textContent = st.totalWins || 0;
   const b = +(localStorage.getItem("rc_best") || 0);
   $("statBest").textContent = b ? fmt(b) : "—";
+  const avg = st.avgLinks != null ? st.avgLinks.toFixed(1) : "—";
+  if ($("statAvg")) $("statAvg").textContent = avg;
+  // My progress panel
+  if ($("pgWins")) {
+    $("pgWins").textContent = st.totalWins || 0;
+    $("pgStreak").textContent = st.streak || 0;
+    $("pgBest").textContent = st.bestStreak || 0;
+    $("pgAvg").textContent = avg;
+    $("pgActor").textContent = st.favActor ? (st.favActor.name + " (×" + st.favActor.count + ")") : "—";
+    $("pgFilm").textContent = st.favFilm ? (st.favFilm.name + " (×" + st.favFilm.count + ")") : "—";
+  }
 }
 
 // ---------- Timer ----------
