@@ -770,7 +770,7 @@ async function buildReelPlayGif(onProgress) {
   const drawBadge = (g, glow) => {
     const bx = 24, by = 118, bw = 236, bh = 30;
     if (glow > 0) { g.save(); g.shadowColor = "rgba(255,77,109," + glow + ")"; g.shadowBlur = 16 * glow; }
-    g.fillStyle = "#16203a"; roundRect(g, bx, by, bw, bh, 15); g.fill();
+    g.fillStyle = "#243556"; roundRect(g, bx, by, bw, bh, 15); g.fill();
     if (glow > 0) g.restore();
     g.strokeStyle = "#ff4d6d"; g.lineWidth = 2; roundRect(g, bx, by, bw, bh, 15); g.stroke();
     g.fillStyle = "#fff"; g.font = "700 15px -apple-system, Arial, sans-serif";
@@ -780,7 +780,7 @@ async function buildReelPlayGif(onProgress) {
   const drawNodeCard = (g, nd, alpha, slideX) => {
     const x = cardX + (slideX || 0), y = nd.cardY;
     g.save(); g.globalAlpha = (alpha == null) ? 1 : alpha;
-    g.fillStyle = "#141a2b"; roundRect(g, x, y, cardW, nodeH, 16); g.fill();
+    g.fillStyle = "#26344f"; roundRect(g, x, y, cardW, nodeH, 16); g.fill();
     g.strokeStyle = colFor(nd); g.lineWidth = 2; roundRect(g, x, y, cardW, nodeH, 16); g.stroke();
     g.fillStyle = colFor(nd); roundRect(g, x + 12, y + 12, 32, 32, 9); g.fill();
     g.fillStyle = "#fff"; g.font = "600 16px -apple-system, Arial, sans-serif";
@@ -799,7 +799,7 @@ async function buildReelPlayGif(onProgress) {
     for (let i = 0; i < uptoIndex; i++) {
       const y0 = pos[i].cy, y1 = pos[i + 1].cy;
       const seg = (i === uptoIndex - 1) ? prog : 1;
-      g.strokeStyle = "rgba(160,170,200,0.55)"; g.lineWidth = 3;
+      g.strokeStyle = "rgba(200,208,230,0.9)"; g.lineWidth = 3;
       g.beginPath(); g.moveTo(railX, y0 + 7); g.lineTo(railX, y0 + (y1 - y0) * seg - 7); g.stroke();
     }
   };
@@ -808,7 +808,7 @@ async function buildReelPlayGif(onProgress) {
     const ey = top + (n - 1) * slotH + nodeH + 30;
     const eh = 152;
     g.save(); g.globalAlpha = (alpha == null) ? 1 : alpha;
-    g.fillStyle = "#11182b"; roundRect(g, 24, ey, W - 48, eh, 18); g.fill();
+    g.fillStyle = "#1e2a48"; roundRect(g, 24, ey, W - 48, eh, 18); g.fill();
     g.strokeStyle = "rgba(255,77,109,0.5)"; g.lineWidth = 1.5; roundRect(g, 24, ey, W - 48, eh, 18); g.stroke();
     g.fillStyle = "#ff4d6d"; g.font = "800 24px -apple-system, Arial, sans-serif";
     g.fillText("ReelChain", 44, ey + 38);
