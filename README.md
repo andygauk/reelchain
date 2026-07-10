@@ -12,7 +12,7 @@ actor, then a film they're both in, building the shortest possible chain.
 and the Cloudflare Pages source (`deploy/index.html`) from `data.json`.
 
 ## Deploy (live)
-Canonical site: **https://reelchain-dhk.pages.dev**
+Canonical site: **https://reelchain.app**
 (Cloudflare Pages project `reelchain`, production branch `main`.)
 
 Manual redeploy:
