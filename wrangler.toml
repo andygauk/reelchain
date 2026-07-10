@@ -2,10 +2,11 @@ name = "reelchain"
 compatibility_date = "2024-09-23"
 pages_build_output_dir = "deploy"
 
-# NOTE: The RC_ANALYTICS KV binding is configured in the Cloudflare Pages
-# dashboard (Settings → Functions → KV namespace bindings), NOT here — git-connected
-# Pages deploys do not read kv_namespaces from wrangler.toml, and an invalid
-# id here breaks the build. Create the namespace once with:
-#   wrangler kv namespace create RC_ANALYTICS
-# then add it as a binding named RC_ANALYTICS in the dashboard.
-# Until bound, /api/event still works (logs to Functions logs, kv:false on /api/stats).
+# KV binding for ReelChain analytics (event.js writes, stats.js reads).
+# This git-connected Pages project is managed through wrangler.toml, so the
+# binding lives here (the dashboard Bindings editor is locked). Namespace ID
+# below was created once in Cloudflare dashboard → Workers & Pages → KV.
+# Both functions read env.RC_ANALYTICS and fall back gracefully if unset.
+[[kv_namespaces]]
+binding = "RC_ANALYTICS"
+id = "689982e872d64160b11eeed0117cd0cb"
