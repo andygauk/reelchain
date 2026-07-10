@@ -542,6 +542,7 @@ function newPuzzle(a, b) {
     pathFilms: [a], pathActors: [],
     optimal: opt ? opt.steps : null,
     selectedActor: null,
+    linksUsed: 0,            // monotonic: every committed link adds 1 (undo does NOT refund)
   };
   $("startName").textContent = a;
   $("targetName").textContent = b;
@@ -598,7 +599,7 @@ function render() {
     c.onclick = () => chooseActor(a);
     cast.appendChild(c);
   }
-  $("stepsTaken").textContent = state.pathActors.length;
+  $("stepsTaken").textContent = state.linksUsed;   // monotonic cost — undo does not reduce it
   $("optimal").textContent = state.optimal == null ? "—" : state.optimal;
   const rem = bfs(state.current, state.target);
   $("optRemaining").textContent = rem ? rem.steps : "—";
@@ -652,6 +653,7 @@ function chooseActor(a) {
 }
 
 function chooseFilm(f) {
+  state.linksUsed = (state.linksUsed || 0) + 1;   // a link was committed — cost sticks even if later undone
   if (f === state.target) {
     state.pathActors.push(state.selectedActor);
     state.pathFilms.push(f);
@@ -712,7 +714,7 @@ function reveal() {
 // ---------- Win ----------
 function win() {
   stopTimer();
-  const steps = state.pathActors.length;
+  const steps = state.linksUsed;            // penalized link count (undo does not refund)
   const optimal = state.optimal || steps;
   const perfect = (steps === optimal);
   let wonGame = true;
@@ -816,7 +818,7 @@ function fillCustom() {
 // ---------- Share card (client-side canvas, no server) ----------
 function buildShareCard() {
   if (!state) return null;
-  const steps = state.pathActors.length;
+  const steps = state.linksUsed;            // penalized count (undo doesn't refund)
   const optimal = state.optimal || steps;
   const perfect = (steps === optimal);
   const chain = [];
@@ -896,7 +898,7 @@ let rpGifBlob = null, rpGifUrl = null;
 async function buildReelPlayGif(onProgress) {
   if (!state || !window.GIF) throw new Error("GIF encoder unavailable");
   const optimal = state.optimal || state.pathActors.length;
-  const steps = state.pathActors.length;
+  const steps = state.linksUsed;            // penalized count (undo doesn't refund)
   const perfect = (steps === optimal);
 
   // ordered chain: Film, Actor, Film, ...
@@ -948,7 +950,7 @@ async function buildReelPlayGif(onProgress) {
     if (glow > 0) g.restore();
     g.strokeStyle = "#ff4d6d"; g.lineWidth = 2; roundRect(g, bx, by, bw, bh, 15); g.stroke();
     g.fillStyle = "#fff"; g.font = "700 15px -apple-system, Arial, sans-serif";
-    g.fillText("Solved in " + steps + (steps === 1 ? " link" : " links"), bx + 16, by + 20);
+    g.fillText("Solved in " + state.linksUsed + (state.linksUsed === 1 ? " link" : " links"), bx + 16, by + 20);
   };
 
   const drawNodeCard = (g, nd, alpha, slideX) => {
@@ -987,7 +989,7 @@ async function buildReelPlayGif(onProgress) {
     g.fillStyle = "#ff4d6d"; g.font = "800 24px -apple-system, Arial, sans-serif";
     g.fillText("ReelChain", 44, ey + 38);
     g.fillStyle = "#fff"; g.font = "700 19px -apple-system, Arial, sans-serif";
-    g.fillText("Can you beat " + steps + (steps === 1 ? " link" : " links") + "?", 44, ey + 70);
+    g.fillText("Can you beat " + state.linksUsed + (state.linksUsed === 1 ? " link" : " links") + "?", 44, ey + 70);
     try {
       const qr = qrcode(0, 'M');
       qr.addData(ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + steps));
@@ -1092,7 +1094,7 @@ async function doShare(opts) {
   if (!dataUrl) { alert("Start a puzzle first, then share!"); return; }
   const blob = await (await fetch(dataUrl)).blob();
   const file = new File([blob], "reelchain_card.png", { type: "image/png" });
-  const text = "I connected " + state.start + " → " + state.target + " in " + state.pathActors.length + " link" + (state.pathActors.length===1?"":"s") + " on ReelChain! Can you beat it?";
+  const text = "I connected " + state.start + " → " + state.target + " in " + state.linksUsed + " link" + (state.linksUsed===1?"":"s") + " on ReelChain! Can you beat it?";
   try {
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: "ReelChain", text });
@@ -1102,7 +1104,7 @@ async function doShare(opts) {
   // Fallback: download card + copy challenge link
   const a = document.createElement("a");
   a.href = dataUrl; a.download = "reelchain_card.png"; a.click();
-  const link = ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + state.pathActors.length);
+  const link = ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + state.linksUsed);
   await copyText(link);
   setMsg("ok", "Result card downloaded & challenge link copied — paste it anywhere to challenge a friend!");
 }
@@ -1161,13 +1163,13 @@ $("winReelPlay").onclick = async () => {
 // Share / download from the preview overlay
 function rpShareNow() {
   const file = new File([rpGifBlob], "reelchain_reelplay.gif", { type: "image/gif" });
-  const text = "I just made an Instant ReelPlay on ReelChain — " + (state ? state.pathActors.length : 0) +
+  const text = "I just made an Instant ReelPlay on ReelChain — " + (state ? state.linksUsed : 0) +
                " links to connect " + (state ? state.start : "two films") + " → " + (state ? state.target : "") + ". Can you beat it?";
   const finish = () => { $("rpOverlay").classList.remove("rc-open"); setMsg("ok", "Instant ReelPlay shared! 🎬"); };
   const fallback = () => {
     const a = document.createElement("a");
     a.href = rpGifUrl; a.download = "reelchain_reelplay.gif"; a.click();
-    if (state) { copyText(ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + state.pathActors.length)); }
+    if (state) { copyText(ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + state.linksUsed)); }
     $("rpOverlay").classList.remove("rc-open");
     setMsg("ok", "Instant ReelPlay downloaded as a GIF & challenge link copied — post it anywhere!");
   };
