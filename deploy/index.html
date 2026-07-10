@@ -700,125 +700,186 @@ function buildShareCard() {
 }
 
 // ---------- Instant ReelPlay (client-side animated GIF, no server) ----------
-// Renders the solve as a step-by-step chain replay, branded "Instant ReelPlay",
-// with a final frame carrying the challenge QR. Encoded in-browser via gif.js.
+// Polished, premium replay: vertical timeline, one connection at a time,
+// growing connector (IMDb "Six Degrees" feel), cards slide in with colour
+// thumbnails, result badge pulses, branded end card (QR + CTA) fades in.
 async function buildReelPlayGif(onProgress) {
   if (!state || !window.GIF) throw new Error("GIF encoder unavailable");
   const optimal = state.optimal || state.pathActors.length;
   const steps = state.pathActors.length;
   const perfect = (steps === optimal);
-  // Build the ordered chain: Film, Actor, Film, Actor, ... Film
+
+  // ordered chain: Film, Actor, Film, ...
   const chain = [];
   state.pathFilms.forEach((f, i) => {
     chain.push({ type: "film", name: f });
     if (i < state.pathActors.length) chain.push({ type: "actor", name: state.pathActors[i] });
   });
 
-  const W = 480, nodeH = 46, padX = 26, gap = 12, padTop = 150;
-  // group chain into wrap rows (max ~2 nodes per row to mirror the mock)
-  const ctx0 = document.createElement("canvas").getContext("2d");
-  ctx0.font = "600 16px -apple-system, Arial, sans-serif";
-  let rows = [], cur = [], x = padX, y = padTop;
-  chain.forEach(n => {
-    const label = (n.type === "film" ? "🎬 " : "👤 ") + n.name;
-    const w = ctx0.measureText(label).width + 28;
-    if (x + w > W - padX) { rows.push(cur); cur = []; x = padX; y += nodeH + gap; }
-    cur.push({ ...n, w, label }); x += w + 10;
-  });
-  if (cur.length) { rows.push(cur); y += nodeH + gap; }
-  const footerY = y + 8;
-  const H = footerY + 120;
+  const W = 480;
+  const railX = 58;
+  const cardW = 332, cardX = 86;
+  const nodeH = 56, slotH = 84;
+  const top = 172;
+  const n = chain.length;
 
-  // base background painter (shared by every frame)
-  const paintBg = (g) => {
+  const pos = chain.map((nd, i) => ({
+    ...nd,
+    cardY: top + i * slotH,
+    cy: top + i * slotH + nodeH / 2
+  }));
+
+  const H = top + (n - 1) * slotH + nodeH + 206;
+
+  const hueFor = (s, warm) => {
+    let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return warm ? 18 + (h % 42) : 198 + (h % 84);
+  };
+  const colFor = (nd) => `hsl(${hueFor(nd.name, nd.type === "actor")} 72% 58%)`;
+
+  const paintBase = (g) => {
     g.fillStyle = "#0d0f17"; g.fillRect(0, 0, W, H);
-    // header band
+    const grad = g.createLinearGradient(0, 0, 0, 168);
+    grad.addColorStop(0, "rgba(255,77,109,0.16)"); grad.addColorStop(1, "rgba(255,77,109,0)");
+    g.fillStyle = grad; g.fillRect(0, 0, W, 168);
+    g.textBaseline = "alphabetic";
     g.fillStyle = "#ff4d6d"; g.font = "800 30px -apple-system, Arial, sans-serif";
     g.fillText("ReelChain", 24, 46);
     g.fillStyle = "#8a90a6"; g.font = "15px -apple-system, Arial, sans-serif";
     g.fillText("Instant ReelPlay", 24, 70);
-    // verdict
-    g.fillStyle = "#ffb84d"; g.font = "600 16px -apple-system, Arial, sans-serif";
-    g.fillText(perfect ? "PERFECT — fewest possible links!" : (steps - optimal) + " over optimal", 24, 100);
-    // "Solved in N links" badge
-    g.fillStyle = "#1b2333"; roundRect(g, 24, 116, 220, 26, 13); g.fill();
-    g.strokeStyle = "#ff4d6d"; g.lineWidth = 2; roundRect(g, 24, 116, 220, 26, 13); g.stroke();
+    g.fillStyle = "#ffd36b"; g.font = "700 17px -apple-system, Arial, sans-serif";
+    g.fillText((perfect ? "⭐ PERFECT PATH" : "YOUR PATH"), 24, 104);
+  };
+
+  const drawBadge = (g, glow) => {
+    const bx = 24, by = 118, bw = 236, bh = 30;
+    if (glow > 0) { g.save(); g.shadowColor = "rgba(255,77,109," + glow + ")"; g.shadowBlur = 16 * glow; }
+    g.fillStyle = "#16203a"; roundRect(g, bx, by, bw, bh, 15); g.fill();
+    if (glow > 0) g.restore();
+    g.strokeStyle = "#ff4d6d"; g.lineWidth = 2; roundRect(g, bx, by, bw, bh, 15); g.stroke();
     g.fillStyle = "#fff"; g.font = "700 15px -apple-system, Arial, sans-serif";
-    g.fillText("Solved in " + steps + (steps === 1 ? " link" : " links"), 36, 134);
+    g.fillText("Solved in " + steps + (steps === 1 ? " link" : " links"), bx + 16, by + 20);
   };
-  const drawNode = (g, n, xx, yy) => {
-    const col = n.type === "film" ? "#5b8cff" : "#ffb84d";
-    roundRect(g, xx, yy, n.w, nodeH, 14); g.fillStyle = "#1b2333"; g.fill();
-    g.strokeStyle = col; g.lineWidth = 2; roundRect(g, xx, yy, n.w, nodeH, 14); g.stroke();
-    g.fillStyle = col; g.font = "600 16px -apple-system, Arial, sans-serif";
-    g.fillText(n.label, xx + 14, yy + 29);
+
+  const drawNodeCard = (g, nd, alpha, slideX) => {
+    const x = cardX + (slideX || 0), y = nd.cardY;
+    g.save(); g.globalAlpha = (alpha == null) ? 1 : alpha;
+    g.fillStyle = "#141a2b"; roundRect(g, x, y, cardW, nodeH, 16); g.fill();
+    g.strokeStyle = colFor(nd); g.lineWidth = 2; roundRect(g, x, y, cardW, nodeH, 16); g.stroke();
+    g.fillStyle = colFor(nd); roundRect(g, x + 12, y + 12, 32, 32, 9); g.fill();
+    g.fillStyle = "#fff"; g.font = "600 16px -apple-system, Arial, sans-serif";
+    const icon = nd.type === "film" ? "🎬 " : "🎭 ";
+    g.fillText(icon + nd.name, x + 56, y + 34);
+    g.restore();
   };
-  const drawNodes = (g, count) => {
-    let shown = 0, yy = padTop;
-    for (const row of rows) {
-      let xx = padX;
-      for (const n of row) {
-        if (shown >= count) return;
-        drawNode(g, n, xx, yy); shown++; xx += n.w + 10;
-      }
-      yy += nodeH + gap;
+
+  const drawRail = (g, uptoIndex, connectorProg) => {
+    const prog = (connectorProg == null) ? 1 : connectorProg;
+    for (let i = 0; i <= uptoIndex; i++) {
+      const c = colFor(pos[i]);
+      g.fillStyle = c; g.beginPath(); g.arc(railX, pos[i].cy, 7, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#0d0f17"; g.beginPath(); g.arc(railX, pos[i].cy, 3, 0, Math.PI * 2); g.fill();
     }
-  };
-  const drawFooter = (g, withQR) => {
-    g.fillStyle = "#8a90a6"; g.font = "13px -apple-system, Arial, sans-serif";
-    g.fillText("Connect two films through the actors they share", 24, footerY + 24);
-    g.fillStyle = "#9db8ff"; g.font = "bold 16px -apple-system, Arial, sans-serif";
-    g.fillText(ORIGIN.replace(/^https?:\/\//, ""), 24, footerY + 48);
-    // "Scan to play" + QR
-    g.fillStyle = "#8a90a6"; g.font = "12px -apple-system, Arial, sans-serif";
-    g.fillText("Scan to play & beat my score", 24, footerY + 72);
-    if (withQR) {
-      try {
-        const qr = qrcode(0, 'M');
-        qr.addData(ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + steps));
-        qr.make();
-        const mod = qr.getModuleCount();
-        const qsize = 84, ox = W - qsize - 24, oy = footerY + 6, cell = qsize / mod;
-        g.fillStyle = "#fff"; g.fillRect(ox - 4, oy - 4, qsize + 8, qsize + 8);
-        for (let r = 0; r < mod; r++) for (let cI = 0; cI < mod; cI++) {
-          if (qr.isDark(r, cI)) { g.fillStyle = "#0d0f17"; g.fillRect(ox + cI * cell, oy + r * cell, Math.ceil(cell), Math.ceil(cell)); }
-        }
-      } catch (e) { /* QR optional */ }
+    for (let i = 0; i < uptoIndex; i++) {
+      const y0 = pos[i].cy, y1 = pos[i + 1].cy;
+      const seg = (i === uptoIndex - 1) ? prog : 1;
+      g.strokeStyle = "rgba(160,170,200,0.55)"; g.lineWidth = 3;
+      g.beginPath(); g.moveTo(railX, y0 + 7); g.lineTo(railX, y0 + (y1 - y0) * seg - 7); g.stroke();
     }
   };
 
-  const totalNodes = chain.length;
-  const FR = 8;        // frames per node step
-  const HOLD = 14;     // hold frames on final
-  const gif = new GIF({ workers: 2, quality: 6, width: W, height: H, workerScript: "gif.worker.js", background: "#0d0f17" });
+  const drawEndCard = (g, alpha) => {
+    const ey = top + (n - 1) * slotH + nodeH + 30;
+    const eh = 152;
+    g.save(); g.globalAlpha = (alpha == null) ? 1 : alpha;
+    g.fillStyle = "#11182b"; roundRect(g, 24, ey, W - 48, eh, 18); g.fill();
+    g.strokeStyle = "rgba(255,77,109,0.5)"; g.lineWidth = 1.5; roundRect(g, 24, ey, W - 48, eh, 18); g.stroke();
+    g.fillStyle = "#ff4d6d"; g.font = "800 24px -apple-system, Arial, sans-serif";
+    g.fillText("ReelChain", 44, ey + 38);
+    g.fillStyle = "#fff"; g.font = "700 19px -apple-system, Arial, sans-serif";
+    g.fillText("Can you beat " + steps + (steps === 1 ? " link" : " links") + "?", 44, ey + 70);
+    try {
+      const qr = qrcode(0, 'M');
+      qr.addData(ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + steps));
+      qr.make();
+      const mod = qr.getModuleCount();
+      const qsize = 92, ox = W - 48 - qsize - 16, oy = ey + (eh - qsize) / 2, cell = qsize / mod;
+      g.fillStyle = "#fff"; g.fillRect(ox - 5, oy - 5, qsize + 10, qsize + 10);
+      for (let r = 0; r < mod; r++) for (let c2 = 0; c2 < mod; c2++)
+        if (qr.isDark(r, c2)) { g.fillStyle = "#0d0f17"; g.fillRect(ox + c2 * cell, oy + r * cell, Math.ceil(cell), Math.ceil(cell)); }
+    } catch (e) {}
+    g.fillStyle = "#9db8ff"; g.font = "bold 14px -apple-system, Arial, sans-serif";
+    g.fillText(ORIGIN.replace(/^https?:\/\//, ""), 44, ey + 100);
+    g.fillStyle = "#ff4d6d"; g.font = "800 16px -apple-system, Arial, sans-serif";
+    g.fillText("Challenge a friend →", 44, ey + 128);
+    g.restore();
+  };
 
-  // Frame 0: header + badge only (the "reveal" beat)
-  let f = document.createElement("canvas"); f.width = W; f.height = H;
-  let g = f.getContext("2d"); paintBg(g);
-  gif.addFrame(g, { copy: true, delay: 700 });
+  const secs = (typeof elapsed !== "undefined" && elapsed) ? (elapsed / 1000).toFixed(1) : null;
+  const pct = perfect ? 1 : Math.min(99, Math.round((1 - optimal / steps) * 100));
+  const drawStats = (g) => {
+    g.fillStyle = "#8a90a6"; g.font = "14px -apple-system, Arial, sans-serif";
+    let sx = 270, sy = 138;
+    if (secs) { g.fillStyle = "#ffd36b"; g.fillText("⚡ " + secs + "s", sx, sy); sx += g.measureText("⚡ " + secs + "s").width + 16; }
+    g.fillStyle = "#ffd36b"; g.fillText("🏆 Top " + pct + "%", sx, sy);
+  };
 
-  // Build up node-by-node
-  for (let n = 1; n <= totalNodes; n++) {
-    const fc = document.createElement("canvas"); fc.width = W; fc.height = H;
-    const gc = fc.getContext("2d"); paintBg(gc); drawNodes(gc, n);
-    gif.addFrame(gc, { copy: true, delay: Math.round(1000 / FR) });
-    if (onProgress) onProgress(n / totalNodes);
+  const frames = [];
+  const addFrame = (drawFn, delay) => {
+    const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const g = cv.getContext("2d"); drawFn(g);
+    frames.push({ canvas: cv, delay });
+  };
+
+  // 1) header reveal with the start node
+  addFrame((g) => { paintBase(g); drawBadge(g, 0); drawStats(g); drawRail(g, 0, 1); drawNodeCard(g, pos[0], 1, 0); }, 450);
+
+  // 2) build one connection at a time
+  for (let i = 1; i < n; i++) {
+    const GF = 9;
+    for (let f = 1; f <= GF; f++) {
+      const prog = f / GF;
+      addFrame((g) => { paintBase(g); drawBadge(g, 0); drawStats(g); drawRail(g, i, prog); for (let k = 0; k < i; k++) drawNodeCard(g, pos[k], 1, 0); }, 45);
+    }
+    const SF = 7;
+    for (let f = 1; f <= SF; f++) {
+      const t = f / SF, ease = 1 - Math.pow(1 - t, 3);
+      const slideX = (1 - ease) * 46, alpha = ease;
+      addFrame((g) => { paintBase(g); drawBadge(g, 0); drawStats(g); drawRail(g, i, 1); for (let k = 0; k < i; k++) drawNodeCard(g, pos[k], 1, 0); drawNodeCard(g, pos[i], alpha, slideX); }, 42);
+    }
+    addFrame((g) => { paintBase(g); drawBadge(g, 0); drawStats(g); drawRail(g, i, 1); for (let k = 0; k <= i; k++) drawNodeCard(g, pos[k], 1, 0); }, 110);
+    if (onProgress) onProgress(i / n);
   }
-  // Hold the full chain, then a final frame WITH QR for a beat longer
-  const full = document.createElement("canvas"); full.width = W; full.height = H;
-  const gf = full.getContext("2d"); paintBg(gf); drawNodes(gf, totalNodes); drawFooter(gf, false);
-  gif.addFrame(gf, { copy: true, delay: 900 });
-  const final = document.createElement("canvas"); final.width = W; final.height = H;
-  const gq = final.getContext("2d"); paintBg(gq); drawNodes(gq, totalNodes); drawFooter(gq, true);
-  gif.addFrame(gq, { copy: true, delay: 1500 });
+
+  // 3) badge pulse
+  const PF = 10;
+  for (let f = 0; f < PF; f++) {
+    const glow = 0.5 + 0.5 * Math.sin((f / PF) * Math.PI * 2);
+    addFrame((g) => { paintBase(g); drawBadge(g, glow); drawStats(g); drawRail(g, n - 1, 1); for (let k = 0; k < n; k++) drawNodeCard(g, pos[k], 1, 0); }, 60);
+  }
+
+  // 4) end card fade-in
+  const EF = 9;
+  for (let f = 1; f <= EF; f++) {
+    const a = f / EF;
+    addFrame((g) => { paintBase(g); drawBadge(g, 0.4); drawStats(g); drawRail(g, n - 1, 1); for (let k = 0; k < n; k++) drawNodeCard(g, pos[k], 1, 0); drawEndCard(g, a); }, 45);
+  }
+  // 5) final hold
+  addFrame((g) => { paintBase(g); drawBadge(g, 0.4); drawStats(g); drawRail(g, n - 1, 1); for (let k = 0; k < n; k++) drawNodeCard(g, pos[k], 1, 0); drawEndCard(g, 1); }, 1500);
+
+  if (onProgress) onProgress(1);
+
+  const gif = new GIF({ workers: 2, quality: 8, width: W, height: H, workerScript: "gif.worker.js", background: "#0d0f17" });
+  for (const fr of frames) gif.addFrame(fr.canvas, { copy: true, delay: fr.delay });
 
   return await new Promise((resolve, reject) => {
-    gif.on("progress", p => { if (onProgress) onProgress(1); });
-    gif.on("finished", blob => resolve(blob));
     gif.on("abort", () => reject(new Error("GIF render aborted")));
+    gif.on("finished", blob => resolve(blob));
     gif.render();
   });
 }
+
+
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath(); ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
