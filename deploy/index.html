@@ -99,6 +99,7 @@
   .rc-overlay{position:fixed;inset:0;background:rgba(8,10,16,.85);display:none;align-items:center;justify-content:center;z-index:2147483647;
          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);line-height:1.5}
   .rc-overlay.rc-open{display:flex}
+  #rpGif{max-width:92vw;max-height:60vh;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#0d0f17;display:block;margin:8px auto;}
   .rc-modal{background:var(--panel);border:1px solid #2b3142;border-radius:18px;padding:26px;max-width:460px;width:calc(100% - 40px);text-align:center;
          box-shadow:0 30px 80px rgba(0,0,0,.6);color:var(--text);font-family:inherit}
   .rc-modal h2{margin:0 0 6px;font-size:26px;font-family:inherit;font-weight:800;color:var(--text)}
@@ -251,6 +252,19 @@
   </div>
 </div>
 
+  <!-- Instant ReelPlay preview-before-share -->
+  <div class="rc-overlay" id="rpOverlay">
+    <div class="rc-modal">
+      <h2>🎬 Instant ReelPlay</h2>
+      <p class="rc-sub" style="text-align:center">Your replay is ready — preview it, then share.</p>
+      <img id="rpGif" alt="Instant ReelPlay replay">
+      <div class="rc-winbtns">
+        <button class="rc-btn ghost" id="rpClose">← Back</button>
+        <button class="rc-btn reelplay-btn" id="rpShare">📤 Share / Download</button>
+      </div>
+    </div>
+  </div>
+
 <div id="rc-onboard">
   <div class="rc-ob">
     <h2>Welcome to ReelChain 🎬</h2>
@@ -353,6 +367,7 @@ function applyHash() {
 }
 
 function newPuzzle(a, b) {
+  rpGifBlob = null; rpGifUrl = null;
   if (mode === "daily") { const p = dailyPair(); a = p[0]; b = p[1]; }
   else if (!a || !b) {
     const r = pickPair(difficulty);
@@ -700,6 +715,7 @@ function buildShareCard() {
 }
 
 // ---------- Instant ReelPlay (client-side animated GIF, no server) ----------
+let rpGifBlob = null, rpGifUrl = null;
 // Polished, premium replay: vertical timeline, one connection at a time,
 // growing connector (IMDb "Six Degrees" feel), cards slide in with colour
 // thumbnails, result badge pulses, branded end card (QR + CTA) fades in.
@@ -869,7 +885,7 @@ async function buildReelPlayGif(onProgress) {
 
   if (onProgress) onProgress(1);
 
-  const gif = new GIF({ workers: 2, quality: 8, width: W, height: H, workerScript: "gif.worker.js", background: "#0d0f17" });
+  const gif = new GIF({ workers: 2, quality: 8, width: W, height: H, workerScript: "gif.worker.js", background: "#0d0f17", repeat: 0 });
   for (const fr of frames) gif.addFrame(fr.canvas, { copy: true, delay: fr.delay });
 
   return await new Promise((resolve, reject) => {
@@ -955,29 +971,42 @@ $("winReelPlay").onclick = async () => {
   const btn = $("winReelPlay"), render = $("reelPlayRender"), status = $("reelPlayStatus");
   btn.disabled = true; render.classList.add("rc-on"); status.textContent = "Rendering your Instant ReelPlay…";
   try {
-    const blob = await buildReelPlayGif();
-    const file = new File([blob], "reelchain_reelplay.gif", { type: "image/gif" });
-    const text = "I just made an Instant ReelPlay on ReelChain — " + (state ? state.pathActors.length : 0) +
-                 " links to connect " + (state ? state.start : "two films") + " → " + (state ? state.target : "") + ". Can you beat it?";
-    try {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: "ReelChain — Instant ReelPlay", text });
-        setMsg("ok", "Instant ReelPlay shared! 🎬");
-      } else { throw new Error("no file share"); }
-    } catch (e) {
-      // desktop/mobile fallback: download + copy challenge link
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob); a.download = "reelchain_reelplay.gif"; a.click();
-      if (state) { await copyText(ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + state.pathActors.length)); }
-      setMsg("ok", "Instant ReelPlay downloaded as a GIF & challenge link copied — post it anywhere!");
-    }
+    if (!rpGifBlob) rpGifBlob = await buildReelPlayGif();
+    if (rpGifUrl) URL.revokeObjectURL(rpGifUrl);
+    rpGifUrl = URL.createObjectURL(rpGifBlob);
+    $("rpGif").src = rpGifUrl;
+    render.classList.remove("rc-on"); btn.disabled = false;
+    $("rpOverlay").classList.add("rc-open");   // show preview first
   } catch (err) {
     console.error(err);
     setMsg("err", "Couldn't render the GIF here — try the Share button to post a static card instead.");
-  } finally {
     btn.disabled = false; render.classList.remove("rc-on");
   }
 };
+
+// Share / download from the preview overlay
+function rpShareNow() {
+  const file = new File([rpGifBlob], "reelchain_reelplay.gif", { type: "image/gif" });
+  const text = "I just made an Instant ReelPlay on ReelChain — " + (state ? state.pathActors.length : 0) +
+               " links to connect " + (state ? state.start : "two films") + " → " + (state ? state.target : "") + ". Can you beat it?";
+  const finish = () => { $("rpOverlay").classList.remove("rc-open"); setMsg("ok", "Instant ReelPlay shared! 🎬"); };
+  const fallback = () => {
+    const a = document.createElement("a");
+    a.href = rpGifUrl; a.download = "reelchain_reelplay.gif"; a.click();
+    if (state) { copyText(ORIGIN + "/#c=" + encodeURIComponent(state.start + "|" + state.target + "|" + state.pathActors.length)); }
+    $("rpOverlay").classList.remove("rc-open");
+    setMsg("ok", "Instant ReelPlay downloaded as a GIF & challenge link copied — post it anywhere!");
+  };
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: "ReelChain — Instant ReelPlay", text }).then(finish).catch(e => { if (e && e.name === "AbortError") return; fallback(); });
+    } else { throw new Error("no file share"); }
+  } catch (e) { fallback(); }
+}
+$("rpShare").onclick = rpShareNow;
+$("rpClose").onclick = () => { $("rpOverlay").classList.remove("rc-open"); };
+$("rpOverlay").addEventListener("click", e => { if (e.target === $("rpOverlay")) $("rpOverlay").classList.remove("rc-open"); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("rpOverlay").classList.contains("rc-open")) $("rpOverlay").classList.remove("rc-open"); });
 $("chalCopy").onclick = () => { copyText($("chalLink").value); setMsg("ok", "Challenge link copied!"); };
 $("customGo").onclick = () => {
   const a = $("customA").value, b = $("customB").value;
