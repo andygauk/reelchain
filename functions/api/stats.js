@@ -42,6 +42,6 @@ function safe(raw) { try { return JSON.parse(raw); } catch (e) { return null; } 
 function json(code, o) {
   return new Response(JSON.stringify(o), {
     status: code,
-    headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
+    headers: { "content-type": "application/json", "access-control-allow-origin": "*", "cache-control": "no-store" },
   });
 }
