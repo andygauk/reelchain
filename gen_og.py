@@ -1,30 +1,47 @@
+"""Regenerate the Open Graph share card (deploy/og-image.png, 1200x630).
+
+This is the image every link scraper (Telegram, WhatsApp, iMessage, Slack,
+Discord, Twitter) pulls from <meta property="og:image">. It MUST be on-brand:
+the real ReelChain logo lockup + the canonical domain, no placeholder boxes.
+"""
 from PIL import Image, ImageDraw, ImageFont
 
 W, H = 1200, 630
-img = Image.new("RGB", (W, H), (13, 15, 23))
+BG_TOP = (13, 15, 23)      # #0d0f17  (matches site)
+BG_BOT = (20, 24, 38)      # subtle lift for depth
+BRAND_TEAL = (88, 196, 220)
+BRAND_PINK = (255, 77, 109)
+BRAND_GOLD = (255, 196, 92)
+
+# --- background: vertical gradient ---
+img = Image.new("RGB", (W, H))
 d = ImageDraw.Draw(img)
+for y in range(H):
+    t = y / (H - 1)
+    r = int(BG_TOP[0] + (BG_BOT[0] - BG_TOP[0]) * t)
+    g = int(BG_TOP[1] + (BG_BOT[1] - BG_TOP[1]) * t)
+    b = int(BG_TOP[2] + (BG_BOT[2] - BG_TOP[2]) * t)
+    d.line([(0, y), (W, y)], fill=(r, g, b))
 
+# --- brand logo lockup (reels + chain + REEL CHAIN + tagline), centered ---
+logo = Image.open("deploy/logo.png").convert("RGBA")
+maxw = 940
+scale = maxw / logo.width
+nw, nh = int(logo.width * scale), int(logo.height * scale)
+logo = logo.resize((nw, nh), Image.LANCZOS)
+lx = (W - nw) // 2
+ly = (H - nh) // 2 - 30   # nudge up to leave room for the domain footer
+img.paste(logo, (lx, ly), logo)
+
+# --- footer: canonical domain (no placeholder boxes) ---
 try:
-    f_black = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 96)
-    f_sub = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 34)
-    f_tag = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 26)
-except Exception as e:
-    f_black = f_sub = f_tag = ImageFont.load_default()
+    f_domain = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 34)
+except Exception:
+    f_domain = ImageFont.load_default()
 
-# Title: ReelChain
-d.text((80, 150), "ReelChain", font=f_black, fill=(255, 77, 109))
-# Subtitle
-d.text((84, 280), "Connect two films through the actors they share.", font=f_sub, fill=(232, 234, 242))
-# Tag
-d.text((84, 540), "reelchain-dhk.pages.dev", font=f_tag, fill=(138, 144, 166))
+dom = "reelchain.app"
+dw = d.textlength(dom, font=f_domain)
+d.text(((W - int(dw)) // 2, H - 70), dom, font=f_domain, fill=BRAND_TEAL)
 
-# Decorative node chips (film -> actor -> film)
-def chip(x, y, text, color, txt_fill):
-    d.rounded_rectangle([x, y, x + 300, y + 70], radius=20, outline=color, width=3, fill=(27, 35, 51))
-    d.text((x + 18, y + 20), text, font=f_sub, fill=txt_fill)
-
-chip(480, 380, "\U0001F3AC Hugo", (91, 140, 255), (157, 184, 255))
-chip(560, 470, "\U0001F464 DiCaprio", (255, 184, 77), (255, 206, 138))
-
-img.save("deploy/og-image.png")
+img.save("deploy/og-image.png", "PNG")
 print("wrote deploy/og-image.png", img.size)
