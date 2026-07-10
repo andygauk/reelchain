@@ -106,12 +106,49 @@ TEMPLATE = r"""<!DOCTYPE html>
   .rc-app .rc-help{font-size:13px;color:var(--muted);line-height:1.6}
   .rc-app .rc-help b{color:var(--text)}
   .rc-app details summary{cursor:pointer;color:var(--accent2);font-size:13px;font-weight:600;margin-bottom:8px}
+
+  /* ---- Run HUD (the "one more round" driver) ---- */
+  .rc-app .rc-hud{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin:-4px 0 14px}
+  .rc-app .rc-stat{flex:1;min-width:78px;background:linear-gradient(160deg,#1a2032,#12151f);border:1px solid #2b3142;border-radius:12px;padding:9px 11px}
+  .rc-app .rc-stat .rc-k{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+  .rc-app .rc-stat .rc-v{font-size:22px;font-weight:800;line-height:1.1;color:var(--text)}
+  .rc-app .rc-stat.rc-combo{border-color:rgba(255,184,77,.4)}
+  .rc-app .rc-stat.rc-combo .rc-v{color:var(--accent2)}
+  .rc-app .rc-stat.rc-hot{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,77,109,.25);animation:rcpulse 1.2s ease-in-out infinite}
+  @keyframes rcpulse{0%,100%{box-shadow:0 0 0 2px rgba(255,77,109,.15)}50%{box-shadow:0 0 0 4px rgba(255,77,109,.45)}}
+  .rc-app .rc-stat .rc-pb{font-size:10px;color:var(--muted);margin-top:1px}
+  .rc-app .rc-stat .rc-pb b{color:var(--good)}
+
+  /* ---- Live genome ---- */
+  .rc-app .rc-genome{background:linear-gradient(160deg,#141826,#0e111b);border:1px solid #232838;border-radius:14px;padding:12px 14px;margin-bottom:14px;overflow:hidden}
+  .rc-app .rc-genome .rc-gh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .rc-app .rc-genome .rc-gh h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+  .rc-app .rc-genome .rc-gh .rc-rarity{font-size:12px;font-weight:700;color:var(--accent2)}
+  .rc-app .rc-genome .rc-svgwrap{overflow-x:auto;overflow-y:hidden}
+  .rc-app .rc-genome svg{display:block;height:92px}
+  .rc-app .rc-genome .rc-empty{color:var(--muted);font-size:13px;padding:26px 0;text-align:center}
+
+  /* ---- Preview-before-share modal ---- */
+  .rc-preview{position:fixed;inset:0;background:rgba(8,10,16,.9);display:none;align-items:center;justify-content:center;z-index:2147483647;padding:20px;
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .rc-preview.rc-open{display:flex}
+  .rc-preview .rc-pv-box{background:var(--panel);border:1px solid #2b3142;border-radius:18px;padding:18px;max-width:520px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .rc-preview .rc-pv-box h2{margin:0 0 4px;font-size:20px;font-weight:800;color:var(--text)}
+  .rc-preview .rc-pv-box .rc-pv-sub{color:var(--muted);font-size:13px;margin-bottom:12px}
+  .rc-preview .rc-pv-box img{width:100%;border-radius:12px;border:1px solid #2b3142;margin-bottom:14px}
+  .rc-preview .rc-pv-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 </style>
 </head>
 <body>
 <div class="rc-app">
   <h1>Reel<span class="rc-c">Chain</span></h1>
-  <div class="rc-tag">Two films. One bridge. Connect them through the actors they share.</div>
+  <div class="rc-tag">Just one more round. Connect two films, grow your genome.</div>
+
+  <div class="rc-hud" id="hud">
+    <div class="rc-stat rc-round"><div class="rc-k">Round</div><div class="rc-v" id="hudRound">0</div><div class="rc-pb">best run <b id="hudPBRun">0</b></div></div>
+    <div class="rc-stat rc-combo" id="hudComboBox"><div class="rc-k">Combo</div><div class="rc-v" id="hudCombo">1.0×</div><div class="rc-pb" id="hudStreakLbl">warm up</div></div>
+    <div class="rc-stat rc-dna"><div class="rc-k">DNA</div><div class="rc-v" id="hudDNA">0</div><div class="rc-pb">best <b id="hudPBDNA">0</b></div></div>
+  </div>
 
   <div class="rc-toolbar">
     <div class="rc-seg" id="diff">
@@ -120,13 +157,16 @@ TEMPLATE = r"""<!DOCTYPE html>
       <button data-d="hard">Hard</button>
       <button data-d="any">Surprise</button>
     </div>
-    <button class="rc-btn" id="newBtn">🎲 New Puzzle</button>
     <button class="rc-btn ghost" id="hintBtn">💡 Hint</button>
-    <button class="rc-btn ghost" id="revealBtn">👁 Reveal</button>
-    <button class="rc-btn ghost" id="shareBtn">📤 Share</button>
-    <button class="rc-btn ghost" id="flipBtn">🔄 Flip</button>
+    <button class="rc-btn ghost" id="shareBtn">🧬 Share genome</button>
+    <button class="rc-btn ghost" id="endBtn">■ End run</button>
     <span class="rc-spacer"></span>
     <span class="rc-clock" id="clock">00:00</span>
+  </div>
+
+  <div class="rc-genome" id="genome">
+    <div class="rc-gh"><h3>Run genome</h3><span class="rc-rarity" id="rarity"></span></div>
+    <div class="rc-svgwrap"><div class="rc-empty" id="genomeEmpty">Solve a round to grow your first strand.</div><svg id="genomeSvg" xmlns="http://www.w3.org/2000/svg"></svg></div>
   </div>
 
   <div class="rc-puzzle">
@@ -168,10 +208,11 @@ TEMPLATE = r"""<!DOCTYPE html>
 
   <div class="rc-row">
     <button class="rc-btn ghost" id="undoBtn">↩ Undo</button>
-    <button class="rc-btn ghost" id="resetBtn">⟲ Reset</button>
+    <button class="rc-btn ghost" id="revealBtn">👁 Reveal</button>
+    <button class="rc-btn ghost" id="flipBtn">🔄 Flip</button>
     <span class="rc-spacer"></span>
     <div class="rc-stats">
-      <span>Won: <b id="statWon">0</b></span>
+      <span>Runs: <b id="statWon">0</b></span>
       <span>Best time: <b id="statBest">—</b></span>
     </div>
   </div>
@@ -197,14 +238,42 @@ TEMPLATE = r"""<!DOCTYPE html>
 
   <div class="rc-overlay" id="overlay">
     <div class="rc-modal">
-      <h2 id="winTitle">Connected! 🎉</h2>
+      <h2 id="winTitle">Round solved! 🎉</h2>
       <div class="rc-big" id="winSteps">0</div>
       <div class="rc-sub" id="winSub"></div>
     <div class="rc-chain" id="winChain"></div>
-    <div class="rc-row" style="justify-content:center;margin-top:6px">
-      <button class="rc-btn" id="winNext">🎲 Next puzzle</button>
+    <div class="rc-row" style="justify-content:center;margin-top:10px">
+      <button class="rc-btn" id="winNext">▶ One more round</button>
+      <button class="rc-btn ghost" id="winShare">🧬 Share genome</button>
+    </div>
+    <div class="rc-sub" id="winEndHint" style="margin-top:12px;margin-bottom:0">Stop now and you lock in your genome — but the combo resets.</div>
+  </div>
+  </div>
+
+  <div class="rc-overlay" id="endOverlay">
+    <div class="rc-modal">
+      <h2 id="endTitle">Run ended 🧬</h2>
+      <div class="rc-big" id="endBig">0</div>
+      <div class="rc-sub" id="endSub"></div>
+      <div class="rc-chain" id="endGenome" style="justify-content:center;margin:10px 0"></div>
+      <div class="rc-row" style="justify-content:center;margin-top:8px">
+        <button class="rc-btn" id="endNewRun">▶ Start a new run</button>
+        <button class="rc-btn ghost" id="endShare">🧬 Share genome</button>
+      </div>
     </div>
   </div>
+
+  <div class="rc-preview" id="preview">
+    <div class="rc-pv-box">
+      <h2>Your run genome</h2>
+      <div class="rc-pv-sub">Preview before you share — nothing leaves your device until you tap Share.</div>
+      <img id="pvImg" alt="ReelChain genome card">
+      <div class="rc-pv-row">
+        <button class="rc-btn" id="pvShare">📤 Share</button>
+        <button class="rc-btn ghost" id="pvDownload">⬇ Download</button>
+        <button class="rc-btn ghost" id="pvClose">Close</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -249,6 +318,62 @@ function bfs(start, target) {
 let state = null;
 let difficulty = "easy";
 let timer = null, startTs = 0, elapsed = 0;
+
+// ---------- Run (the "one more round" spine) ----------
+// A run is a session of back-to-back rounds. Each solved round adds a "strand"
+// to a live genome and feeds a combo multiplier. Ending the run locks the genome
+// in and resets the combo — that felt loss is what drives "just one more round".
+let run = null;
+
+function newRun() {
+  run = { rounds: 0, dna: 0, combo: 1, streak: 0, best: 0, strands: [] };
+  renderGenome();
+  updateHUD();
+}
+
+// deterministic per-strand signature so the genome is legible ("that's how I played")
+function makeStrand(steps, optimal, secs) {
+  const over = Math.max(0, steps - optimal);
+  const perfect = over === 0;
+  const fast = secs > 0 && secs < 20;
+  // hue derived from the round shape; perfect rounds skew warm/gold, sloppy skew cool
+  const hue = perfect ? 42 : (over === 1 ? 12 : 205 + Math.min(over, 4) * 12);
+  return {
+    steps, optimal, over, perfect, fast, secs,
+    hue,
+    sat: perfect ? 85 : 60,
+    amp: 10 + Math.min(steps, 8) * 3,       // taller wave = longer chain
+    speed: fast ? 1.6 : 1,
+  };
+}
+
+// combo grows with consecutive perfect rounds, decays a touch on sloppy ones
+function applyRoundToRun(strand) {
+  run.rounds += 1;
+  if (strand.perfect) { run.streak += 1; run.combo = Math.min(5, +(run.combo + 0.5).toFixed(1)); }
+  else { run.streak = 0; run.combo = Math.max(1, +(run.combo - 0.5).toFixed(1)); }
+  // DNA points: base for solving + efficiency + speed, all times combo
+  let base = 10 + Math.max(0, 6 - strand.over) * 3 + (strand.fast ? 6 : 0);
+  const gain = Math.round(base * run.combo);
+  run.dna += gain;
+  strand.gain = gain;
+  run.strands.push(strand);
+  // personal bests
+  const pbRun = +(localStorage.getItem("rc_pb_run") || 0);
+  const pbDNA = +(localStorage.getItem("rc_pb_dna") || 0);
+  if (run.rounds > pbRun) localStorage.setItem("rc_pb_run", run.rounds);
+  if (run.dna > pbDNA) localStorage.setItem("rc_pb_dna", run.dna);
+  return gain;
+}
+
+function rarityLabel() {
+  const n = run.rounds;
+  if (n >= 20) return "🧬 LEGENDARY GENOME";
+  if (n >= 12) return "🧬 Rare genome";
+  if (n >= 7) return "🧬 Uncommon genome";
+  if (n >= 3) return "🧬 Common genome";
+  return n > 0 ? "🧬 Nascent" : "";
+}
 
 function newPuzzle(a, b) {
   if (!a || !b) {
@@ -328,7 +453,67 @@ function render() {
 function updateModeBar() {
   const bar = $("modeBar");
   if (!bar) return;
-  bar.innerHTML = "∞ Endless mode — keep solving for a new puzzle each round.";
+  if (run && run.rounds > 0) {
+    bar.innerHTML = "∞ Endless run — round <b>" + (run.rounds + 1) + "</b>. Keep the combo alive.";
+  } else {
+    bar.innerHTML = "∞ Endless run — solve rounds back to back to grow your genome.";
+  }
+}
+
+function updateHUD() {
+  if (!run) return;
+  $("hudRound").textContent = run.rounds;
+  $("hudCombo").textContent = run.combo.toFixed(1) + "×";
+  $("hudDNA").textContent = run.dna;
+  $("hudPBRun").textContent = localStorage.getItem("rc_pb_run") || 0;
+  $("hudPBDNA").textContent = localStorage.getItem("rc_pb_dna") || 0;
+  const box = $("hudComboBox");
+  if (run.streak >= 3) { box.classList.add("rc-hot"); $("hudStreakLbl").innerHTML = "🔥 " + run.streak + " perfect"; }
+  else { box.classList.remove("rc-hot"); $("hudStreakLbl").textContent = run.streak > 0 ? run.streak + " streak" : "warm up"; }
+}
+
+// Draws the live genome as a double-helix of strands; grows each round.
+function renderGenome() {
+  const svg = $("genomeSvg"), empty = $("genomeEmpty"), rar = $("rarity");
+  if (!run || run.strands.length === 0) {
+    svg.innerHTML = ""; svg.removeAttribute("width");
+    empty.style.display = "block"; rar.textContent = "";
+    return;
+  }
+  empty.style.display = "none";
+  rar.textContent = rarityLabel();
+  const step = 30, padX = 16, H = 92, midY = H / 2;
+  const W = padX * 2 + run.strands.length * step;
+  svg.setAttribute("width", W);
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  const NS = "http://www.w3.org/2000/svg";
+  let parts = "";
+  // backbone (two sine strands)
+  const pts = (phase) => {
+    let d = "";
+    for (let i = 0; i <= run.strands.length; i++) {
+      const s = run.strands[Math.min(i, run.strands.length - 1)];
+      const x = padX + i * step;
+      const y = midY + Math.sin(i * 0.9 + phase) * (s ? s.amp : 12);
+      d += (i === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1) + " ";
+    }
+    return d;
+  };
+  parts += '<path d="' + pts(0) + '" fill="none" stroke="#3a4160" stroke-width="2" opacity="0.5"/>';
+  parts += '<path d="' + pts(Math.PI) + '" fill="none" stroke="#3a4160" stroke-width="2" opacity="0.5"/>';
+  // rungs + nodes per strand
+  run.strands.forEach((s, i) => {
+    const x = padX + i * step;
+    const y1 = midY + Math.sin(i * 0.9) * s.amp;
+    const y2 = midY + Math.sin(i * 0.9 + Math.PI) * s.amp;
+    const col = "hsl(" + s.hue + "," + s.sat + "%,60%)";
+    parts += '<line x1="' + x + '" y1="' + y1.toFixed(1) + '" x2="' + x + '" y2="' + y2.toFixed(1) + '" stroke="' + col + '" stroke-width="2" opacity="0.7"/>';
+    const r = s.perfect ? 6 : 4;
+    parts += '<circle cx="' + x + '" cy="' + y1.toFixed(1) + '" r="' + r + '" fill="' + col + '"/>';
+    parts += '<circle cx="' + x + '" cy="' + y2.toFixed(1) + '" r="' + (r - 1) + '" fill="' + col + '" opacity="0.85"/>';
+    if (s.fast) parts += '<circle cx="' + x + '" cy="' + y1.toFixed(1) + '" r="' + (r + 3) + '" fill="none" stroke="' + col + '" stroke-width="1" opacity="0.6"/>';
+  });
+  svg.innerHTML = parts;
 }
 
 function mkNode(type, name) {
@@ -430,18 +615,27 @@ function reveal() {
   setMsg("info", "Shortest link (" + r.steps + "): " + txt);
 }
 
-// ---------- Win ----------
+// ---------- Win (a solved round feeds the run) ----------
 function win() {
   stopTimer();
   const steps = state.pathActors.length;
   const optimal = state.optimal || steps;
   const perfect = (steps === optimal);
-  $("winTitle").textContent = perfect ? "Perfect! 🎯" : "Connected! 🎉";
-  $("winSteps").textContent = steps + (steps === 1 ? " link" : " links");
-  let sub = perfect ? "Fewest possible — nicely done."
-                    : ("Best possible was " + optimal + ". " + (steps - optimal) + " extra.");
-  if (elapsed) sub += "  ⏱ " + fmt(elapsed);
+  const secs = Math.round(elapsed / 1000);
+
+  const strand = makeStrand(steps, optimal, secs);
+  const gain = applyRoundToRun(strand);
+  renderGenome();
+  updateHUD();
+
+  $("winTitle").textContent = perfect ? "Perfect round! 🎯" : "Round solved! 🎉";
+  $("winSteps").textContent = "+" + gain + " DNA";
+  let sub = perfect ? "Fewest possible" : ("Best was " + optimal + " (" + (steps - optimal) + " over)");
+  sub += "  ·  combo " + run.combo.toFixed(1) + "×";
+  if (run.streak >= 2) sub += "  ·  🔥 " + run.streak + " perfect in a row";
+  sub += "  ·  round " + run.rounds + " of this run";
   $("winSub").textContent = sub;
+
   const wc = $("winChain"); wc.innerHTML = "";
   state.pathFilms.forEach((f, i) => {
     wc.appendChild(mkNode("film", f));
@@ -451,14 +645,40 @@ function win() {
       wc.appendChild(arrow());
     }
   });
-  // stats
-  let won = +(localStorage.getItem("rc_won") || 0) + 1;
-  localStorage.setItem("rc_won", won);
+
+  $("winEndHint").textContent = run.rounds >= 3
+    ? "Stop now and you lock in a " + rarityLabel().replace("🧬 ", "").toLowerCase() + " — but the combo resets."
+    : "Stop now and you lock in your genome — but the combo resets.";
+
+  // best time (per round) is still fun to track
   let best = +(localStorage.getItem("rc_best") || 0);
   if (!best || elapsed < best) { best = elapsed; localStorage.setItem("rc_best", best); }
   refreshStats();
   updateModeBar();
   $("overlay").classList.add("rc-open");
+}
+
+// ---------- End run (the felt loss) ----------
+function endRun() {
+  if (!run || run.rounds === 0) { setMsg("info", "Solve at least one round to build a genome."); return; }
+  $("overlay").classList.remove("rc-open");
+  // count completed runs
+  let runs = +(localStorage.getItem("rc_won") || 0) + 1;
+  localStorage.setItem("rc_won", runs);
+  refreshStats();
+  const pbRun = +(localStorage.getItem("rc_pb_run") || 0);
+  const pbDNA = +(localStorage.getItem("rc_pb_dna") || 0);
+  $("endTitle").textContent = rarityLabel() + " locked in";
+  $("endBig").textContent = run.dna + " DNA";
+  let sub = run.rounds + (run.rounds === 1 ? " round" : " rounds") + " · peak combo hit along the way";
+  const beatRun = run.rounds >= pbRun, beatDNA = run.dna >= pbDNA;
+  if (beatRun || beatDNA) sub += "  ·  🏆 new personal best!";
+  else sub += "  ·  best run " + pbRun + " rounds / " + pbDNA + " DNA";
+  $("endSub").textContent = sub;
+  // render final genome inline
+  const eg = $("endGenome"); eg.innerHTML = "";
+  eg.appendChild($("genomeSvg").cloneNode(true));
+  $("endOverlay").classList.add("rc-open");
 }
 
 function refreshStats() {
@@ -503,14 +723,19 @@ document.querySelectorAll("#diff button").forEach(btn => {
     newPuzzle();
   };
 });
-$("newBtn").onclick = () => newPuzzle();
 $("hintBtn").onclick = hint;
 $("revealBtn").onclick = reveal;
 $("shareBtn").onclick = shareCard;
+$("endBtn").onclick = endRun;
 $("flipBtn").onclick = () => { if (state) newPuzzle(state.target, state.start); };
 $("undoBtn").onclick = undo;
-$("resetBtn").onclick = reset;
 $("winNext").onclick = () => { $("overlay").classList.remove("rc-open"); newPuzzle(); };
+$("winShare").onclick = shareCard;
+$("endNewRun").onclick = () => { $("endOverlay").classList.remove("rc-open"); newRun(); newPuzzle(); };
+$("endShare").onclick = shareCard;
+$("pvShare").onclick = doShare;
+$("pvDownload").onclick = doDownload;
+$("pvClose").onclick = closePreview;
 $("customGo").onclick = () => {
   const a = $("customA").value, b = $("customB").value;
   if (a === b) { setMsg("err", "Pick two different films."); return; }
@@ -518,86 +743,120 @@ $("customGo").onclick = () => {
   newPuzzle(a, b);
 };
 
-// ---------- Share card (client-side canvas, no server) ----------
+// ---------- Genome share card (client-side canvas, no server) ----------
 function buildShareCard() {
-  if (!state) return null;
-  const steps = state.pathActors.length;
-  const optimal = state.optimal || steps;
-  const perfect = (steps === optimal);
-  const chain = [];
-  state.pathFilms.forEach((f, i) => { chain.push({ type: "film", name: f });
-    if (i < state.pathActors.length) chain.push({ type: "actor", name: state.pathActors[i] }); });
-  const W = 600;
-  const nodeH = 40, padTop = 92, gap = 10, padX = 28;
-  // wrap rows
-  const ctx0 = document.createElement("canvas").getContext("2d");
-  ctx0.font = "600 15px -apple-system, Arial, sans-serif";
-  let rows = [], x = padX, y = padTop, cur = [];
-  chain.forEach(n => {
-    const label = (n.type === "film" ? "🎬 " : "👤 ") + n.name;
-    const w = ctx0.measureText(label).width + 26;
-    if (x + w > W - padX) { rows.push(cur); cur = []; x = padX; y += nodeH + gap; }
-    cur.push({ ...n, w, label }); x += w + 10;
-  });
-  if (cur.length) { rows.push(cur); y += nodeH + gap; }
-  const H = y + 64;
+  if (!run || run.strands.length === 0) return null;
+  const W = 600, H = 560;
   const c = document.createElement("canvas");
   c.width = W; c.height = H;
-  const x2 = c.getContext("2d");
-  x2.fillStyle = "#0d0f17"; x2.fillRect(0, 0, W, H);
+  const g = c.getContext("2d");
+  // background
+  g.fillStyle = "#0d0f17"; g.fillRect(0, 0, W, H);
+  const grad = g.createRadialGradient(W/2, 40, 40, W/2, 40, 500);
+  grad.addColorStop(0, "rgba(40,50,80,0.5)"); grad.addColorStop(1, "rgba(13,15,23,0)");
+  g.fillStyle = grad; g.fillRect(0, 0, W, H);
   // header
-  x2.fillStyle = "#ff4d6d"; x2.font = "800 30px -apple-system, Arial, sans-serif";
-  x2.fillText("ReelChain", 24, 44);
-  x2.fillStyle = "#8a90a6"; x2.font = "15px -apple-system, Arial, sans-serif";
-  const dateLabel = "Puzzle";
-  x2.fillText(dateLabel, 24, 68);
-  // verdict
-  x2.fillStyle = "#ffb84d";
-  x2.fillText(perfect ? "PERFECT — matched the optimal link!" : (steps - optimal) + " over optimal", 24, 88);
-  // nodes
-  let yy = padTop;
-  const drawRounded = (rx, ry, rw, rh, r, stroke, fill) => {
-    x2.beginPath(); x2.moveTo(rx + r, ry);
-    x2.arcTo(rx + rw, ry, rx + rw, ry + rh, r); x2.arcTo(rx + rw, ry + rh, rx, ry + rh, r);
-    x2.arcTo(rx, ry + rh, rx, ry, r); x2.arcTo(rx, ry, rx + rw, ry, r); x2.closePath();
-    x2.fillStyle = fill; x2.fill(); x2.strokeStyle = stroke; x2.lineWidth = 2; x2.stroke();
-  };
-  rows.forEach(row => {
-    let xx = padX;
-    row.forEach(n => {
-      const col = n.type === "film" ? "#5b8cff" : "#ffb84d";
-      drawRounded(xx, yy, n.w, nodeH, 14, col, "#1b2333");
-      x2.fillStyle = col; x2.font = "600 15px -apple-system, Arial, sans-serif";
-      x2.fillText(n.label, xx + 13, yy + 25);
-      xx += n.w + 10;
-    });
-    yy += nodeH + gap;
+  g.fillStyle = "#ff4d6d"; g.font = "800 34px -apple-system, Arial, sans-serif";
+  g.fillText("ReelChain", 30, 52);
+  g.fillStyle = "#8a90a6"; g.font = "15px -apple-system, Arial, sans-serif";
+  g.fillText("My run genome", 30, 76);
+  g.fillStyle = "#ffb84d"; g.font = "700 15px -apple-system, Arial, sans-serif";
+  g.fillText(rarityLabel().replace("🧬 ", ""), 30, 100);
+
+  // big stats row
+  const stats = [["ROUNDS", run.rounds], ["DNA", run.dna], ["PEAK COMBO", maxCombo() + "×"]];
+  const colW = (W - 60) / 3;
+  stats.forEach((s, i) => {
+    const x = 30 + i * colW;
+    g.fillStyle = "#8a90a6"; g.font = "600 11px -apple-system, Arial, sans-serif";
+    g.fillText(s[0], x, 138);
+    g.fillStyle = "#e8eaf2"; g.font = "800 34px -apple-system, Arial, sans-serif";
+    g.fillText(String(s[1]), x, 174);
   });
+
+  // genome helix
+  const gy = 300, amp0 = 70, padX = 40;
+  const n = run.strands.length;
+  const step = Math.min(46, (W - padX * 2) / Math.max(1, n));
+  const xAt = i => padX + i * step + (W - padX * 2 - (n - 1) * step) / 2;
+  const yAt = (i, phase) => gy + Math.sin(i * 0.9 + phase) * Math.min(amp0, run.strands[Math.min(i, n-1)].amp * 3.2);
+  // backbones
+  g.strokeStyle = "#3a4160"; g.lineWidth = 2.5;
+  [0, Math.PI].forEach(phase => {
+    g.beginPath();
+    for (let i = 0; i < n; i++) { const x = xAt(i), y = yAt(i, phase); i ? g.lineTo(x, y) : g.moveTo(x, y); }
+    g.stroke();
+  });
+  // rungs + nodes
+  run.strands.forEach((s, i) => {
+    const x = xAt(i), y1 = yAt(i, 0), y2 = yAt(i, Math.PI);
+    const col = "hsl(" + s.hue + "," + s.sat + "%,62%)";
+    g.strokeStyle = col; g.lineWidth = 2; g.globalAlpha = 0.8;
+    g.beginPath(); g.moveTo(x, y1); g.lineTo(x, y2); g.stroke();
+    g.globalAlpha = 1; g.fillStyle = col;
+    const r = s.perfect ? 8 : 5;
+    g.beginPath(); g.arc(x, y1, r, 0, 7); g.fill();
+    g.beginPath(); g.arc(x, y2, r - 1, 0, 7); g.fill();
+    if (s.fast) { g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y1, r + 4, 0, 7); g.stroke(); }
+  });
+  // legend
+  g.fillStyle = "#8a90a6"; g.font = "13px -apple-system, Arial, sans-serif";
+  g.fillText("● gold = perfect round   ○ ring = fast   height = chain length", 30, 470);
   // footer
-  x2.fillStyle = "#8a90a6"; x2.font = "13px -apple-system, Arial, sans-serif";
-  x2.fillText("Connect two films through the actors they share", 24, H - 30);
-  x2.fillText("reelchain.app", 24, H - 14);
+  g.fillStyle = "#8a90a6"; g.font = "13px -apple-system, Arial, sans-serif";
+  g.fillText("Just one more round — connect two films through shared cast", 30, H - 34);
+  g.fillStyle = "#ff4d6d"; g.font = "700 15px -apple-system, Arial, sans-serif";
+  g.fillText("reelchain.app", 30, H - 14);
   return c.toDataURL("image/png");
 }
 
-async function shareCard() {
+function maxCombo() {
+  // reconstruct peak combo from perfect streaks (combo caps at 5)
+  let combo = 1, peak = 1;
+  run.strands.forEach(s => {
+    combo = s.perfect ? Math.min(5, combo + 0.5) : Math.max(1, combo - 0.5);
+    if (combo > peak) peak = combo;
+  });
+  return peak.toFixed(1);
+}
+
+// ---------- Preview-before-share flow ----------
+let pvDataUrl = null;
+function shareCard() {
   const dataUrl = buildShareCard();
-  if (!dataUrl) { alert("Solve a puzzle first, then share!"); return; }
-  const blob = await (await fetch(dataUrl)).blob();
-  const file = new File([blob], "reelchain_card.png", { type: "image/png" });
+  if (!dataUrl) { setMsg("info", "Solve a round first — your genome needs at least one strand."); return; }
+  pvDataUrl = dataUrl;
+  $("pvImg").src = dataUrl;
+  $("overlay").classList.remove("rc-open");
+  $("endOverlay").classList.remove("rc-open");
+  $("preview").classList.add("rc-open");
+}
+
+function closePreview() { $("preview").classList.remove("rc-open"); }
+
+async function doShare() {
+  if (!pvDataUrl) return;
+  const blob = await (await fetch(pvDataUrl)).blob();
+  const file = new File([blob], "reelchain_genome.png", { type: "image/png" });
   try {
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: "ReelChain", text: "I solved a ReelChain puzzle!" });
+      await navigator.share({ files: [file], title: "ReelChain", text: "My ReelChain run genome — just one more round." });
       return;
     }
-  } catch (e) { /* user cancelled */ }
+  } catch (e) { /* user cancelled */ return; }
+  doDownload(); // fallback when Web Share unavailable
+}
+
+function doDownload() {
+  if (!pvDataUrl) return;
   const a = document.createElement("a");
-  a.href = dataUrl; a.download = "reelchain_card.png"; a.click();
+  a.href = pvDataUrl; a.download = "reelchain_genome.png"; a.click();
 }
 
 // ---------- Boot ----------
 fillCustom();
 refreshStats();
+newRun();
 newPuzzle();
 </script>
 </body>
