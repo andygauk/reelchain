@@ -103,7 +103,7 @@
   .rc-overlay{position:fixed;inset:0;background:rgba(8,10,16,.85);display:none;align-items:center;justify-content:center;z-index:2147483647;
          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);line-height:1.5}
   .rc-overlay.rc-open{display:flex}
-  #rpGif{max-width:92vw;max-height:60vh;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#0d0f17;display:block;margin:8px auto;}
+  #dnaOverlay{z-index:2147483648}  // above the win modal so the DNA card previews on top
   .rc-modal{background:var(--panel);border:1px solid #2b3142;border-radius:18px;padding:26px;max-width:460px;width:calc(100% - 40px);text-align:center;
          box-shadow:0 30px 80px rgba(0,0,0,.6);color:var(--text);font-family:inherit}
   .rc-modal h2{margin:0 0 6px;font-size:26px;font-family:inherit;font-weight:800;color:var(--text)}
@@ -1289,6 +1289,32 @@ $("rpClose").onclick = () => { $("rpOverlay").classList.remove("rc-open"); };
 $("rpOverlay").addEventListener("click", e => { if (e.target === $("rpOverlay")) $("rpOverlay").classList.remove("rc-open"); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("rpOverlay").classList.contains("rc-open")) $("rpOverlay").classList.remove("rc-open"); });
 $("chalCopy").onclick = () => { copyText($("chalLink").value); setMsg("ok", "Challenge link copied!"); };
+
+  // ---- ReelChain DNA card (Stage 2) ----
+  let dnaDataUrl = null;
+  $("winDna").onclick = () => { openDnaCard(); };
+  $("pgDnaLink").onclick = (e) => { e.preventDefault(); openDnaCard(); };
+  $("dnaClose").onclick = () => { $("dnaOverlay").classList.remove("rc-open"); };
+  $("dnaOverlay").addEventListener("click", e => { if (e.target === $("dnaOverlay")) $("dnaOverlay").classList.remove("rc-open"); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("dnaOverlay").classList.contains("rc-open")) $("dnaOverlay").classList.remove("rc-open"); });
+  $("dnaShare").onclick = async () => {
+    if (!dnaDataUrl) dnaDataUrl = buildDnaCard(RCData.stats());
+    const blob = await (await fetch(dnaDataUrl)).blob();
+    const file = new File([blob], "reelchain_dna.png", { type: "image/png" });
+    const text = "Here's my ReelChain DNA — what's yours? " + ORIGIN;
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: "ReelChain DNA", text }); return; }
+    } catch (e) {}
+    const a = document.createElement("a"); a.href = dnaDataUrl; a.download = "reelchain_dna.png"; a.click();
+    await copyText(ORIGIN); setMsg("ok", "DNA card downloaded & link copied — share it anywhere!");
+  };
+  function openDnaCard() {
+    const st = RCData.stats();
+    if (st.totalWins < 1) { setMsg("info", "Solve at least one puzzle to unlock your ReelChain DNA!"); return; }
+    dnaDataUrl = buildDnaCard(st);
+    $("dnaImg").src = dnaDataUrl;
+    $("dnaOverlay").classList.add("rc-open");  // preview first, then share
+  }
 $("customGo").onclick = () => {
   const a = $("customA").value, b = $("customB").value;
   if (a === b) { setMsg("err", "Pick two different films."); return; }
