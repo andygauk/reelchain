@@ -885,7 +885,7 @@ async function buildReelPlayGif(onProgress) {
 
   if (onProgress) onProgress(1);
 
-  const gif = new GIF({ workers: 2, quality: 8, width: W, height: H, workerScript: "gif.worker.js", background: "#0d0f17", repeat: 0 });
+  const gif = new GIF({ workers: 2, quality: 12, width: W, height: H, workerScript: "gif.worker.js", background: "#0d0f17", repeat: 0 });
   for (const fr of frames) gif.addFrame(fr.canvas, { copy: true, delay: fr.delay });
 
   return await new Promise((resolve, reject) => {
