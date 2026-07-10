@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ReelChain — Connect Two Films</title>
+<meta name="description" content="ReelChain: connect two films through shared cast and build your Fame. A quick, shareable movie-connection puzzle.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ReelChain — Connect Two Films">
+<meta property="og:description" content="Connect two films through shared cast and build your Fame. A quick, shareable movie-connection puzzle.">
+<meta property="og:image" content="https://reelchain.app/og-reelchain.png">
+<meta property="og:url" content="https://reelchain.app/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ReelChain — Connect Two Films">
+<meta name="twitter:description" content="Connect two films through shared cast and build your Fame.">
+<meta name="twitter:image" content="https://reelchain.app/og-reelchain.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='20' fill='none' stroke='%23ff4d6d' stroke-width='5'/%3E%3Ccircle cx='24' cy='24' r='4.5' fill='%23ff4d6d'/%3E%3Cg fill='%23ff4d6d'%3E%3Ccircle cx='24' cy='9' r='2.6'/%3E%3Ccircle cx='39' cy='24' r='2.6'/%3E%3Ccircle cx='24' cy='39' r='2.6'/%3E%3Ccircle cx='9' cy='24' r='2.6'/%3E%3Ccircle cx='34' cy='14' r='2.6'/%3E%3Ccircle cx='34' cy='34' r='2.6'/%3E%3Ccircle cx='14' cy='34' r='2.6'/%3E%3Ccircle cx='14' cy='14' r='2.6'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#0d0f17; --panel:#161a26; --panel2:#1e2333; --accent:#ff4d6d; --accent2:#ffb84d;
@@ -14,6 +25,10 @@
        background:radial-gradient(1200px 600px at 50% -10%,#1b2030,#0d0f17);color:var(--text);padding:22px 16px 80px}
   .rc-app h1{font-size:30px;margin:0 0 2px;letter-spacing:.5px}
   .rc-app h1 .rc-c{color:var(--accent)}
+  .rc-app .rc-logo{display:inline-flex;align-items:center;gap:12px;margin:0 0 2px;text-decoration:none;color:var(--text)}
+  .rc-app .rc-logo-mark{width:46px;height:46px;flex:0 0 auto;filter:drop-shadow(0 2px 8px rgba(255,77,109,.35))}
+  .rc-app .rc-logo-word{font-size:30px;font-weight:800;letter-spacing:.5px;line-height:1;color:var(--text)}
+  .rc-app .rc-logo-word b{color:var(--accent2);font-weight:800}
   .rc-app .rc-tag{color:var(--muted);font-size:14px;margin-bottom:16px}
 
   .rc-app .rc-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
@@ -140,8 +155,21 @@
 </style>
 </head>
 <body>
+<!-- v3-ut:WS1 brand logo + favicon + og image -->
 <div class="rc-app">
-  <h1>Reel<span class="rc-c">Chain</span></h1>
+  <a class="rc-logo" href="https://reelchain.app/" aria-label="ReelChain home">
+    <svg class="rc-logo-mark" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="20" fill="none" stroke="var(--accent)" stroke-width="5"/>
+      <circle cx="24" cy="24" r="4.5" fill="var(--accent)"/>
+      <g fill="var(--accent)">
+        <circle cx="24" cy="9" r="2.6"/><circle cx="39" cy="24" r="2.6"/>
+        <circle cx="24" cy="39" r="2.6"/><circle cx="9" cy="24" r="2.6"/>
+        <circle cx="34" cy="14" r="2.6"/><circle cx="34" cy="34" r="2.6"/>
+        <circle cx="14" cy="34" r="2.6"/><circle cx="14" cy="14" r="2.6"/>
+      </g>
+    </svg>
+    <span class="rc-logo-word">REEL<b>CHAIN</b></span>
+  </a>
   <div class="rc-tag">One more round. Connect two films through shared cast — build your Fame.</div>
 
   <div class="rc-hud" id="hud">
