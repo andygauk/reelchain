@@ -854,41 +854,47 @@ $("customGo").onclick = () => {
 // ---------- Challenge share card (spoiler-safe, client-side canvas) ----------
 function buildShareCard() {
   if (!lastRound) return null;
-  const W = 600, H = 420;
-  const c = document.createElement("canvas");
-  c.width = W; c.height = H;
-  const g = c.getContext("2d");
-  g.fillStyle = "#0d0f17"; g.fillRect(0, 0, W, H);
-  const grad = g.createRadialGradient(W/2, 40, 40, W/2, 40, 500);
-  grad.addColorStop(0, "rgba(40,50,80,0.5)"); grad.addColorStop(1, "rgba(13,15,23,0)");
-  g.fillStyle = grad; g.fillRect(0, 0, W, H);
-  // header
-  g.fillStyle = "#ff4d6d"; g.font = "800 34px -apple-system, Arial, sans-serif";
-  g.fillText("ReelChain", 30, 52);
-  g.fillStyle = "#8a90a6"; g.font = "15px -apple-system, Arial, sans-serif";
-  g.fillText(lastRound.perfect ? "PERFECT CHAIN" : "CHAIN COMPLETE", 30, 76);
-  // start + target (spoiler-safe: show the pair, conceal the middle)
-  g.fillStyle = "#e8eaf2"; g.font = "800 24px -apple-system, Arial, sans-serif";
-  g.fillText(lastRound.start, 30, 140);
-  g.fillStyle = "#9db8ff"; g.font = "16px -apple-system, Arial, sans-serif";
-  g.fillText("↓ connect through shared cast ↓", 30, 170);
-  g.fillStyle = "#e8eaf2"; g.font = "800 24px -apple-system, Arial, sans-serif";
-  g.fillText(lastRound.target, 30, 210);
-  // par + sender result (counts only — route hidden)
-  g.fillStyle = "#ffb84d"; g.font = "700 18px -apple-system, Arial, sans-serif";
-  g.fillText("Perfect is " + lastRound.optimal + " moves · I did it in " + lastRound.steps, 30, 270);
-  if (run.avatar) { g.fillText(avatarToken(run.avatar) + " " + run.avatar, 30, 298); }
-  // challenge copy
-  g.fillStyle = "#e8eaf2"; g.font = "600 16px -apple-system, Arial, sans-serif";
-  const copy = lastRound.perfect
-    ? "Can you match my Perfect Chain — without hints?"
-    : "Can you find the Perfect Chain? (I needed " + lastRound.steps + ")";
-  g.fillText(copy.slice(0, 52), 30, 340);
-  // footer
-  g.fillStyle = "#8a90a6"; g.font = "13px -apple-system, Arial, sans-serif";
-  g.fillText("reelchain.app — connect two films through shared cast", 30, H - 20);
-  return c.toDataURL("image/png");
-}
+    const W = 600, H = 420;
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const g = c.getContext("2d");
+    g.fillStyle = "#0d0f17"; g.fillRect(0, 0, W, H);
+    const grad = g.createRadialGradient(W/2, 40, 40, W/2, 40, 500);
+    grad.addColorStop(0, "rgba(40,50,80,0.5)"); grad.addColorStop(1, "rgba(13,15,23,0)");
+    g.fillStyle = grad; g.fillRect(0, 0, W, H);
+    // header
+    g.fillStyle = "#ff4d6d"; g.font = "800 34px -apple-system, Arial, sans-serif";
+    g.fillText("ReelChain", 30, 52);
+    g.fillStyle = "#8a90a6"; g.font = "15px -apple-system, Arial, sans-serif";
+    g.fillText(lastRound.perfect ? "PERFECT CHAIN" : "CHAIN COMPLETE", 30, 76);
+    // poster tiles (initials fallback; TMDB skin optional — keeps canvas untainted)
+    posterTile(g, 30, 100, 150, 84, lastRound.start);
+    posterTile(g, 420, 100, 150, 84, lastRound.target);
+    g.fillStyle = "#9db8ff"; g.font = "15px -apple-system, Arial, sans-serif"; g.textAlign = "center";
+    g.fillText("↓ connect through shared cast ↓", W/2, 150); g.textAlign = "left";
+    // start + target titles under the tiles
+    g.fillStyle = "#e8eaf2"; g.font = "800 18px -apple-system, Arial, sans-serif";
+    g.fillText(trunc(lastRound.start, 20), 30, 204);
+    g.textAlign = "right"; g.fillText(trunc(lastRound.target, 20), 570, 204); g.textAlign = "left";
+    // par + sender result (counts only — route hidden)
+    g.fillStyle = "#ffb84d"; g.font = "700 18px -apple-system, Arial, sans-serif";
+    g.fillText("Perfect is " + lastRound.optimal + " moves · I did it in " + lastRound.steps, 30, 270);
+    if (run.avatar) {
+      avatarTile(g, 30, 290, 40, run.avatar);
+      g.fillStyle = "#e8eaf2"; g.font = "700 16px -apple-system, Arial, sans-serif";
+      g.textAlign = "left"; g.textBaseline = "middle";
+      g.fillText(avatarToken(run.avatar) + " " + run.avatar, 80, 310); g.textBaseline = "alphabetic";
+    }
+    // challenge copy
+    g.fillStyle = "#e8eaf2"; g.font = "600 16px -apple-system, Arial, sans-serif";
+    const copy = lastRound.perfect
+      ? "Can you match my Perfect Chain — without hints?"
+      : "Can you find the Perfect Chain? (I needed " + lastRound.steps + ")";
+    g.fillText(copy.slice(0, 54), 30, 356);
+    // footer
+    g.fillStyle = "#8a90a6"; g.font = "13px -apple-system, Arial, sans-serif";
+    g.fillText("reelchain.app — connect two films through shared cast", 30, H - 20);
+    return c.toDataURL("image/png");
+  }
 
 // ---------- Preview-before-share flow ----------
 let pvDataUrl = null;
@@ -955,10 +961,51 @@ if (ch && ch.s && ch.t) {
 // Spoiler-safe: it animates the start → target route the player JUST solved
 // (their own route, not a challenge's hidden route). Perfect = gold pulse,
 // over-par = amber "beat my chain?" treatment.
+// rounded-rect path helper
+function rr(g, x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+}
+// deterministic gradient from a title string (stable per film)
+function tileColors(s) {
+  let h = 0; for (let i = 0; i < (s || "").length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+  return ["hsl(" + h + ",52%,34%)", "hsl(" + ((h + 38) % 360) + ",58%,18%)"];
+}
+function initials(s) {
+  const w = (s || "").replace(/[^a-zA-Z0-9 ]/g, "").trim().split(/\s+/);
+  return ((w[0]?.[0] || "") + (w[1]?.[0] || "")).toUpperCase() || (s || "?").slice(0, 2).toUpperCase();
+}
+// poster tile (initials fallback — no external images, keeps canvas untainted for the GIF)
+function posterTile(g, x, y, w, h, title) {
+  const grad = g.createLinearGradient(x, y, x + w, y + h);
+  const [c1, c2] = tileColors(title);
+  grad.addColorStop(0, c1); grad.addColorStop(1, c2);
+  g.fillStyle = grad; rr(g, x, y, w, h, 8); g.fill();
+  g.fillStyle = "rgba(255,255,255,0.92)"; g.font = "800 " + Math.round(h * 0.4) + "px -apple-system,Arial,sans-serif";
+  g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText(initials(title), x + w / 2, y + h / 2);
+  g.textAlign = "left"; g.textBaseline = "alphabetic";
+}
+// avatar / headshot tile (sender)
+function avatarTile(g, x, y, d, name) {
+  const grad = g.createLinearGradient(x, y, x + d, y + d);
+  grad.addColorStop(0, "#5b8cff"); grad.addColorStop(1, "#ff4d6d");
+  g.fillStyle = grad; g.beginPath(); g.arc(x + d / 2, y + d / 2, d / 2, 0, 7); g.fill();
+  g.fillStyle = "#fff"; g.font = "800 " + Math.round(d * 0.4) + "px -apple-system,Arial,sans-serif";
+  g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText(initials(name), x + d / 2, y + d / 2);
+  g.textAlign = "left"; g.textBaseline = "alphabetic";
+}
+function trunc(s, n) { return (s || "").length > n ? (s.slice(0, n - 1) + "…") : s; }
+
 function buildReelPlay(frames) {
   return new Promise((resolve) => {
     if (typeof GIF === "undefined") { resolve(null); return; }
-    const w = 480, h = 270, delay = 90;
+    const w = 480, h = 270, delay = 110;
     const gif = new GIF({ workers: 2, quality: 10, width: w, height: h, workerScript: "gif.worker.js" });
     frames.forEach(f => gif.addFrame(f, { delay, copy: true }));
     gif.on("finished", (blob) => resolve(blob));
@@ -966,23 +1013,16 @@ function buildReelPlay(frames) {
   });
 }
 async function queueReelPlay() {
-  // build frames: start film, then each actor→film step, then finish flourish
+  // Build frames in reveal phases that match the chosen share asset:
+  // flat charcoal → pink "ReelChain" → "Instant ReelPlay" → PERFECT status → "Solved in N links" pill.
   try {
     const w = 480, h = 270;
-    const perfect = lastRound.perfect;
-    const accent = perfect ? "#ffd24d" : "#ffb84d";
+    const perfect = lastRound.perfect, steps = lastRound.steps;
     const frames = [];
-    const films = lastRound.pathFilms, acts = lastRound.pathActors;
-    const total = films.length;
-    // frame 0: title card
-    frames.push(drawReelFrame(w, h, { films, acts, upto: 0, accent, perfect, label: perfect ? "PERFECT CHAIN" : "CHAIN COMPLETE" }));
-    // animate building the chain
-    for (let i = 1; i <= total - 1; i++) {
-      frames.push(drawReelFrame(w, h, { films, acts, upto: i, accent, perfect, label: null }));
-    }
-    // final flourish frame (held longer)
-    const last = drawReelFrame(w, h, { films, acts, upto: total - 1, accent, perfect, label: (perfect ? "⭐ Perfect · " : "") + lastRound.steps + " moves · par " + lastRound.optimal });
-    frames.push(last); frames.push(last);
+    frames.push(drawReelFrame(w, h, { phase: 0, perfect, steps }));
+    for (let f = 1; f <= 4; f++) frames.push(drawReelFrame(w, h, { phase: 1, perfect, steps, fade: f / 4 }));
+    for (let f = 1; f <= 4; f++) frames.push(drawReelFrame(w, h, { phase: 2, perfect, steps, fade: f / 4 }));
+    for (let p = 0; p < 6; p++) frames.push(drawReelFrame(w, h, { phase: 3, perfect, steps, pulse: p * 0.6 }));
     const blob = await buildReelPlay(frames);
     if (!blob) return;
     reelPlayBlob = blob;
@@ -999,38 +1039,34 @@ async function queueReelPlay() {
     track("instant_reelplay_generated", { perfect, moves: lastRound.steps, par: lastRound.optimal });
   } catch (e) { /* GIF unavailable — result screen still works without it */ }
 }
+// image-2 share-asset layout: flat charcoal, typographic, pill CTA
 function drawReelFrame(w, h, o) {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const g = c.getContext("2d");
-  g.fillStyle = "#0d0f17"; g.fillRect(0, 0, w, h);
-  const grad = g.createRadialGradient(w/2, 30, 30, w/2, 30, 500);
-  grad.addColorStop(0, "rgba(40,50,80,0.5)"); grad.addColorStop(1, "rgba(13,15,23,0)");
-  g.fillStyle = grad; g.fillRect(0, 0, w, h);
-  g.fillStyle = "#ff4d6d"; g.font = "800 22px -apple-system,Arial,sans-serif"; g.fillText("ReelChain", 18, 32);
-  if (o.label) { g.fillStyle = (o.perfect ? "#ffd24d" : "#ffb84d"); g.font = "700 15px -apple-system,Arial,sans-serif"; g.fillText(o.label, 18, 54); }
-  // chain nodes
-  const n = o.films.length;
-  const x0 = 40, x1 = w - 40, midY = h - 70;
-  const stepX = (x1 - x0) / Math.max(1, n - 1);
-  o.films.forEach((f, i) => {
-    if (i > o.upto) return;
-    const x = x0 + i * stepX;
-    g.fillStyle = "#e8eaf2"; g.beginPath(); g.arc(x, midY, 7, 0, 7); g.fill();
-    if (i < o.films.length - 1 && i < o.upto) {
-      const x2 = x0 + (i + 1) * stepX;
-      g.strokeStyle = o.accent; g.lineWidth = 3; g.beginPath(); g.moveTo(x, midY); g.lineTo(x2, midY); g.stroke();
-      // actor label
-      const a = o.acts[i];
-      g.fillStyle = o.accent; g.font = "11px -apple-system,Arial,sans-serif";
-      g.fillText(a.length > 16 ? a.slice(0,15)+"…" : a, (x + x2)/2 - 30, midY - 12);
+  g.fillStyle = "#0d0f17"; g.fillRect(0, 0, w, h); // flat charcoal (matches chosen asset)
+  g.fillStyle = "#ff4d6d"; g.font = "800 26px -apple-system,Arial,sans-serif"; g.fillText("ReelChain", 22, 42);
+  g.fillStyle = "#8a90a6"; g.font = "600 14px -apple-system,Arial,sans-serif"; g.fillText("Instant ReelPlay", 24, 64);
+  if (o.phase >= 1) {
+    g.globalAlpha = o.phase === 1 ? (o.fade != null ? o.fade : 1) : 1;
+    const stat = o.perfect ? "PERFECT — fewest possible links!" : ("CHAIN COMPLETE — " + o.steps + " links");
+    g.fillStyle = o.perfect ? "#ffd24d" : "#ffb84d"; g.font = "700 17px -apple-system,Arial,sans-serif"; g.fillText(stat, 24, 102);
+    g.globalAlpha = 1;
+  }
+  if (o.phase >= 2) {
+    const pw = 210, ph = 42, px = 24, py = 128;
+    g.save(); g.globalAlpha = o.phase === 2 ? (o.fade != null ? o.fade : 1) : 1;
+    g.strokeStyle = "#ff4d6d"; g.lineWidth = 2; rr(g, px, py, pw, ph, ph / 2); g.stroke();
+    g.fillStyle = "#ff4d6d"; g.font = "700 16px -apple-system,Arial,sans-serif";
+    g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText("Solved in " + o.steps + " links", px + pw / 2, py + ph / 2 + 1);
+    g.textAlign = "left"; g.textBaseline = "alphabetic";
+    g.restore();
+    if (o.phase === 3) {
+      g.save(); g.globalAlpha = 0.3 + 0.25 * Math.sin(o.pulse || 0);
+      g.strokeStyle = "#ff4d6d"; g.lineWidth = 6; rr(g, px - 4, py - 4, pw + 8, ph + 8, ph / 2 + 4); g.stroke();
+      g.restore();
     }
-    g.fillStyle = "#8a90a6"; g.font = "11px -apple-system,Arial,sans-serif";
-    const label = f.length > 18 ? f.slice(0,17)+"…" : f;
-    g.fillText(label, x - 30, midY + 22);
-  });
-  // progress text
-  g.fillStyle = "#8a90a6"; g.font = "12px -apple-system,Arial,sans-serif";
-  g.fillText((o.upto + 1) + " / " + n + " films", 18, h - 16);
+  }
   return c;
 }
 
