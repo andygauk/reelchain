@@ -43,6 +43,11 @@
   .rc-app .rc-modebar{font-size:13px;color:var(--muted);margin:-6px 0 12px;min-height:18px}
   .rc-app .rc-modebar b{color:var(--accent2)}
   .rc-app .rc-modebar .rc-done{color:var(--good);font-weight:600}
+  .rc-app .rc-runrisk{display:none;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:0 0 10px;padding:6px 12px;background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);border-radius:10px}
+  .rc-app .rc-runrisk b{color:#e8eaf2}
+  .rc-app .rc-runrisk b.rc-risk{color:#ff6b85}
+  .rc-app .rc-riskbox{display:none;margin-top:10px;padding:10px 12px;font-size:13px;color:#ffd7df;background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.3);border-radius:10px}
+  .rc-app .rc-riskbox b{color:#ff8aa0}
 
   .rc-app .rc-puzzle{display:flex;align-items:stretch;gap:10px;margin-bottom:14px}
   .rc-app .rc-card{flex:1;background:linear-gradient(160deg,#20283e,#141826);border:1px solid #2b3142;border-radius:16px;
@@ -208,14 +213,14 @@
     <div class="rc-stat rc-fame"><div class="rc-k">⭐ Fame</div><div class="rc-v" id="hudFame">0</div><div class="rc-pb">lifetime</div></div>
     <div class="rc-stat rc-hof" id="hudHofBox"><div class="rc-k">🏆 Hall of Fame</div><div class="rc-v" id="hudHof">—</div><div class="rc-pb"><b id="hudNext">0</b> to next</div></div>
   </div>
+  <div class="rc-runrisk" id="runRisk" style="display:none"></div>
 
   <div class="rc-toolbar">
     <div class="rc-seg" id="diff">
-      <button data-d="easy" class="rc-active">Easy</button>
-      <button data-d="medium">Medium</button>
-      <button data-d="hard">Hard</button>
-      <button data-d="surprise">Surprise</button>
-    </div>
+        <button data-d="easy" class="rc-active">Easy</button>
+        <button data-d="medium">Medium</button>
+        <button data-d="hard">Hard</button>
+      </div>
     <button class="rc-btn ghost" id="hintBtn">💡 Hint</button>
     <button class="rc-btn ghost" id="avatarBtn">⭐ Avatar</button>
     <button class="rc-btn ghost" id="secondTakeBtn" style="display:none">↩ Second Take</button>
@@ -325,7 +330,8 @@
   <div class="rc-overlay" id="giveUpOverlay">
     <div class="rc-modal">
       <h2>Give up?</h2>
-      <div class="rc-sub">Your current Run will end. We'll show you the shortest chain before starting another.</div>
+      <div class="rc-sub">Your Run ends. You keep your <b>banked</b> Fame — but any Fame earned since your last milestone (Round 3 / 6 / 9) is lost, and a new Run starts from your banked total.</div>
+      <div class="rc-riskbox" id="giveUpRisk" style="display:none"></div>
       <div class="rc-row" style="justify-content:center;margin-top:12px">
         <button class="rc-btn ghost" id="giveUpCancel">Keep looking</button>
         <button class="rc-btn" id="giveUpConfirm">🏳 Give up</button>
@@ -420,9 +426,8 @@ const HOF = [
 ];
 const DIFF = {
   easy:     { earn: 30 },
-  medium:   { earn: 40 },
-  hard:     { earn: 50 },
-  surprise: { earn: 45 },
+  medium:   { earn: 50 },
+  hard:     { earn: 80 },
 };
 
 function loadFame() { return +(localStorage.getItem("rc_fame") || 0); }
@@ -442,14 +447,15 @@ let lastRound = null; // last completed round details (for result screen + share
 let activeChallenge = null; // the challenge this run was launched from (for beat-my-score compare)
 
 function newRun() {
-  run = { rounds: 0, streak: 0, atRisk: 0, hints: 0, fame: loadFame() };
+  // banked = lifetime Fame secured at the last milestone (R3/R6/R9). atRisk = Fame earned since.
+  run = { rounds: 0, streak: 0, atRisk: 0, banked: loadFame(), hints: 0, fame: loadFame() };
   renderHof();
   updateHUD();
 }
 
 // v3-ut:WS2 — Workspace 2 scoring (per Gameplay & Scoring Redesign brief)
 // Each round answers ONE question: "How well did I solve THIS chain?"
-//   Difficulty base: Easy 30 / Medium 40 / Hard 50
+//   Difficulty base: Easy 30 / Medium 50 / Hard 80
 //   Penalties: extra links beyond par, backtracks, hints, Second Take.
 //   Perfect Chain = optimal + no backtracking + no hints + no Second Take (NOT time-based).
 //   No time/speed scoring. Run bonuses are tracked separately (see applyRoundToRun).
@@ -464,7 +470,7 @@ function scoreRound(diff, steps, optimal, backtracks, hints, usedSecondTake) {
   if (backtracks > 0) { earn -= backtracks * 2; parts.push({ label: "Backtracking (" + backtracks + ")", value: -(backtracks * 2) }); }
   if (hints > 0) { earn -= hints * 5; parts.push({ label: "Hints (" + hints + ")", value: -(hints * 5) }); }
   if (usedSecondTake) { earn = Math.round(earn * 0.9); parts.push({ label: "Second Take assist", value: -(d.earn - Math.round(d.earn * 0.9)) }); }
-  earn = Math.max(5, earn);   // minimum completion reward always applies
+  earn = Math.max(1, earn);   // minimum completion reward always applies (brief §9: at least 1 Fame)
   return { earn, parts, perfect };
 }
 
@@ -473,11 +479,19 @@ function applyRoundToRun(steps, optimal, backtracks, usedSecondTake) {
   run.rounds += 1;
   const { earn, parts, perfect } = scoreRound(run.difficulty, steps, optimal, backtracks, run.hints, usedSecondTake);
   // Run bonus: rewards consistency (chains completed in a row), shown SEPARATELY from round Fame.
-  let runBonus = 0;
-  if (run.rounds >= 3) runBonus = 5;
-  if (run.rounds >= 6) runBonus = 10;
-  if (run.rounds >= 9) runBonus = 15;
-  run.fame += earn + runBonus;
+  // Milestones bank lifetime Fame; between milestones, newly earned Fame is "at risk" on Give Up.
+  let runBonus = 0, milestone = 0;
+  if (run.rounds === 3) { runBonus = 5; milestone = 3; }
+  else if (run.rounds === 6) { runBonus = 10; milestone = 6; }
+  else if (run.rounds === 9) { runBonus = 15; milestone = 9; }
+  const gained = earn + runBonus;
+  run.fame += gained;
+  run.atRisk = run.fame - run.banked;            // banked is frozen between milestones
+  if (milestone) {                               // banking a milestone secures everything so far
+    run.banked = run.fame;
+    run.atRisk = 0;
+    track("run_milestone_awarded", { milestone, roundBonus: runBonus, fameTotal: run.fame });
+  }
   saveFame(run.fame);
   const total = earn + runBonus;
   lastRound = {
@@ -538,7 +552,7 @@ function newPuzzle(a, b, skipIntro) {
   $("secondTakeBtn").style.display = (run && run.avatar) ? "inline-block" : "none";
   render();
   startTimer();
-  track("round_start", {});
+  track("game_started", { difficulty: run ? run.difficulty : difficulty, round: run ? run.rounds + 1 : 1 });
 }
 
 function pickPair(band) {
@@ -610,6 +624,14 @@ function updateHUD() {
   $("hudHof").textContent = st.name;
   const need = st.next ? (st.next.min - run.fame) : 0;
   $("hudNext").textContent = st.next ? need : "MAX";
+  // Unobtrusive risk indicator: what's banked vs what's on the table this Run.
+  const riskEl = $("runRisk");
+  if (riskEl && run && run.rounds > 0 && run.atRisk > 0) {
+    riskEl.innerHTML = "Banked: <b>" + run.banked + "</b> Fame &nbsp;·&nbsp; At risk: <b class='rc-risk'>" + run.atRisk + "</b> Fame";
+    riskEl.style.display = "flex";
+  } else if (riskEl) {
+    riskEl.style.display = "none";
+  }
   // Current Run status line (consistency, not a score multiplier)
   const lbl = $("hudRunLbl");
   if (run.rounds === 0) lbl.textContent = "chains";
@@ -698,6 +720,7 @@ function chooseActor(a) {
 
 function chooseFilm(f) {
   state.movesTaken++;   // monotonic: counts every link made; never decremented by undo
+  track("link_added", { film: f, from: state.current });
   if (f === state.target) {
     state.pathActors.push(state.selectedActor);
     state.pathFilms.push(f);
@@ -764,7 +787,7 @@ function win() {
   const { earn, runBonus, total } = applyRoundToRun(steps, optimal, state.backtracks || 0, run.usedSecondTake);
   updateHUD();
 
-  track("round_completed", {
+  track("game_completed", {
     difficulty: run.difficulty, par: optimal, moves: steps, timeMs: elapsed,
     backtracks: state.backtracks || 0, hints: run.hints, usedSecondTake: !!run.usedSecondTake,
     perfect, fameEarned: total, runBonus, fameTotal: run.fame, hofLevel: hofStatus(run.fame).name,
@@ -778,7 +801,7 @@ function win() {
   const st = hofStatus(run.fame);
   const justLeveled = (st.i > (lastRound ? hofIndex((run.fame - total)) : 0));
   $("winTitle").textContent = perfect ? "PERFECT CHAIN 🎯" : "CHAIN COMPLETE 🎉";
-  $("winSteps").textContent = "+" + total + " Fame";
+  $("winSteps").textContent = "+" + total + " Fame" + (runBonus > 0 ? "  ·  🔥 Run Bonus +" + runBonus : "");
   // summary line (par shown here — post-solve, so it informs without spoiling)
   let sub;
   if (perfect) sub = steps + " moves · par " + optimal + " (fewest possible)";
@@ -857,18 +880,27 @@ function confirmGiveUp() {
   // Allow Give Up at ANY point in a puzzle. run.rounds counts only COMPLETED chains,
   // so an in-progress first puzzle (rounds===0) must still be give-up-able — otherwise
   // a stuck player can never reveal the shortest chain (brief §3: Give Up IS the reveal).
+  const rb = $("giveUpRisk");
+  if (rb) {
+    if (run.atRisk > 0) {
+      rb.innerHTML = "You'll drop <b>" + run.atRisk + "</b> Fame. Your <b>" + run.banked + "</b> banked stays — the new Run starts at " + run.banked + ".";
+      rb.style.display = "block";
+    } else {
+      rb.style.display = "none";
+    }
+  }
   $("giveUpOverlay").classList.add("rc-open");
 }
 function giveUp() {
   $("giveUpOverlay").classList.remove("rc-open");
   stopTimer();
-  // A Give Up only counts as a completed "Run" if the player had banked ≥1 chain this run.
-  // Otherwise it's a mid-puzzle surrender and must NOT inflate the Runs/completed-chains stat.
-  if (run.rounds > 0) {
-    let runs = +(localStorage.getItem("rc_won") || 0) + 1;
-    localStorage.setItem("rc_won", runs);
-  }
+  // Banking model (v3.5 G5): Give Up surrenders all Fame earned since the last banked
+  // milestone and starts a fresh Run from the banked total. Established HoF history is kept.
+  const dropped = Math.max(0, run.fame - run.banked);
+  run.fame = run.banked;
+  saveFame(run.fame);
   refreshStats();
+  updateHUD();
   // show the SHORTEST chain (the old Reveal result) before starting another
   const r = bfs(state.start, state.target);
   const st = hofStatus(run.fame);
@@ -877,12 +909,14 @@ function giveUp() {
   const par = r ? r.steps : null;
   const solved = run.rounds > 0;
   $("endTitle").textContent = par ? "Here's the shortest chain 🔗" : "Run ended 🎬";
-  // Encourage re-engagement: show how far you got + how few moves it actually took.
   let big = solved ? (run.rounds + (run.rounds === 1 ? " chain" : " chains")) : (mySteps + (mySteps === 1 ? " step" : " steps") + " in");
   $("endBig").textContent = big;
   let sub;
   if (par) {
-    sub = "Shortest path is " + par + " moves" + (solved ? " — you'd banked " + run.fame + " Fame this run." : (mySteps ? " · you got " + mySteps + " in. Next time, give it another go! 💪" : " · give it another go! 💪"));
+    sub = "Shortest path is " + par + " moves";
+    if (dropped > 0) sub += " — you lost " + dropped + " unbanked Fame. Your banked " + run.banked + " stays.";
+    else if (solved) sub += " — your banked " + run.banked + " Fame is safe.";
+    else sub += " · give it another go! 💪";
   } else {
     sub = "Hall of Fame: " + st.name;
   }
@@ -901,7 +935,7 @@ function giveUp() {
     eg.appendChild(arrow());
     eg.appendChild(mkNode("film", state.target));
   }
-  track("run_gave_up", { rounds: run.rounds, difficulty: run.difficulty, fame: run.fame, hofLevel: st.name });
+  track("give_up", { rounds: run.rounds, difficulty: run.difficulty, droppedFame: dropped, bankedFame: run.banked, lifetimeFame: run.fame, hofLevel: st.name });
   $("endOverlay").classList.add("rc-open");
 }
 
@@ -1021,7 +1055,6 @@ document.querySelectorAll("#diff button").forEach(btn => {
     document.querySelectorAll("#diff button").forEach(x => x.classList.remove("rc-active"));
     btn.classList.add("rc-active");
     difficulty = btn.dataset.d;
-    track("next_round_selected", { difficulty });
     newPuzzle(undefined, undefined, true); // skip cinematic intro on difficulty switch
   };
 });
@@ -1034,10 +1067,10 @@ $("giveUpConfirm").onclick = giveUp;
 $("avatarBtn").onclick = pickAvatar;
 $("secondTakeBtn").onclick = secondTake;
 $("flipBtn").onclick = () => { if (state) newPuzzle(state.target, state.start, true); }; // flip = mid-session swap, skip intro
-$("undoBtn").onclick = () => { track("undo_used", {}); undo(); };
-$("winNext").onclick = () => { track("next_round_selected", { from: "win" }); $("overlay").classList.remove("rc-open"); newPuzzle(); };
+$("undoBtn").onclick = () => { track("wrong_turn", { type: "undo" }); undo(); };
+$("winNext").onclick = () => { track("one_more_go_clicked", { from: "win", round: run.rounds }); $("overlay").classList.remove("rc-open"); newPuzzle(); };
 $("winShare").onclick = shareCard;
-$("endNewRun").onclick = () => { $("endOverlay").classList.remove("rc-open"); newRun(); newPuzzle(); };
+$("endNewRun").onclick = () => { $("endOverlay").classList.remove("rc-open"); newRun(); newPuzzle(); track("game_started", { difficulty: run.difficulty, round: 1 }); };
 $("endShare").onclick = shareCard;
 $("pvShare").onclick = doShare;
 $("pvDownload").onclick = doDownload;
@@ -1064,7 +1097,7 @@ function buildShareCard() {
     g.fillStyle = "#ff4d6d"; g.font = "800 34px -apple-system, Arial, sans-serif";
     g.fillText("ReelChain", 30, 52);
     g.fillStyle = "#8a90a6"; g.font = "15px -apple-system, Arial, sans-serif";
-    g.fillText(lastRound.perfect ? "PERFECT CHAIN" : "CHAIN COMPLETE", 30, 76);
+    g.fillText("CHAIN COMPLETE", 30, 76);
     // poster tiles (initials fallback; TMDB skin optional — keeps canvas untainted)
     posterTile(g, 30, 100, 150, 84, lastRound.start);
     posterTile(g, 420, 100, 150, 84, lastRound.target);
@@ -1085,9 +1118,7 @@ function buildShareCard() {
     }
     // challenge copy
     g.fillStyle = "#e8eaf2"; g.font = "600 16px -apple-system, Arial, sans-serif";
-    const copy = lastRound.perfect
-      ? "Can you match my Perfect Chain — without hints?"
-      : "Can you find the Perfect Chain? (I needed " + lastRound.steps + ")";
+    const copy = "I connected " + lastRound.start + " to " + lastRound.target + " in " + lastRound.steps + " links. Can you beat it?";
     g.fillText(copy.slice(0, 54), 30, 356);
     // footer
     g.fillStyle = "#8a90a6"; g.font = "13px -apple-system, Arial, sans-serif";
@@ -1103,7 +1134,7 @@ function shareCard() {
   pvDataUrl = dataUrl;
   $("pvImg").src = dataUrl;
   const ch = makeChallenge();
-  if (ch) { $("pvImg").alt = ch.url; track("challenge_created", { difficulty: lastRound.difficulty, par: lastRound.optimal, moves: lastRound.steps }); }
+  if (ch) { $("pvImg").alt = ch.url; track("share_clicked", { type: "challenge", difficulty: lastRound.difficulty, par: lastRound.optimal, moves: lastRound.steps }); }
   $("overlay").classList.remove("rc-open");
   $("endOverlay").classList.remove("rc-open");
   $("preview").classList.add("rc-open");
@@ -1124,7 +1155,7 @@ async function doShare() {
   const file = new File([blob], "reelchain-challenge.png", { type: "image/png" });
   try {
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: "ReelChain", text: "Can you find the Perfect Chain?" });
+      await navigator.share({ files: [file], title: "ReelChain", text: "I connected " + lastRound.start + " to " + lastRound.target + " in " + lastRound.steps + " links. Can you beat it?" });
       track("share_completed", { channel: "native_share" });
       return;
     }
@@ -1153,6 +1184,7 @@ if (ch && ch.s && ch.t) {
   const hintTxt = ch.p ? (" Challenger's Perfect Chain is " + ch.p + " moves.") : "";
   setMsg("info", "📨 Challenge! Connect " + ch.s + " → " + ch.t + "." + hintTxt + " Solve it without revealing the route.  ⚔️ Beat their score to send a rematch.");
   track("challenge_landed", { difficulty: ch.d, par: ch.p });
+  track("challenge_started", { difficulty: ch.d, par: ch.p, start: ch.s, target: ch.t, senderMoves: ch.m });
 } else {
   newPuzzle();
 }
@@ -1711,6 +1743,7 @@ function chainInfo() {
 // Instant ReelPlay (T1.5): an animated vertical chain of the route the player
 // JUST solved, with over-par links highlighted in red. Matches the PERFECT mockup.
 async function queueReelPlay() {
+  track("instant_reelplay_started", { perfect: lastRound ? lastRound.perfect : false });
   try {
     if (typeof GIF === "undefined") return;
     const films = lastRound.pathFilms, actors = lastRound.pathActors;
@@ -1748,10 +1781,10 @@ async function queueReelPlay() {
     img.src = url; img.alt = "Instant ReelPlay"; img.style.maxWidth = "100%"; img.style.borderRadius = "12px";
     reel.appendChild(img);
     const dl = document.createElement("button");
-    dl.className = "rc-btn ghost"; dl.textContent = "⬇ Save ReelPlay";
-    dl.onclick = () => { const a = document.createElement("a"); a.href = url; a.download = "reelchain-reelplay.gif"; a.click(); track("instant_reelplay_downloaded", { perfect: lastRound.perfect }); };
+      dl.className = "rc-btn ghost"; dl.textContent = "⬇ Save ReelPlay";
+      dl.onclick = () => { const a = document.createElement("a"); a.href = url; a.download = "reelchain-reelplay.gif"; a.click(); track("instant_reelplay_gif_generated", { perfect: lastRound.perfect }); };
     reel.appendChild(dl);
-    track("instant_reelplay_generated", { perfect: lastRound.perfect, moves: actors.length, par: ci.optimal, over: ci.over.size });
+    track("instant_reelplay_completed", { perfect: lastRound.perfect, moves: actors.length, par: ci.optimal, over: ci.over.size });
   } catch (e) { /* GIF unavailable — result screen still works without it */ }
 }
 
