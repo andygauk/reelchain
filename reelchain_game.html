@@ -1033,7 +1033,7 @@ $("giveUpCancel").onclick = () => { $("giveUpOverlay").classList.remove("rc-open
 $("giveUpConfirm").onclick = giveUp;
 $("avatarBtn").onclick = pickAvatar;
 $("secondTakeBtn").onclick = secondTake;
-$("flipBtn").onclick = () => { if (state) newPuzzle(state.target, state.start); };
+$("flipBtn").onclick = () => { if (state) newPuzzle(state.target, state.start, true); }; // flip = mid-session swap, skip intro
 $("undoBtn").onclick = () => { track("undo_used", {}); undo(); };
 $("winNext").onclick = () => { track("next_round_selected", { from: "win" }); $("overlay").classList.remove("rc-open"); newPuzzle(); };
 $("winShare").onclick = shareCard;
