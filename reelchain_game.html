@@ -128,10 +128,16 @@
   /* ---- Run HUD (the "one more round" driver) ---- */
   .rc-app .rc-hud{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin:-4px 0 14px}
   .rc-app .rc-stat{flex:1;min-width:78px;background:linear-gradient(160deg,#1a2032,#12151f);border:1px solid #2b3142;border-radius:12px;padding:9px 11px}
-  .rc-app .rc-stat .rc-k{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+  .rc-app .rc-stat .rc-k{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700}
   .rc-app .rc-stat .rc-v{font-size:22px;font-weight:800;line-height:1.1;color:var(--text)}
+  .rc-app .rc-stat.rc-round{border-color:rgba(99,179,237,.45)}
+  .rc-app .rc-stat.rc-round .rc-v{color:#63b3ed}
   .rc-app .rc-stat.rc-combo{border-color:rgba(255,184,77,.4)}
   .rc-app .rc-stat.rc-combo .rc-v{color:var(--accent2)}
+  .rc-app .rc-stat.rc-fame{border-color:rgba(255,77,109,.4)}
+  .rc-app .rc-stat.rc-fame .rc-v{color:var(--accent)}
+  .rc-app .rc-stat.rc-hof{border-color:rgba(157,184,255,.4)}
+  .rc-app .rc-stat.rc-hof .rc-v{color:var(--accent2)}
   .rc-app .rc-stat.rc-hot{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,77,109,.25);animation:rcpulse 1.2s ease-in-out infinite}
   @keyframes rcpulse{0%,100%{box-shadow:0 0 0 2px rgba(255,77,109,.15)}50%{box-shadow:0 0 0 4px rgba(255,77,109,.45)}}
   .rc-app .rc-stat .rc-pb{font-size:10px;color:var(--muted);margin-top:1px}
@@ -142,14 +148,32 @@
   .rc-app .rc-hof .rc-hof-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
   .rc-app .rc-hof .rc-hof-head h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
   .rc-app .rc-hof .rc-hof-head span{font-size:12px;color:var(--muted)}
-  .rc-app .rc-hof .rc-hof-bar{position:relative;height:14px;background:#0e111b;border:1px solid #2b3142;border-radius:8px;overflow:hidden}
-  .rc-app .rc-hof .rc-hof-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#ff4d6d,#ffb84d);transition:width .5s ease}
-  .rc-app .rc-hof .rc-hof-label{position:absolute;right:8px;top:0;line-height:14px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .rc-app .rc-hof .rc-hof-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto;padding-right:4px;scrollbar-width:thin}
+  .rc-app .rc-hof .rc-tier{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid #232838}
+  .rc-app .rc-hof .rc-tier .t-name{font-size:13px;font-weight:700;color:var(--muted)}
+  .rc-app .rc-hof .rc-tier .t-fame{font-size:11px;color:var(--muted)}
+  .rc-app .rc-hof .rc-tier.rc-unlocked{background:rgba(157,184,255,.08);border-color:rgba(157,184,255,.3)}
+  .rc-app .rc-hof .rc-tier.rc-unlocked .t-name{color:#cfe0ff}
+  .rc-app .rc-hof .rc-tier.rc-current{background:linear-gradient(135deg,rgba(255,77,109,.18),rgba(255,184,77,.18));border-color:var(--accent);box-shadow:0 0 0 1px rgba(255,77,109,.25)}
+  .rc-app .rc-hof .rc-tier.rc-current .t-name{color:#fff}
+  .rc-app .rc-hof .rc-tier.rc-next{border-style:dashed;border-color:rgba(157,184,255,.35)}
+  .rc-app .rc-hof .rc-tier.rc-next .t-name{color:var(--accent2)}
   .rc-app .rc-stat.rc-fame .rc-v{color:var(--accent)}
   .rc-app .rc-stat.rc-hof .rc-v{color:var(--accent2)}
   .rc-app .rc-stat.rc-hof{border-color:rgba(157,184,255,.4)}
 
-  .rc-preview{position:fixed;inset:0;background:rgba(8,10,16,.9);display:none;align-items:center;justify-content:center;z-index:2147483647;padding:20px;
+  /* v3-ut:WS6 — clock + cinematic countdown takeover */
+  .rc-app .rc-clock{font-variant-numeric:tabular-nums;font-weight:800;font-size:15px;color:#cfe0ff;background:linear-gradient(135deg,#1a2032,#0e111b);border:1px solid #2b3142;border-radius:9px;padding:6px 10px;min-width:62px;text-align:center;transition:color .2s,border-color .2s,box-shadow .2s}
+  .rc-app .rc-clock.rc-urgent{color:#fff;border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,77,109,.35);animation:cdurgent .8s ease-in-out infinite}
+  @keyframes cdurgent{0%,100%{box-shadow:0 0 0 2px rgba(255,77,109,.2)}50%{box-shadow:0 0 0 4px rgba(255,77,109,.55)}}
+  .rc-countdown{position:fixed;inset:0;z-index:2147483646;display:none;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 50%,rgba(20,16,30,.86),rgba(8,10,16,.96));backdrop-filter:blur(2px)}
+  .rc-countdown.rc-show{display:flex}
+  .rc-countdown .rc-cd-num{font-size:120px;font-weight:900;letter-spacing:-2px;color:#fff;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    animation:cdpop .6s ease-out}
+  .rc-countdown .rc-cd-sub{font-size:15px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-top:-6px}
+  @keyframes cdpop{0%{transform:scale(2.2);opacity:0;filter:blur(8px)}60%{opacity:1}100%{transform:scale(1);opacity:1;filter:blur(0)}}
         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
   .rc-preview.rc-open{display:flex}
   .rc-preview .rc-pv-box{background:var(--panel);border:1px solid #2b3142;border-radius:18px;padding:18px;max-width:520px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6)}
@@ -178,10 +202,10 @@
   <div class="rc-tag">One more round. Connect two films through shared cast — build your Fame.</div>
 
   <div class="rc-hud" id="hud">
-    <div class="rc-stat rc-round"><div class="rc-k">Round</div><div class="rc-v" id="hudRound">0</div><div class="rc-pb">this run</div></div>
-    <div class="rc-stat rc-combo" id="hudComboBox"><div class="rc-k">Run streak</div><div class="rc-v" id="hudCombo">0</div><div class="rc-pb" id="hudStreakLbl">warm up</div></div>
-    <div class="rc-stat rc-fame"><div class="rc-k">Fame</div><div class="rc-v" id="hudFame">0</div><div class="rc-pb">lifetime</div></div>
-    <div class="rc-stat rc-hof" id="hudHofBox"><div class="rc-k">Status</div><div class="rc-v" id="hudHof">—</div><div class="rc-pb"><b id="hudNext">0</b> to next</div></div>
+    <div class="rc-stat rc-round"><div class="rc-k">🎬 Round</div><div class="rc-v" id="hudRound">0</div><div class="rc-pb">this run</div></div>
+    <div class="rc-stat rc-combo" id="hudComboBox"><div class="rc-k">🔥 Run streak</div><div class="rc-v" id="hudCombo">0</div><div class="rc-pb" id="hudStreakLbl">warm up</div></div>
+    <div class="rc-stat rc-fame"><div class="rc-k">🌟 Fame</div><div class="rc-v" id="hudFame">0</div><div class="rc-pb">lifetime</div></div>
+    <div class="rc-stat rc-hof" id="hudHofBox"><div class="rc-k">🏆 Status</div><div class="rc-v" id="hudHof">—</div><div class="rc-pb"><b id="hudNext">0</b> to next</div></div>
   </div>
 
   <div class="rc-toolbar">
@@ -200,9 +224,15 @@
     <span class="rc-clock" id="clock">00:00</span>
   </div>
 
-  <div class="rc-hof" id="hof">
+  <!-- v3-ut:WS6 cinematic round-start takeover -->
+  <div class="rc-countdown" id="countdown" aria-hidden="true">
+    <div class="rc-cd-num" id="cdNum"></div>
+    <div class="rc-cd-sub" id="cdSub"></div>
+  </div>
+
+  <div class="rc-hof" id="hof"><!-- v3-ut:WS4 infinite vertical tiers -->
     <div class="rc-hof-head"><h3>Hall of Fame</h3><span id="hofLine">Solve a chain to grow your standing.</span></div>
-    <div class="rc-hof-bar"><div class="rc-hof-fill" id="hofFill"></div><div class="rc-hof-label" id="hofPct">0%</div></div>
+    <div class="rc-hof-list" id="hofList"></div>
   </div>
 
   <div class="rc-puzzle">
@@ -444,7 +474,27 @@ function applyRoundToRun(steps, optimal, secs, usedSecondTake) {
   return earn;
 }
 
+function playCountdown(roundNo) { // v3-ut:WS6 cinematic round-start takeover
+  const ov = $("countdown"), num = $("cdNum"), sub = $("cdSub");
+  if (!ov) return;
+  const seq = ["3", "2", "1", "GO"];
+  let i = 0;
+  ov.classList.add("rc-show");
+  ov.setAttribute("aria-hidden", "false");
+  function step() {
+    if (i < 3) { num.textContent = seq[i]; sub.textContent = "Get ready"; }
+    else { num.textContent = seq[i]; sub.textContent = (roundNo > 0 ? "Round " + roundNo : "Go!"); }
+    // retrigger the pop animation
+    num.style.animation = "none"; void num.offsetWidth; num.style.animation = "";
+    i++;
+    if (i <= seq.length) setTimeout(step, 480);
+    else { setTimeout(() => { ov.classList.remove("rc-show"); ov.setAttribute("aria-hidden", "true"); }, 420); }
+  }
+  step();
+}
+
 function newPuzzle(a, b) {
+  playCountdown(run ? (run.rounds + 1) : 1); // v3-ut:WS6 takeover before the board reveals
   if (!a || !b) {
     const r = pickPair(difficulty);
     a = r[0]; b = r[1];
@@ -548,23 +598,43 @@ function updateHUD() {
   else { box.classList.remove("rc-hot"); $("hudStreakLbl").textContent = run.streak > 0 ? run.streak + " streak" : "warm up"; }
 }
 
-// Compact Hall of Fame progress — current status, Fame total, progress to next status.
-// Never a finite horizontal ladder; always shows the next attainable step.
+// v3-ut:WS4 — infinite Hall of Fame ladder. Beyond the hardcoded top tier,
+// generate procedural tiers (+HOF_STEP Fame each) so it never ends.
+const HOF_STEP = 400;
+function hofTiers(fame) {
+  const out = HOF.map(t => ({ name: t.name, min: t.min }));
+  let m = out[out.length - 1].min + HOF_STEP, k = 1;
+  while (m <= fame + HOF_STEP) {
+    out.push({ name: "Tier " + (HOF.length + k) + " Legend", min: m });
+    m += HOF_STEP; k++;
+    if (out.length > 40) break;
+  }
+  return out;
+}
+
+// Compact Hall of Fame progress as a growing vertical list of tiers:
+// unlocked = dimmed/earned, current = highlighted, next = "X Fame to <tier>".
+// Never a finite % bar — always shows the next attainable step.
 function renderHof() {
   if (!run) return;
   const st = hofStatus(run.fame);
-  const base = HOF[st.i].min;
-  const top = st.next ? st.next.min : HOF[HOF.length - 1].min;
-  const span = st.next ? (top - base) : 1;
-  const pct = st.next ? Math.min(100, Math.round((run.fame - base) / span * 100)) : 100;
-  $("hofFill").style.width = pct + "%";
-  $("hofPct").textContent = pct + "%";
-  if (st.next) {
-    const need = st.next.min - run.fame;
-    $("hofLine").textContent = st.name + " · " + run.fame + " Fame · " + need + " to " + st.next.name;
-  } else {
-    $("hofLine").textContent = st.name + " · " + run.fame + " Fame · top of the ladder";
-  }
+  const tiers = hofTiers(run.fame);
+  const list = $("hofList");
+  list.innerHTML = "";
+  tiers.forEach((t, i) => {
+    const div = document.createElement("div");
+    let cls = "rc-tier";
+    if (t.min <= run.fame) cls += " rc-unlocked";
+    if (i === st.i) cls += " rc-current";
+    if (i === st.i + 1) cls += " rc-next";
+    div.className = cls;
+    const label = (i === st.i + 1) ? ((t.min - run.fame) + " Fame to here") : (t.min + " Fame");
+    div.innerHTML = '<span class="t-name">' + t.name + '</span><span class="t-fame">' + label + '</span>';
+    list.appendChild(div);
+  });
+  const nxt = tiers[st.i + 1];
+  if (nxt) $("hofLine").textContent = st.name + " · " + run.fame + " Fame · " + (nxt.min - run.fame) + " to " + nxt.name;
+  else $("hofLine").textContent = st.name + " · " + run.fame + " Fame";
 }
 
 function mkNode(type, name) {
@@ -799,9 +869,10 @@ function startTimer() {
   timer = setInterval(() => {
     elapsed = Date.now() - startTs;
     $("clock").textContent = fmt(elapsed);
+    if (elapsed >= 10000) $("clock").classList.add("rc-urgent"); // v3-ut:WS6 clock pulse <10s
   }, 250);
 }
-function stopTimer() { if (timer) { clearInterval(timer); timer = null; } elapsed = Date.now() - startTs; }
+function stopTimer() { if (timer) { clearInterval(timer); timer = null; } elapsed = Date.now() - startTs; $("clock").classList.remove("rc-urgent"); }
 
 // ---------- Custom pair ----------
 function fillCustom() {
