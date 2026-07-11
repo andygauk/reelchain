@@ -205,10 +205,9 @@
   <div class="rc-tag">One more round. Connect two films through shared cast — build your Fame.</div>
 
   <div class="rc-hud" id="hud">
-    <div class="rc-stat rc-round"><div class="rc-k">🎬 Round</div><div class="rc-v" id="hudRound">0</div><div class="rc-pb">this run</div></div>
-    <div class="rc-stat rc-combo" id="hudComboBox"><div class="rc-k">🔥 Run streak</div><div class="rc-v" id="hudCombo">0</div><div class="rc-pb" id="hudStreakLbl">warm up</div></div>
-    <div class="rc-stat rc-fame"><div class="rc-k">🌟 Fame</div><div class="rc-v" id="hudFame">0</div><div class="rc-pb">lifetime</div></div>
-    <div class="rc-stat rc-hof" id="hudHofBox"><div class="rc-k">🏆 Status</div><div class="rc-v" id="hudHof">—</div><div class="rc-pb"><b id="hudNext">0</b> to next</div></div>
+    <div class="rc-stat rc-run" id="hudRunBox"><div class="rc-k">🔥 Current Run</div><div class="rc-v" id="hudRun">0</div><div class="rc-pb" id="hudRunLbl">chains</div></div>
+    <div class="rc-stat rc-fame"><div class="rc-k">⭐ Fame</div><div class="rc-v" id="hudFame">0</div><div class="rc-pb">lifetime</div></div>
+    <div class="rc-stat rc-hof" id="hudHofBox"><div class="rc-k">🏆 Hall of Fame</div><div class="rc-v" id="hudHof">—</div><div class="rc-pb"><b id="hudNext">0</b> to next</div></div>
   </div>
 
   <div class="rc-toolbar">
@@ -222,7 +221,7 @@
     <button class="rc-btn ghost" id="avatarBtn">⭐ Avatar</button>
     <button class="rc-btn ghost" id="secondTakeBtn" style="display:none">↩ Second Take</button>
     <button class="rc-btn ghost" id="shareBtn">📤 Challenge</button>
-    <button class="rc-btn ghost" id="endBtn">■ End</button>
+    <button class="rc-btn ghost" id="endBtn">🏳 Give up</button>
     <span class="rc-spacer"></span>
     <span class="rc-clock" id="clock">00:00</span>
   </div>
@@ -275,7 +274,6 @@
 
   <div class="rc-row">
     <button class="rc-btn ghost" id="undoBtn">↩ Go back a step</button>
-    <button class="rc-btn ghost" id="revealBtn">👁 Reveal</button>
     <button class="rc-btn ghost" id="flipBtn">🔄 Flip</button>
     <span class="rc-spacer"></span>
     <div class="rc-stats">
@@ -318,6 +316,18 @@
     </div>
     <div class="rc-sub" id="winEndHint" style="margin-top:12px;margin-bottom:0"></div>
   </div>
+  </div>
+
+  <!-- v3-ut:WS7 — Give Up confirm (Reveal becomes the consequence of giving up, per brief §3) -->
+  <div class="rc-overlay" id="giveUpOverlay">
+    <div class="rc-modal">
+      <h2>Give up?</h2>
+      <div class="rc-sub">Your current Run will end. We'll show you the shortest chain before starting another.</div>
+      <div class="rc-row" style="justify-content:center;margin-top:12px">
+        <button class="rc-btn ghost" id="giveUpCancel">Keep looking</button>
+        <button class="rc-btn" id="giveUpConfirm">🏳 Give up</button>
+      </div>
+    </div>
   </div>
 
   <div class="rc-overlay" id="endOverlay">
@@ -589,15 +599,18 @@ function updateModeBar() {
 function updateHUD() {
   if (!run) return;
   const st = hofStatus(run.fame);
-  $("hudRound").textContent = run.rounds;
-  $("hudCombo").textContent = run.streak;
+  $("hudRun").textContent = run.rounds;
   $("hudFame").textContent = run.fame;
   $("hudHof").textContent = st.name;
   const need = st.next ? (st.next.min - run.fame) : 0;
   $("hudNext").textContent = st.next ? need : "MAX";
-  const box = $("hudComboBox");
-  if (run.streak >= 3) { box.classList.add("rc-hot"); $("hudStreakLbl").innerHTML = "🔥 " + run.streak + " perfect"; }
-  else { box.classList.remove("rc-hot"); $("hudStreakLbl").textContent = run.streak > 0 ? run.streak + " streak" : "warm up"; }
+  // Current Run status line (consistency, not a score multiplier)
+  const lbl = $("hudRunLbl");
+  if (run.rounds === 0) lbl.textContent = "chains";
+  else if (run.rounds >= 9) lbl.textContent = "🔥 legendary";
+  else if (run.rounds >= 6) lbl.textContent = "🔥 on fire";
+  else if (run.rounds >= 3) lbl.textContent = "🔥 heating up";
+  else lbl.textContent = "chains";
 }
 
 // v3-ut:WS4 — infinite Hall of Fame ladder. Beyond the hardcoded top tier,
@@ -839,25 +852,44 @@ function win() {
 }
 
 // ---------- End run (lock in lifetime Fame) ----------
-function endRun() {
-  if (!run || run.rounds === 0) { setMsg("info", "Solve at least one round to build your Fame."); return; }
-  $("overlay").classList.remove("rc-open");
+// ---------- Give Up (brief §3: Reveal becomes the consequence of ending) ----------
+function confirmGiveUp() {
+  if (!run) return;
+  if (run.rounds === 0) { setMsg("info", "Nothing to give up yet — solve a chain first."); return; }
+  $("giveUpOverlay").classList.add("rc-open");
+}
+function giveUp() {
+  $("giveUpOverlay").classList.remove("rc-open");
+  stopTimer();
+  // lock in lifetime Fame already earned this run (never reduced)
   let runs = +(localStorage.getItem("rc_won") || 0) + 1;
   localStorage.setItem("rc_won", runs);
   refreshStats();
+  // show the SHORTEST chain (the old Reveal result) before starting another
+  const r = bfs(state.start, state.target);
   const st = hofStatus(run.fame);
   const pbFame = +(localStorage.getItem("rc_pb_fame") || 0);
-  $("endTitle").textContent = st.name + " locked in";
-  $("endBig").textContent = run.fame + " Fame";
-  let sub = run.rounds + (run.rounds === 1 ? " round" : " rounds") + " · Hall of Fame: " + st.name;
-  sub += (run.fame >= pbFame) ? "  ·  🏆 new Fame best!" : "  ·  best " + pbFame + " Fame";
+  $("endTitle").textContent = "You gave up — Run ended";
+  $("endBig").textContent = run.rounds + (run.rounds === 1 ? " chain" : " chains");
+  let sub = "Hall of Fame: " + st.name + (run.fame >= pbFame ? "  ·  🏆 new Fame best!" : "  ·  best " + pbFame + " Fame");
   $("endSub").textContent = sub;
   const eg = $("endChain"); eg.innerHTML = "";
-  eg.appendChild(mkNode("film", state.start));
-  eg.appendChild(arrow());
-  eg.appendChild(mkNode("film", state.target));
+  if (r && r.chain && r.chain.length) {
+    r.chain.forEach((n, i) => {
+      eg.appendChild(mkNode(n.type, n.name));
+      if (i < r.chain.length - 1) eg.appendChild(arrow());
+    });
+  } else {
+    eg.appendChild(mkNode("film", state.start));
+    eg.appendChild(arrow());
+    eg.appendChild(mkNode("film", state.target));
+  }
+  track("run_gave_up", { rounds: run.rounds, difficulty: run.difficulty, fame: run.fame, hofLevel: st.name });
   $("endOverlay").classList.add("rc-open");
 }
+
+// ---------- End run (legacy: keep as alias to Give Up for safety) ----------
+function endRun() { giveUp(); }
 
 function refreshStats() {
   $("statWon").textContent = localStorage.getItem("rc_won") || 0;
@@ -874,13 +906,13 @@ function startTimer() {
   stopTimer();
   startTs = Date.now(); elapsed = 0;
   $("clock").textContent = "00:00";
+  // informational only — not part of scoring or pressure (brief §11). No urgent pulse.
   timer = setInterval(() => {
     elapsed = Date.now() - startTs;
     $("clock").textContent = fmt(elapsed);
-    if (elapsed >= 10000) $("clock").classList.add("rc-urgent"); // v3-ut:WS6 clock pulse <10s
   }, 250);
 }
-function stopTimer() { if (timer) { clearInterval(timer); timer = null; } elapsed = Date.now() - startTs; $("clock").classList.remove("rc-urgent"); }
+function stopTimer() { if (timer) { clearInterval(timer); timer = null; } elapsed = Date.now() - startTs; }
 
 // ---------- Custom pair ----------
 function fillCustom() {
@@ -975,11 +1007,11 @@ document.querySelectorAll("#diff button").forEach(btn => {
   };
 });
 $("hintBtn").onclick = () => { run.hints++; track("hint_used", { difficulty: run.difficulty }); hint(); };
-$("revealBtn").onclick = reveal;
-$("shareBtn").onclick = shareCard;
+$("endBtn").onclick = confirmGiveUp;
+$("giveUpCancel").onclick = () => { $("giveUpOverlay").classList.remove("rc-open"); };
+$("giveUpConfirm").onclick = giveUp;
 $("avatarBtn").onclick = pickAvatar;
 $("secondTakeBtn").onclick = secondTake;
-$("endBtn").onclick = endRun;
 $("flipBtn").onclick = () => { if (state) newPuzzle(state.target, state.start); };
 $("undoBtn").onclick = () => { track("undo_used", {}); undo(); };
 $("winNext").onclick = () => { track("next_round_selected", { from: "win" }); $("overlay").classList.remove("rc-open"); newPuzzle(); };
