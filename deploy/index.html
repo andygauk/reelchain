@@ -166,9 +166,8 @@
   .rc-app .rc-stat.rc-hof{border-color:rgba(157,184,255,.4)}
 
   /* v3-ut:WS6 — clock + cinematic countdown takeover */
-  .rc-app .rc-clock{font-variant-numeric:tabular-nums;font-weight:800;font-size:15px;color:#cfe0ff;background:linear-gradient(135deg,#1a2032,#0e111b);border:1px solid #2b3142;border-radius:9px;padding:6px 10px;min-width:62px;text-align:center;transition:color .2s,border-color .2s,box-shadow .2s}
-  .rc-app .rc-clock.rc-urgent{color:#fff;border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,77,109,.35);animation:cdurgent .8s ease-in-out infinite}
-  @keyframes cdurgent{0%,100%{box-shadow:0 0 0 2px rgba(255,77,109,.2)}50%{box-shadow:0 0 0 4px rgba(255,77,109,.55)}}
+  .rc-app .rc-clock{display:none;font-variant-numeric:tabular-nums;font-weight:800;font-size:15px;color:#cfe0ff;background:linear-gradient(135deg,#1a2032,#0e111b);border:1px solid #2b3142;border-radius:9px;padding:6px 10px;min-width:62px;text-align:center;transition:color .2s,border-color .2s,box-shadow .2s}
+  .rc-app .rc-clock.rc-on{display:inline-block}
   .rc-countdown{position:fixed;inset:0;z-index:2147483646;display:none;flex-direction:column;align-items:center;justify-content:center;
     background:radial-gradient(circle at 50% 50%,rgba(20,16,30,.86),rgba(8,10,16,.96));backdrop-filter:blur(2px)}
   .rc-countdown.rc-show{display:flex}
@@ -297,8 +296,12 @@
           <select id="customB"></select>
           <button class="rc-btn" id="customGo">Play</button>
         </div>
-      </div>
-    </details>
+        <label class="rc-toggle" style="margin-top:12px;display:inline-flex;gap:8px;align-items:center;cursor:pointer">
+          <input type="checkbox" id="showClock" /> Show running timer
+        </label>
+        <div class="rc-sub" style="margin-top:4px;font-size:12px">The timer is just a stopwatch — it never affects your Fame.</div>
+        </div>
+        </details>
   </div>
 
   <div class="rc-overlay" id="overlay">
@@ -424,6 +427,9 @@ const DIFF = {
 
 function loadFame() { return +(localStorage.getItem("rc_fame") || 0); }
 function saveFame(v) { localStorage.setItem("rc_fame", v); }
+// v3-ut:WS6 — timer is an OPT-IN disclosure (brief §11: demote timer). Default OFF.
+function showClock() { return localStorage.getItem("rc_show_clock") === "1"; }
+function setShowClock(on) { localStorage.setItem("rc_show_clock", on ? "1" : "0"); }
 
 function hofIndex(fame) {
   let idx = 0;
@@ -747,13 +753,6 @@ function hint() {
   }
 }
 
-function reveal() {
-  const r = bfs(state.start, state.target);
-  if (!r) { setMsg("err", "These two films aren't connected in the dataset."); return; }
-  const txt = r.chain.map(n => n.name).join("  →  ");
-  setMsg("info", "Shortest link (" + r.steps + "): " + txt);
-}
-
 // ---------- Win (a solved round feeds the run) ----------
 function win() {
   stopTimer();
@@ -904,7 +903,9 @@ function fmt(ms) {
 }
 function startTimer() {
   stopTimer();
+  if (!showClock()) { $("clock").classList.remove("rc-on"); return; }   // opt-in only
   startTs = Date.now(); elapsed = 0;
+  $("clock").classList.add("rc-on");
   $("clock").textContent = "00:00";
   // informational only — not part of scoring or pressure (brief §11). No urgent pulse.
   timer = setInterval(() => {
@@ -1007,6 +1008,8 @@ document.querySelectorAll("#diff button").forEach(btn => {
   };
 });
 $("hintBtn").onclick = () => { run.hints++; track("hint_used", { difficulty: run.difficulty }); hint(); };
+$("showClock").checked = showClock();
+$("showClock").onchange = (e) => { setShowClock(e.target.checked); if (showClock()) startTimer(); else { stopTimer(); $("clock").classList.remove("rc-on"); } };
 $("endBtn").onclick = confirmGiveUp;
 $("giveUpCancel").onclick = () => { $("giveUpOverlay").classList.remove("rc-open"); };
 $("giveUpConfirm").onclick = giveUp;
