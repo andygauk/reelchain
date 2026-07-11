@@ -116,6 +116,7 @@ WS1 (logo, cheap, high trust) → WS7 (steps, pure logic, low risk) → WS2+WS5 
 ## Open Questions
 1. Scoring numbers in WS2 are a proposal — confirm easy=1/med=2/hard=3 base + 2x speed / 1.5x perfect multipliers feel right, or adjust.
 2. WS9 deferred unless you flag otherwise.
+3. **USER FLAG (post-WS7, 2026-07-11):** Andy misses the "optimal"/par number that WS7 removed from the live panel. Likely to revisit — prefer re-showing optimal at the **win screen** (post-solve, non-spoiling) and/or a subtle "par N" on completion, NOT live during play. Tie into WS2/WS5 breakdown. Do NOT treat WS7's hide-optimal as permanently final.
 
 ## Files likely to change
 - `deploy/index.html` (primary), `reelchain_game.html` (mirror)
