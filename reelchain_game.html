@@ -512,8 +512,8 @@ function playCountdown(roundNo) { // v3-ut:WS6 cinematic round-start takeover
   step();
 }
 
-function newPuzzle(a, b) {
-  playCountdown(run ? (run.rounds + 1) : 1); // v3-ut:WS6 takeover before the board reveals
+function newPuzzle(a, b, skipIntro) {
+  if (!skipIntro) playCountdown(run ? (run.rounds + 1) : 1); // v3-ut:WS6 takeover (skipped only on difficulty switch)
   if (!a || !b) {
     const r = pickPair(difficulty);
     a = r[0]; b = r[1];
@@ -1022,7 +1022,7 @@ document.querySelectorAll("#diff button").forEach(btn => {
     btn.classList.add("rc-active");
     difficulty = btn.dataset.d;
     track("next_round_selected", { difficulty });
-    newPuzzle();
+    newPuzzle(undefined, undefined, true); // skip cinematic intro on difficulty switch
   };
 });
 $("hintBtn").onclick = () => { run.hints++; track("hint_used", { difficulty: run.difficulty }); hint(); };
