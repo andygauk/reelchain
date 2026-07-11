@@ -853,24 +853,42 @@ function win() {
 // ---------- End run (lock in lifetime Fame) ----------
 // ---------- Give Up (brief §3: Reveal becomes the consequence of ending) ----------
 function confirmGiveUp() {
-  if (!run) return;
-  if (run.rounds === 0) { setMsg("info", "Nothing to give up yet — solve a chain first."); return; }
+  if (!run || !state) return;
+  // Allow Give Up at ANY point in a puzzle. run.rounds counts only COMPLETED chains,
+  // so an in-progress first puzzle (rounds===0) must still be give-up-able — otherwise
+  // a stuck player can never reveal the shortest chain (brief §3: Give Up IS the reveal).
   $("giveUpOverlay").classList.add("rc-open");
 }
 function giveUp() {
   $("giveUpOverlay").classList.remove("rc-open");
   stopTimer();
-  // lock in lifetime Fame already earned this run (never reduced)
-  let runs = +(localStorage.getItem("rc_won") || 0) + 1;
-  localStorage.setItem("rc_won", runs);
+  // A Give Up only counts as a completed "Run" if the player had banked ≥1 chain this run.
+  // Otherwise it's a mid-puzzle surrender and must NOT inflate the Runs/completed-chains stat.
+  if (run.rounds > 0) {
+    let runs = +(localStorage.getItem("rc_won") || 0) + 1;
+    localStorage.setItem("rc_won", runs);
+  }
   refreshStats();
   // show the SHORTEST chain (the old Reveal result) before starting another
   const r = bfs(state.start, state.target);
   const st = hofStatus(run.fame);
   const pbFame = +(localStorage.getItem("rc_pb_fame") || 0);
-  $("endTitle").textContent = "You gave up — Run ended";
-  $("endBig").textContent = run.rounds + (run.rounds === 1 ? " chain" : " chains");
-  let sub = "Hall of Fame: " + st.name + (run.fame >= pbFame ? "  ·  🏆 new Fame best!" : "  ·  best " + pbFame + " Fame");
+  const mySteps = state.movesTaken || 0;
+  const par = r ? r.steps : null;
+  const solved = run.rounds > 0;
+  $("endTitle").textContent = par ? "Here's the shortest chain 🔗" : "Run ended 🎬";
+  // Encourage re-engagement: show how far you got + how few moves it actually took.
+  let big = solved ? (run.rounds + (run.rounds === 1 ? " chain" : " chains")) : (mySteps + (mySteps === 1 ? " step" : " steps") + " in");
+  $("endBig").textContent = big;
+  let sub;
+  if (par) {
+    sub = "Shortest path is " + par + " moves" + (solved ? " — you'd banked " + run.fame + " Fame this run." : (mySteps ? " · you got " + mySteps + " in. Next time, give it another go! 💪" : " · give it another go! 💪"));
+  } else {
+    sub = "Hall of Fame: " + st.name;
+  }
+  if (!solved && run.fame > 0) sub += "  ·  Lifetime Fame " + run.fame;
+  else if (solved && run.fame >= pbFame) sub += "  ·  🏆 new Fame best!";
+  else if (solved) sub += "  ·  best " + pbFame + " Fame";
   $("endSub").textContent = sub;
   const eg = $("endChain"); eg.innerHTML = "";
   if (r && r.chain && r.chain.length) {
