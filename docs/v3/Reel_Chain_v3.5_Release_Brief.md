@@ -132,6 +132,8 @@ Reel Chain uses Fame as its points system. Harder chains award more Fame. The ro
 
 Difficulty labels may remain internal. The player does not need to see Easy, Medium or Hard unless that presentation improves the experience.
 
+> v3.5 clarification (2026-07-11): **Surprise difficulty is removed.** All generated chains are classified as Easy, Medium or Hard only.
+
 The scoring engine should use the shortest known valid chain as its efficiency reference. Hermes must confirm that the current data and route logic can calculate this reliably, but should not redesign the agreed scoring model.
 
 ## 10. Runs and milestone bonuses
@@ -152,17 +154,15 @@ A Run continues while the player keeps solving chains. One more go advances the 
 
 Give Up is the single surrender action. There is no separate Reveal button.
 
-When the player chooses Give Up:
+Runs use a **banked-milestone** model (v3.5 decision, ratified 2026-07-11):
 
-- The approved Fame loss from the existing scoring system is applied.
-- The current Run ends immediately.
-- The shortest known chain is revealed.
-- The player is returned to round one of a new Run.
-- Established Hall of Fame progress remains; Give Up must not wipe the player’s complete history.
+- Completing **Round 3**, **Round 6** and **Round 9** banks the player's current lifetime Fame.
+- Between milestones, every point of Fame earned is **at risk**.
+- When the player chooses Give Up, they forfeit all unbanked (at-risk) Fame and begin a new Run starting from the banked total. Established Hall of Fame history is kept — Give Up never wipes banked progress.
 
-> Give Up ends this Run, costs Fame and starts you again from round one.
+This replaces the earlier "fixed Fame penalty / return to round one" wording. There is no single fixed penalty; the risk is exactly the Fame earned since the last banked milestone, shown live in the Run UI ("Banked: X · At risk: Y") and again on the Give Up confirm step so the player always knows what they are sacrificing.
 
-The numerical Give Up rule is not being reopened in v3.5. Hermes should preserve the approved value already defined in the current scoring implementation or v3 scoring source of truth.
+The shortest known chain is still revealed on Give Up, and a new Run begins from the banked total.
 
 ## 12. Progression and Hall of Fame
 

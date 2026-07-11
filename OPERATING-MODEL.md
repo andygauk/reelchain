@@ -24,3 +24,6 @@ Apply to any v3.5 cron / autonomous build job: `deliver='origin,telegram:8690893
 
 ## Escalation rule (brief §1 / §20 / §25)
 Hermes does not interrupt Andy for minor UI / implementation choices. Escalate only when a decision materially changes gameplay, design, scoring, progression, or the sharing loop.
+
+## Implementation autonomy (Andy, 2026-07-11)
+For implementation choices, build the **strongest coherent version**, not a menu of options. Do not stop to ask "which of 3 approaches?" for things like an "eye-catching Instant ReelPlay" — surprise him with the best build. Only pause when a change would alter product philosophy. He would rather review something ambitious than approve many small decisions.
