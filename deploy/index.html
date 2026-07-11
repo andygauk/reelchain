@@ -33,17 +33,18 @@
 
   .rc-app .rc-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
   .rc-app .rc-seg{display:inline-flex;background:var(--panel2);border:1px solid #2b3142;border-radius:10px;overflow:hidden}
-  .rc-app .rc-seg button{background:none;border:none;color:var(--muted);padding:9px 13px;font-size:13px;font-weight:600;cursor:pointer}
+  .rc-app .rc-seg button{background:none;border:none;color:var(--muted);padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer}
   .rc-app .rc-seg button.rc-active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1320}
   .rc-app .rc-btn{cursor:pointer;border:none;border-radius:10px;padding:10px 15px;font-size:14px;font-weight:600;
        background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1320;transition:transform .06s}
   .rc-app .rc-btn:active{transform:translateY(1px)}
   .rc-app .rc-btn.ghost{background:var(--panel2);color:var(--text);border:1px solid #2b3142}
+  .rc-app .rc-toolbar .rc-tool{padding:9px 12px;font-size:16px;line-height:1;border-radius:10px}
   .rc-app .rc-spacer{flex:1}
   .rc-app .rc-modebar{font-size:13px;color:var(--muted);margin:-6px 0 12px;min-height:18px}
   .rc-app .rc-modebar b{color:var(--accent2)}
   .rc-app .rc-modebar .rc-done{color:var(--good);font-weight:600}
-  .rc-app .rc-runrisk{display:none;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:0 0 10px;padding:6px 12px;background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);border-radius:10px}
+  .rc-app .rc-runrisk{display:none;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:0 0 12px;padding:6px 12px;background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);border-radius:10px}
   .rc-app .rc-runrisk b{color:#e8eaf2}
   .rc-app .rc-runrisk b.rc-risk{color:#ff6b85}
   .rc-app .rc-riskbox{display:none;margin-top:10px;padding:10px 12px;font-size:13px;color:#ffd7df;background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.3);border-radius:10px}
@@ -51,11 +52,11 @@
 
   .rc-app .rc-puzzle{display:flex;align-items:stretch;gap:10px;margin-bottom:14px}
   .rc-app .rc-card{flex:1;background:linear-gradient(160deg,#20283e,#141826);border:1px solid #2b3142;border-radius:16px;
-        padding:16px;position:relative;min-height:96px;display:flex;flex-direction:column;justify-content:center}
+        padding:18px;position:relative;min-height:118px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,.35)}
   .rc-app .rc-card .rc-lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-  .rc-app .rc-card .rc-name{font-size:20px;font-weight:700;line-height:1.2}
-  .rc-app .rc-card.rc-target{background:linear-gradient(160deg,#3a1f33,#21141f);border-color:#7a3550}
-  .rc-app .rc-card .rc-emoji{position:absolute;top:12px;right:14px;font-size:22px;opacity:.6}
+  .rc-app .rc-card .rc-name{font-size:26px;font-weight:800;line-height:1.15;letter-spacing:.2px}
+  .rc-app .rc-card.rc-target{background:linear-gradient(160deg,#3a1f33,#21141f);border-color:#7a3550;box-shadow:0 10px 30px rgba(122,53,80,.25)}
+  .rc-app .rc-card .rc-emoji{position:absolute;top:12px;right:14px;font-size:26px;opacity:.7}
   .rc-app .rc-connector{display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:12px;min-width:64px}
   .rc-app .rc-connector .rc-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);margin:4px 0}
   .rc-app .rc-connector .rc-line{width:2px;flex:1;background:linear-gradient(var(--accent),var(--accent2));min-height:18px}
@@ -134,17 +135,12 @@
   .rc-app .rc-help b{color:var(--text)}
   .rc-app details summary{cursor:pointer;color:var(--accent2);font-size:13px;font-weight:600;margin-bottom:8px}
 
-  /* ---- Run HUD (the "one more round" driver) ---- */
-  .rc-app .rc-hud{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin:-4px 0 14px}
-  .rc-app .rc-stat{flex:1;min-width:78px;background:linear-gradient(160deg,#1a2032,#12151f);border:1px solid #2b3142;border-radius:12px;padding:9px 11px}
-  .rc-app .rc-stat .rc-k{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700}
-  .rc-app .rc-stat .rc-v{font-size:22px;font-weight:800;line-height:1.1;color:var(--text)}
-  .rc-app .rc-stat.rc-round{border-color:rgba(99,179,237,.45)}
-  .rc-app .rc-stat.rc-round .rc-v{color:#63b3ed}
-  .rc-app .rc-stat.rc-combo{border-color:rgba(255,184,77,.4)}
-  .rc-app .rc-stat.rc-combo .rc-v{color:var(--accent2)}
-  .rc-app .rc-stat.rc-fame{border-color:rgba(255,77,109,.4)}
-  .rc-app .rc-stat.rc-fame .rc-v{color:var(--accent)}
+  /* ---- Slim status line (replaces the 3-card HUD) ---- */
+  .rc-app .rc-status{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+  .rc-app .rc-st-chip{font-size:13px;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid #232838;border-radius:999px;padding:5px 11px;white-space:nowrap}
+  .rc-app .rc-st-chip b{color:var(--text);font-weight:700}
+  .rc-app .rc-st-hof b{color:var(--accent2)}
+  .rc-app .rc-st-next b{color:var(--good)}
   .rc-app .rc-stat.rc-hof{border-color:rgba(157,184,255,.4)}
   .rc-app .rc-stat.rc-hof .rc-v{color:var(--accent2)}
   .rc-app .rc-stat.rc-hot{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,77,109,.25);animation:rcpulse 1.2s ease-in-out infinite}
@@ -152,12 +148,15 @@
   .rc-app .rc-stat .rc-pb{font-size:10px;color:var(--muted);margin-top:1px}
   .rc-app .rc-stat .rc-pb b{color:var(--good)}
 
-  /* ---- Hall of Fame progress ---- */
-  .rc-app .rc-hof{background:linear-gradient(160deg,#141826,#0e111b);border:1px solid #232838;border-radius:14px;padding:12px 14px;margin-bottom:14px;overflow:hidden}
-  .rc-app .rc-hof .rc-hof-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
-  .rc-app .rc-hof .rc-hof-head h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
-  .rc-app .rc-hof .rc-hof-head span{font-size:12px;color:var(--muted)}
-  .rc-app .rc-hof .rc-hof-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto;padding-right:4px;scrollbar-width:thin}
+  /* ---- Hall of Fame: collapsed accordion (progression preserved, off the dominant path) ---- */
+  .rc-app .rc-hof-collapse{margin:0 0 16px;border:1px solid #232838;border-radius:14px;background:rgba(255,255,255,.02);overflow:hidden}
+  .rc-app .rc-hof-collapse > summary{list-style:none;cursor:pointer;padding:12px 16px;font-size:14px;font-weight:600;color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .rc-app .rc-hof-collapse > summary::-webkit-details-marker{display:none}
+  .rc-app .rc-hof-collapse > summary::after{content:"▾";color:var(--muted);font-size:12px;transition:transform .2s}
+  .rc-app .rc-hof-collapse[open] > summary::after{transform:rotate(180deg)}
+  .rc-app .rc-hof-collapse > summary #hofLine{font-weight:400;color:var(--muted);font-size:13px}
+  .rc-app .rc-hof{background:transparent;border:none;border-radius:0;padding:0 16px 14px;margin:0}
+  .rc-app .rc-hof .rc-hof-list{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;padding-right:4px;scrollbar-width:thin}
   .rc-app .rc-hof .rc-tier{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid #232838}
   .rc-app .rc-hof .rc-tier .t-name{font-size:13px;font-weight:700;color:var(--muted)}
   .rc-app .rc-hof .rc-tier .t-fame{font-size:11px;color:var(--muted)}
@@ -199,7 +198,11 @@
     .rc-app .rc-toolbar{gap:6px}
     .rc-app .rc-seg button{padding:8px 11px;font-size:12px}
     .rc-app .rc-btn, .rc-btn{padding:11px 14px;font-size:15px}
-    .rc-modal{padding:20px 16px;border-radius:16px;width:calc(100% - 24px)}
+    /* Hero board dominates even on small screens */
+    .rc-app .rc-card .rc-name{font-size:22px}
+    .rc-app .rc-card{min-height:104px;padding:14px}
+    .rc-app .rc-status{margin:0 0 10px}
+    .rc-app .rc-st-chip{font-size:12px;padding:4px 10px}
     .rc-modal h2{font-size:22px}
     .rc-modal .rc-big{font-size:38px}
     .rc-modal .rc-breakdown{padding:9px 12px}
@@ -233,41 +236,18 @@
     </svg>
     <span class="rc-logo-word">REEL<b>CHAIN</b></span>
   </a>
-  <div class="rc-tag">One more round. Connect two films through shared cast — build your Fame.</div>
+  <div class="rc-tag">Connect two films through shared cast. One more round — build your Fame.</div>
 
-  <div class="rc-hud" id="hud">
-    <div class="rc-stat rc-run" id="hudRunBox"><div class="rc-k">🔥 Current Run</div><div class="rc-v" id="hudRun">0</div><div class="rc-pb" id="hudRunLbl">chains</div></div>
-    <div class="rc-stat rc-fame"><div class="rc-k">⭐ Fame</div><div class="rc-v" id="hudFame">0</div><div class="rc-pb">lifetime</div></div>
-    <div class="rc-stat rc-hof" id="hudHofBox"><div class="rc-k">🏆 Hall of Fame</div><div class="rc-v" id="hudHof">—</div><div class="rc-pb"><b id="hudNext">0</b> to next</div></div>
+  <!-- Slim status line (replaces the 3-card HUD): Run · Fame · standing -->
+  <div class="rc-status" id="hud">
+    <span class="rc-st-chip"><b id="hudRun">0</b> 🔥 run</span>
+    <span class="rc-st-chip"><b id="hudFame">0</b> ⭐ Fame</span>
+    <span class="rc-st-chip rc-st-hof">🏆 <b id="hudHof">—</b></span>
+    <span class="rc-st-chip rc-st-next"><b id="hudNext">0</b> to next</span>
   </div>
   <div class="rc-runrisk" id="runRisk" style="display:none"></div>
 
-  <div class="rc-toolbar">
-    <div class="rc-seg" id="diff">
-        <button data-d="easy" class="rc-active">Easy</button>
-        <button data-d="medium">Medium</button>
-        <button data-d="hard">Hard</button>
-      </div>
-    <button class="rc-btn ghost" id="hintBtn">💡 Hint</button>
-    <button class="rc-btn ghost" id="avatarBtn">⭐ Avatar</button>
-    <button class="rc-btn ghost" id="secondTakeBtn" style="display:none">↩ Second Take</button>
-    <button class="rc-btn ghost" id="shareBtn">📤 Challenge</button>
-    <button class="rc-btn ghost" id="endBtn">🏳 Give up</button>
-    <span class="rc-spacer"></span>
-    <span class="rc-clock" id="clock">00:00</span>
-  </div>
-
-  <!-- v3-ut:WS6 cinematic round-start takeover -->
-  <div class="rc-countdown" id="countdown" aria-hidden="true">
-    <div class="rc-cd-num" id="cdNum"></div>
-    <div class="rc-cd-sub" id="cdSub"></div>
-  </div>
-
-  <div class="rc-hof" id="hof"><!-- v3-ut:WS4 infinite vertical tiers -->
-    <div class="rc-hof-head"><h3>Hall of Fame</h3><span id="hofLine">Solve a chain to grow your standing.</span></div>
-    <div class="rc-hof-list" id="hofList"></div>
-  </div>
-
+  <!-- HERO: the puzzle is the dominant element -->
   <div class="rc-puzzle">
     <div class="rc-card rc-start">
       <span class="rc-emoji">🎬</span>
@@ -283,6 +263,27 @@
       <div class="rc-name" id="targetName">—</div>
     </div>
   </div>
+
+  <div class="rc-toolbar">
+    <div class="rc-seg" id="diff">
+        <button data-d="easy" class="rc-active">Easy</button>
+        <button data-d="medium">Medium</button>
+        <button data-d="hard">Hard</button>
+      </div>
+    <span class="rc-spacer"></span>
+    <button class="rc-btn ghost rc-tool" id="hintBtn" title="Hint">💡</button>
+    <button class="rc-btn ghost rc-tool" id="avatarBtn" title="Avatar">⭐</button>
+    <button class="rc-btn ghost rc-tool" id="shareBtn" title="Challenge a friend">📤</button>
+    <button class="rc-btn ghost rc-tool" id="endBtn" title="Give up">🏳</button>
+    <span class="rc-clock" id="clock">00:00</span>
+  </div>
+
+  <!-- v3-ut:WS6 cinematic round-start takeover -->
+  <div class="rc-countdown" id="countdown" aria-hidden="true">
+    <div class="rc-cd-num" id="cdNum"></div>
+    <div class="rc-cd-sub" id="cdSub"></div>
+  </div>
+
   <div class="rc-modebar" id="modeBar"></div>
 
   <div class="rc-panel">
@@ -312,6 +313,14 @@
       <span>Best time: <b id="statBest">—</b></span>
     </div>
   </div>
+
+  <!-- Hall of Fame: progression preserved (brief §12) but collapsed off the dominant path -->
+  <details class="rc-hof-collapse">
+    <summary>🏆 Hall of Fame — <span id="hofLine">Solve a chain to grow your standing.</span></summary>
+    <div class="rc-hof" id="hof"><!-- v3-ut:WS4 infinite vertical tiers -->
+      <div class="rc-hof-list" id="hofList"></div>
+    </div>
+  </details>
 
   <div class="rc-panel" style="margin-top:14px">
     <details>
@@ -576,7 +585,7 @@ function newPuzzle(a, b, skipIntro) {
   const d = DIFF[difficulty] || DIFF.easy;
   setMsg("info", "Earn up to <b>+" + d.earn + " Fame</b> for a perfect chain" + (d.earn > 30 ? " (harder puzzle)" : "") + ".");
   hideActorPanel();
-  $("secondTakeBtn").style.display = (run && run.avatar) ? "inline-block" : "none";
+  const stb = $("secondTakeBtn"); if (stb) stb.style.display = (run && run.avatar) ? "inline-block" : "none";
   render();
   startTimer();
   track("game_started", { difficulty: run ? run.difficulty : difficulty, round: run ? run.rounds + 1 : 1 });
@@ -646,7 +655,12 @@ function updateModeBar() {
 function updateHUD() {
   if (!run) return;
   const st = hofStatus(run.fame);
-  $("hudRun").textContent = run.rounds;
+  // Run chip shows the count + a short status word (no separate label element now).
+  let runWord = "run";
+  if (run.rounds >= 9) runWord = "🔥 legendary";
+  else if (run.rounds >= 6) runWord = "🔥 on fire";
+  else if (run.rounds >= 3) runWord = "🔥 heating up";
+  $("hudRun").textContent = run.rounds + (runWord ? " · " + runWord : "");
   $("hudFame").textContent = run.fame;
   $("hudHof").textContent = st.name;
   const need = st.next ? (st.next.min - run.fame) : 0;
@@ -659,13 +673,6 @@ function updateHUD() {
   } else if (riskEl) {
     riskEl.style.display = "none";
   }
-  // Current Run status line (consistency, not a score multiplier)
-  const lbl = $("hudRunLbl");
-  if (run.rounds === 0) lbl.textContent = "chains";
-  else if (run.rounds >= 9) lbl.textContent = "🔥 legendary";
-  else if (run.rounds >= 6) lbl.textContent = "🔥 on fire";
-  else if (run.rounds >= 3) lbl.textContent = "🔥 heating up";
-  else lbl.textContent = "chains";
 }
 
 // v3-ut:WS4 — infinite Hall of Fame ladder. Beyond the hardcoded top tier,
@@ -1038,7 +1045,7 @@ function avatarToken(name) { return AVATAR_TOKENS[name] || "⭐"; }
 function pickAvatar() {
   const choices = Object.keys(AVATAR_TOKENS).filter(a => FILMS[state.start] && FILMS[state.target] && (FILMS[state.start].includes(a) || FILMS[state.target].includes(a) || true));
   const a = prompt("Pick your Star Avatar (type an actor name):\n" + Object.keys(AVATAR_TOKENS).join(", "), run.avatar || "");
-  if (a && AVATAR_TOKENS[a]) { run.avatar = a; setMsg("ok", avatarToken(a) + " " + a + " is your Star Avatar."); $("secondTakeBtn").style.display = "inline-block"; }
+  if (a && AVATAR_TOKENS[a]) { run.avatar = a; setMsg("ok", avatarToken(a) + " " + a + " is your Star Avatar."); const stb = $("secondTakeBtn"); if (stb) stb.style.display = "inline-block"; }
   else if (a) setMsg("err", "Unknown actor — try one from the list.");
 }
 function secondTake() {
@@ -1049,7 +1056,7 @@ function secondTake() {
   undo();
   track("avatar_assist_used", { avatar: run.avatar });
   setMsg("ok", avatarToken(run.avatar) + " Second Take — one move rewound, Perfect Chain bonus kept.");
-  $("secondTakeBtn").style.display = "none";
+  const stb = $("secondTakeBtn"); if (stb) stb.style.display = "none";
 }
 
 // ---------- Instant ReelPlay (T1.5) — animated GIF (defined at end of script) ----------
@@ -1092,7 +1099,7 @@ $("endBtn").onclick = confirmGiveUp;
 $("giveUpCancel").onclick = () => { $("giveUpOverlay").classList.remove("rc-open"); };
 $("giveUpConfirm").onclick = giveUp;
 $("avatarBtn").onclick = pickAvatar;
-$("secondTakeBtn").onclick = secondTake;
+$("secondTakeBtn") && ($("secondTakeBtn").onclick = secondTake);
 $("flipBtn").onclick = () => { if (state) newPuzzle(state.target, state.start, true); }; // flip = mid-session swap, skip intro
 $("undoBtn").onclick = () => { track("wrong_turn", { type: "undo" }); undo(); };
 $("winNext").onclick = () => { track("one_more_go_clicked", { from: "win", round: run.rounds }); $("overlay").classList.remove("rc-open"); newPuzzle(); };
