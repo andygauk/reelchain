@@ -220,10 +220,8 @@
   <div class="rc-panel">
     <h3>You are at</h3>
     <div class="rc-chain" id="pathChain"></div>
-    <div class="rc-meta">
+    <div class="rc-meta"><!-- v3-ut:WS7 steps monotonic + hide optimal + rename undo -->
       <span>Steps taken: <b id="stepsTaken">0</b></span>
-      <span>Best possible: <b id="optimal">?</b></span>
-      <span>Optimal from here: <b id="optRemaining">?</b></span>
     </div>
     <div id="msg"></div>
   </div>
@@ -238,7 +236,7 @@
   </div>
 
   <div class="rc-row">
-    <button class="rc-btn ghost" id="undoBtn">↩ Undo</button>
+    <button class="rc-btn ghost" id="undoBtn">↩ Go back a step</button>
     <button class="rc-btn ghost" id="revealBtn">👁 Reveal</button>
     <button class="rc-btn ghost" id="flipBtn">🔄 Flip</button>
     <span class="rc-spacer"></span>
@@ -433,6 +431,7 @@ function newPuzzle(a, b) {
     start: a, target: b,
     current: a,
     pathFilms: [a], pathActors: [],
+    movesTaken: 0,
     optimal: opt ? opt.steps : null,
     selectedActor: null,
   };
@@ -496,11 +495,8 @@ function render() {
     c.onclick = () => chooseActor(a);
     cast.appendChild(c);
   }
-  // meta
-  $("stepsTaken").textContent = state.pathActors.length;
-  $("optimal").textContent = state.optimal == null ? "—" : state.optimal;
-  const rem = bfs(state.current, state.target);
-  $("optRemaining").textContent = rem ? rem.steps : "—";
+  // meta — steps only ever increases (undo does not decrement)
+  $("stepsTaken").textContent = state.movesTaken;
   updateModeBar();
 }
 
@@ -586,6 +582,7 @@ function chooseActor(a) {
 }
 
 function chooseFilm(f) {
+  state.movesTaken++;   // monotonic: counts every link made; never decremented by undo
   if (f === state.target) {
     state.pathActors.push(state.selectedActor);
     state.pathFilms.push(f);
