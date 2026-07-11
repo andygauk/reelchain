@@ -656,11 +656,12 @@ function updateHUD() {
   if (!run) return;
   const st = hofStatus(run.fame);
   // Run chip shows the count + a short status word (no separate label element now).
-  let runWord = "run";
+  let runWord = "";
   if (run.rounds >= 9) runWord = "🔥 legendary";
   else if (run.rounds >= 6) runWord = "🔥 on fire";
   else if (run.rounds >= 3) runWord = "🔥 heating up";
-  $("hudRun").textContent = run.rounds + (runWord ? " · " + runWord : "");
+  else if (run.rounds >= 1) runWord = "in a run";
+  $("hudRun").textContent = run.rounds + (runWord ? " · " + runWord : " · run");
   $("hudFame").textContent = run.fame;
   $("hudHof").textContent = st.name;
   const need = st.next ? (st.next.min - run.fame) : 0;
