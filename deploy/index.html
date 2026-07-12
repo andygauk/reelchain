@@ -64,9 +64,24 @@
   .rc-app .rc-ct-item.rc-start .rc-ct-tile{border-color:#3a4150}
   .rc-app .rc-ct-item.rc-goal .rc-ct-tile{border-style:dashed;border-color:var(--gold-dim);opacity:.85}
   .rc-app .rc-ct-item.rc-goal .rc-ct-tile img{filter:grayscale(.55) brightness(.7)}
-  /* the "you are here" position pulses gently so the eye always finds its place */
-  .rc-app .rc-ct-item.rc-here .rc-ct-tile{animation:rcHere 1.8s ease-in-out infinite}
-  @keyframes rcHere{0%,100%{box-shadow:0 0 0 3px rgba(217,166,61,.18)}50%{box-shadow:0 0 0 5px rgba(217,166,61,.10)}}
+  /* the "you are here" node is the active GATE: a focused breathing glow + gold
+     corner brackets frame it so the eye always lands on the current position,
+     while the rest of the chain stays fully visible around it. */
+  .rc-app .rc-ct-item.rc-here .rc-ct-tile{animation:rcHere 1.8s ease-in-out infinite;z-index:2}
+  .rc-app .rc-ct-item.rc-here .rc-ct-tile::before{
+    content:"";position:absolute;inset:3px;pointer-events:none;z-index:3;border-radius:11px;
+    background:
+      linear-gradient(var(--gold),var(--gold)) top left/12px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) top left/2px 12px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) top right/12px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) top right/2px 12px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) bottom left/12px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) bottom left/2px 12px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) bottom right/12px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) bottom right/2px 12px no-repeat;
+    opacity:.9}
+  @keyframes rcHere{0%,100%{box-shadow:0 0 0 3px rgba(217,166,61,.24),0 0 14px rgba(217,166,61,.30)}
+    50%{box-shadow:0 0 0 5px rgba(217,166,61,.12),0 0 24px rgba(217,166,61,.16)}}
   /* pending actor: chosen, awaiting a movie pick — the signal to "now pick a movie" */
   .rc-app .rc-ct-item.rc-pending .rc-ct-tile{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.28);animation:rcGlow 1.4s ease-in-out infinite}
   @keyframes rcGlow{0%,100%{box-shadow:0 0 0 3px rgba(217,166,61,.22)}50%{box-shadow:0 0 0 6px rgba(217,166,61,.10)}}
