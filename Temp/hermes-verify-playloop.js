@@ -26,6 +26,8 @@ function makeEl(id){
     _all(){let out=[];for(const c of this._children){out.push(c);out=out.concat(c._all?c._all():[]);}return out;},
     getAttribute(k){return this['_attr_'+k]!==undefined?this['_attr_'+k]:(this[k]||null);}, setAttribute(k,v){this['_attr_'+k]=v;},
     set className(v){this._cls=v;this._s=new Set(v.split(/\s+/).filter(Boolean));}, get className(){return this._cls||'';},
+    querySelector(sel){const cls=sel.replace('.','');return this._all().find(e=>e.classList.contains(cls))||null;},
+    querySelectorAll(sel){const cls=sel.replace('.','');return this._all().filter(e=>e.classList.contains(cls));},
     addEventListener(){}, onclick:null, onload:null, onerror:null};
   return el;
 }
