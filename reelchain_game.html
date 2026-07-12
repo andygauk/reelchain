@@ -14,6 +14,9 @@
 <meta name="twitter:title" content="ReelChain — Connect Two Films">
 <meta name="twitter:description" content="Connect two films through shared cast and build your Fame.">
 <meta name="twitter:image" content="https://reelchain.app/og-reelchain.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Oswald:wght@500;600;700&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='20' fill='none' stroke='%23ff4d6d' stroke-width='5'/%3E%3Ccircle cx='24' cy='24' r='4.5' fill='%23ff4d6d'/%3E%3Cg fill='%23ff4d6d'%3E%3Ccircle cx='24' cy='9' r='2.6'/%3E%3Ccircle cx='39' cy='24' r='2.6'/%3E%3Ccircle cx='24' cy='39' r='2.6'/%3E%3Ccircle cx='9' cy='24' r='2.6'/%3E%3Ccircle cx='34' cy='14' r='2.6'/%3E%3Ccircle cx='34' cy='34' r='2.6'/%3E%3Ccircle cx='14' cy='34' r='2.6'/%3E%3Ccircle cx='14' cy='14' r='2.6'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   :root{
@@ -21,6 +24,8 @@
     --gold:#D9A63D; --gold-dim:rgba(217,166,61,.35); --ink:#F2EFE8; --ink-dim:#8E93A3;
     --accent:#D9A63D; --accent2:#f0c674; --good:#39d98a; --bad:#ff5470;
     --text:#e8eaf2; --muted:#8a90a6; --film:#5b8cff; --actor:#ffb84d; --slot-empty:#2A2E3A;
+    --font-display:"Fraunces",Georgia,"Times New Roman",serif;
+    --font-brand:"Oswald",Georgia,serif;
   }
   .rc-app *{box-sizing:border-box}
 
@@ -29,7 +34,7 @@
   .rc-app .rc-topbar{display:flex;align-items:center;justify-content:space-between;margin:2px 0 14px}
   .rc-app .rc-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
   .rc-app .rc-logo-mark{width:32px;height:32px;flex:0 0 auto}
-  .rc-app .rc-logo-word{font-size:21px;font-weight:800;letter-spacing:.07em;color:var(--ink);font-family:"Oswald",Georgia,serif}
+  .rc-app .rc-logo-word{font-size:21px;font-weight:800;letter-spacing:.07em;color:var(--ink);font-family:var(--font-brand)}
   .rc-app .rc-logo-word b{color:var(--gold);font-weight:800}
   .rc-app .rc-topmeta{display:none}
   .rc-app .rc-topmeta b{color:var(--ink);font-weight:700}
@@ -41,7 +46,7 @@
        background:var(--bg-raised);border:1px solid #20242e;box-shadow:0 18px 50px rgba(0,0,0,.45);margin-bottom:10px}
   .rc-app .rc-poster{flex:1;position:relative;overflow:hidden}
   .rc-app .rc-poster img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.72)}
-  .rc-app .rc-poster .rc-plabel{position:absolute;left:12px;right:12px;bottom:10px;font-family:"Oswald",Georgia,serif;
+  .rc-app .rc-poster .rc-plabel{position:absolute;left:12px;right:12px;bottom:10px;font-family:var(--font-brand);
        font-weight:600;font-size:16px;letter-spacing:.02em;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.85);line-height:1.12}
   .rc-app .rc-poster.rc-a::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.78) 0%,rgba(0,0,0,0) 52%)}
   .rc-app .rc-poster.rc-b::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.78) 0%,rgba(0,0,0,0) 52%)}
@@ -57,24 +62,42 @@
   .rc-app .rc-ct-tile{width:66px;height:66px;border-radius:14px;overflow:hidden;background:var(--bg-raised);
        border:2px solid #2a2e3a;display:flex;align-items:center;justify-content:center;position:relative;transition:border-color .2s,box-shadow .2s}
   .rc-app .rc-ct-tile img{width:100%;height:100%;object-fit:cover;display:block}
-  .rc-app .rc-ct-tile .rc-ct-fb{font-family:"Oswald",Georgia,serif;font-weight:800;font-size:20px;color:var(--gold);
+  .rc-app .rc-ct-tile .rc-ct-fb{font-family:var(--font-brand);font-weight:800;font-size:20px;color:var(--gold);
        background:linear-gradient(135deg,#2a2333,#15131c);width:100%;height:100%;display:flex;align-items:center;justify-content:center}
   .rc-app .rc-ct-item.rc-actor .rc-ct-tile{border-radius:50%}
   .rc-app .rc-ct-item.rc-film.rc-here .rc-ct-tile{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.22)}
   .rc-app .rc-ct-item.rc-start .rc-ct-tile{border-color:#3a4150}
   .rc-app .rc-ct-item.rc-goal .rc-ct-tile{border-style:dashed;border-color:var(--gold-dim);opacity:.85}
   .rc-app .rc-ct-item.rc-goal .rc-ct-tile img{filter:grayscale(.55) brightness(.7)}
-  /* the "you are here" position pulses gently so the eye always finds its place */
-  .rc-app .rc-ct-item.rc-here .rc-ct-tile{animation:rcHere 1.8s ease-in-out infinite}
-  @keyframes rcHere{0%,100%{box-shadow:0 0 0 3px rgba(217,166,61,.18)}50%{box-shadow:0 0 0 5px rgba(217,166,61,.10)}}
+  /* the "you are here" node is the active GATE: a focused breathing glow + gold
+     corner brackets frame it so the eye always lands on the current position,
+     while the rest of the chain stays fully visible around it. */
+  .rc-app .rc-ct-item.rc-here .rc-ct-tile{animation:rcHere 1.8s ease-in-out infinite;z-index:2}
+  .rc-app .rc-ct-item.rc-here .rc-ct-tile::before{
+    content:"";position:absolute;inset:3px;pointer-events:none;z-index:3;border-radius:11px;
+    background:
+      linear-gradient(var(--gold),var(--gold)) top left/12px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) top left/2px 12px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) top right/12px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) top right/2px 12px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) bottom left/12px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) bottom left/2px 12px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) bottom right/12px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) bottom right/2px 12px no-repeat;
+    opacity:.9}
+  @keyframes rcHere{0%,100%{box-shadow:0 0 0 3px rgba(217,166,61,.24),0 0 14px rgba(217,166,61,.30)}
+    50%{box-shadow:0 0 0 5px rgba(217,166,61,.12),0 0 24px rgba(217,166,61,.16)}}
   /* pending actor: chosen, awaiting a movie pick — the signal to "now pick a movie" */
   .rc-app .rc-ct-item.rc-pending .rc-ct-tile{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.28);animation:rcGlow 1.4s ease-in-out infinite}
   @keyframes rcGlow{0%,100%{box-shadow:0 0 0 3px rgba(217,166,61,.22)}50%{box-shadow:0 0 0 6px rgba(217,166,61,.10)}}
   .rc-app .rc-ct-lbl{font-size:11px;line-height:1.15;color:var(--ink-dim);max-width:78px;
        overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .rc-app .rc-ct-item.rc-here .rc-ct-lbl,.rc-app .rc-ct-item.rc-pending .rc-ct-lbl{color:var(--ink)}
-  .rc-app .rc-ct-conn{flex:0 0 auto;align-self:center;margin-top:-18px;color:#3a4150;font-size:16px;padding:0 1px}
-  .rc-app .rc-ct-conn.rc-live{color:var(--gold)}
+  .rc-app .rc-ct-conn{flex:0 0 auto;align-self:center;margin-top:-17px;width:16px;height:3px;border-radius:2px;
+       background:#2f3543;position:relative;transition:background .25s,box-shadow .25s}
+  .rc-app .rc-ct-conn.rc-live{background:linear-gradient(90deg,var(--gold),var(--gold-dim));box-shadow:0 0 7px rgba(217,166,61,.45)}
+  .rc-app .rc-ct-conn.rc-ghost{background:none;border-top:2px dashed var(--gold-dim);height:0;border-radius:0;box-shadow:none}
+  .rc-app .rc-chain-track.rc-solved .rc-ct-conn.rc-live{box-shadow:0 0 10px rgba(217,166,61,.7)}
   /* satisfying growth: newest item springs in + a brief flash on the tile */
   .rc-app .rc-ct-item.rc-grew{animation:rcGrow .34s cubic-bezier(.22,1.2,.36,1) both}
   @keyframes rcGrow{0%{transform:translateY(16px) scale(.5);opacity:0}60%{transform:translateY(0) scale(1.12)}100%{transform:none;opacity:1}}
@@ -99,24 +122,48 @@
   .rc-app .rc-act#flipBtn{background:linear-gradient(135deg,var(--gold),var(--accent2));color:#1a1200;border-color:transparent}
   .rc-app .rc-act#flipBtn:hover{filter:brightness(1.06)}
 
-  /* ===== Compact decks: add a link, not a screen ===== */
-  .rc-app .rc-deck-wrap{padding:6px 4px 4px;margin:0 0 10px;background:none;border:none;border-radius:0}
-  .rc-app .rc-deck-head{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-dim);text-align:center;margin:2px 0 10px}
-  .rc-app .rc-deck{display:flex;flex-wrap:wrap;gap:8px 8px;justify-content:center}
-  .rc-app .rc-deck.rc-films{gap:8px 8px}
-  .rc-app .rc-pick{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;background:none;border:none;padding:0;font-family:inherit;width:56px}
-  .rc-app .rc-pick .rc-thumb{width:50px;height:50px;border-radius:11px;overflow:hidden;border:2px solid #2a2e3a;transition:border-color .15s,transform .15s}
-  .rc-app .rc-pick.rc-actor .rc-thumb{border-radius:50%;width:50px;height:50px}
-  .rc-app .rc-pick:hover .rc-thumb{border-color:var(--gold);transform:scale(1.06)}
-  .rc-app .rc-pick.rc-picked .rc-thumb{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.3)}
+  /* ===== Decks as a film strip (prototype A): horizontal scroll, sprockets,
+     circular actor avatars + poster cards, stagger deal-in, hover glow, chosen-flash ===== */
+  .rc-app .rc-deck-wrap{padding:4px 0 6px;margin:0 0 8px;background:none;border:none;border-radius:0}
+  .rc-app .rc-deck-head{display:none} /* replaced by the actor-tag chip in Stage 2 */
+  .rc-app .rc-strip{width:100%;position:relative;margin-top:2px}
+  .rc-app .rc-sprocket-row{display:flex;justify-content:space-evenly;padding:0 6px}
+  .rc-app .rc-sprocket{width:6px;height:6px;border-radius:1px;background:#242938}
+  .rc-app .rc-strip-track{display:flex;gap:10px;padding:8px 10px;overflow-x:auto;scrollbar-width:none;
+    background:#0E1119;border-top:1px dashed #232838;border-bottom:1px dashed #232838;-webkit-overflow-scrolling:touch}
+  .rc-app .rc-strip-track::-webkit-scrollbar{display:none}
+  .rc-app .rc-deck{display:flex;gap:10px;flex-wrap:nowrap;justify-content:flex-start}
+  .rc-app .rc-deck.rc-films{margin-top:0}
+  .rc-app .rc-pick{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;
+    background:none;border:none;padding:0;font-family:inherit;opacity:0;transform:translateY(10px);animation:rcFrameIn .34s ease forwards}
+  .rc-app .rc-pick .rc-thumb{width:50px;height:50px;border-radius:50%;overflow:hidden;border:2px solid #242938;
+    transition:border-color .15s,transform .15s,box-shadow .15s;background:#15131c}
+  .rc-app .rc-pick.rc-film .rc-thumb{border-radius:6px;width:52px;height:70px}
+  .rc-app .rc-pick:hover .rc-thumb{border-color:var(--gold);transform:scale(1.06);box-shadow:0 0 0 4px rgba(217,166,61,.28)}
+  .rc-app .rc-pick.rc-picked .rc-thumb,.rc-app .rc-pick.rc-chosen .rc-thumb{border-color:var(--gold);
+    box-shadow:0 0 0 6px rgba(217,166,61,.28);animation:rcChoseFlash .4s ease}
   .rc-app .rc-pick.rc-dim{opacity:.32;pointer-events:none}
-  .rc-app .rc-pick.rc-goalpick .rc-thumb{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.35),0 0 16px rgba(217,166,61,.3)}
+  .rc-app .rc-pick.rc-goalpick .rc-thumb{border-color:var(--gold);box-shadow:0 0 0 4px rgba(217,166,61,.35),0 0 16px rgba(217,166,61,.3)}
   .rc-app .rc-pick.rc-goalpick .rc-nm{color:var(--gold);font-weight:700}
   .rc-app .rc-pick .rc-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-  .rc-app .rc-pick .rc-thumb.rc-fallback{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2a2333,#15131c);color:var(--gold);font-weight:800;font-size:16px;font-family:"Oswald",Georgia,serif}
-  .rc-app .rc-pick .rc-nm{font-size:10.5px;color:var(--ink);text-align:center;line-height:1.15;max-width:62px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rc-app .rc-deal{animation:rcDeal .3s ease both}
-  @keyframes rcDeal{0%{transform:translateY(22px) scale(.85);opacity:0}100%{transform:none;opacity:1}}
+  .rc-app .rc-pick .rc-thumb.rc-fallback{display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#2a2333,#15131c);color:var(--gold);font-weight:800;font-size:16px;font-family:var(--font-brand)}
+  .rc-app .rc-pick .rc-nm{font-size:10px;color:var(--ink);text-align:center;line-height:1.15;max-width:62px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @keyframes rcFrameIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes rcChoseFlash{0%{box-shadow:0 0 0 0 rgba(217,166,61,.28)}60%{box-shadow:0 0 0 10px rgba(217,166,61,.28)}100%{box-shadow:0 0 0 6px rgba(217,166,61,.28)}}
+  .rc-app .rc-deal{animation:rcFrameIn .34s ease forwards}
+  /* ===== Actor-tag chip (prototype B): replaces the deck-head prompt when an
+     actor is selected — shows "👤 Name" + a "change" affordance that undoes the
+     pending selection so the player can pick a different actor. ===== */
+  .rc-app .rc-strip .rc-actor-chip{display:flex;align-items:center;gap:8px;width:100%;
+    padding:8px 12px;margin:2px 0 0;background:#15131c;border:1px solid #2a2e3a;border-radius:10px;
+    box-sizing:border-box;animation:rcFrameIn .26s ease both}
+  .rc-app .rc-actor-chip .rc-chip-tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink)}
+  .rc-app .rc-actor-chip .rc-chip-tag b{color:var(--gold);font-weight:700}
+  .rc-app .rc-actor-chip .rc-chip-change{flex:0 0 auto;margin-left:auto;background:none;border:1px solid #2a2e3a;color:var(--ink-dim);
+    font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding:4px 9px;border-radius:8px;cursor:pointer;font-family:inherit}
+  .rc-app .rc-actor-chip .rc-chip-change:hover{border-color:var(--gold);color:var(--gold)}
   .rc-app .rc-tools{display:none;flex-direction:column;gap:10px;margin:0 0 14px;padding:14px;border:1px solid #20242e;border-radius:16px;background:rgba(255,255,255,.02)}
   .rc-app .rc-tools.rc-open{display:flex}
   .rc-app .rc-tools .rc-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:0}
@@ -131,7 +178,7 @@
   .rc-app .rc-runrisk b.rc-risk{color:#ff8a9c}
   .rc-app .rc-riskbox{display:none;margin-top:6px;padding:10px 12px;font-size:13px;color:#ffd7df;background:rgba(255,84,112,.12);border:1px solid rgba(255,84,112,.3);border-radius:10px}
   .rc-app .rc-riskbox b{color:#ff8aa0}
-  .rc-app{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  .rc-app{margin:0;font-family:var(--font-brand);
        background:radial-gradient(1200px 600px at 50% -10%,#1b2030,#0d0f17);color:var(--text);padding:22px 16px 80px}
   .rc-app h1{font-size:30px;margin:0 0 2px;letter-spacing:.5px}
   .rc-app h1 .rc-c{color:var(--accent)}
@@ -237,6 +284,56 @@
   .rc-modal .rc-breakdown .rc-bd-run span{color:var(--accent2)}
   .rc-modal .rc-breakdown .rc-bd-run b{color:var(--accent2)}
   .rc-modal .rc-chain{justify-content:center;margin:14px 0}
+
+  /* ===== Stage 5: win celebration — "Linked!" hold + confetti ===== */
+  /* A brief "Linked!" flourish fires the instant the chain completes, then the
+     win overlay (with a confetti burst) takes over. Both are purely additive. */
+  .rc-linked{position:fixed;inset:0;z-index:2147483646;display:none;align-items:center;justify-content:center;
+       pointer-events:none;flex-direction:column;gap:6px}
+  .rc-linked.rc-show{display:flex;animation:rcLinkedFade 1.15s ease forwards}
+  .rc-linked .rc-linked-word{font-family:var(--font-display);font-weight:800;font-size:64px;letter-spacing:.01em;
+       background:linear-gradient(135deg,var(--gold),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;
+       text-shadow:0 0 40px rgba(217,166,61,.35);transform:scale(.6);opacity:0;animation:rcLinkedPop .9s cubic-bezier(.22,1.4,.36,1) .08s forwards}
+  .rc-linked .rc-linked-sub{font-family:var(--font-brand);font-size:15px;letter-spacing:.18em;text-transform:uppercase;
+       color:var(--ink);opacity:0;animation:rcLinkedSub .7s ease .5s forwards}
+  @keyframes rcLinkedPop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}}
+  @keyframes rcLinkedSub{from{opacity:0;transform:translateY(8px)}to{opacity:.9;transform:none}}
+  @keyframes rcLinkedFade{0%,70%{opacity:1}100%{opacity:0;visibility:hidden}}
+  /* confetti: lightweight CSS pieces spawned into the win overlay */
+  .rc-confetti{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;pointer-events:none;z-index:50;
+       animation:rcConfettiFall var(--dur,2.6s) cubic-bezier(.3,.7,.4,1) forwards}
+  @keyframes rcConfettiFall{0%{transform:translateY(-10px) rotate(0);opacity:1}
+       100%{transform:translateY(560px) rotate(var(--spin,520deg));opacity:.15}}
+
+  /* Win modal — celebration hierarchy (Chain Complete → Fame → Milestone → ReelPlay → actions) */
+  .rc-win-modal{position:relative;text-align:center;overflow:hidden}
+  .rc-win-glow{position:absolute;top:-44%;left:50%;transform:translateX(-50%);width:360px;height:360px;border-radius:50%;
+       background:radial-gradient(circle, rgba(217,166,61,.22), rgba(217,166,61,0) 70%);pointer-events:none}
+  .rc-win-modal h2.rc-win-h{font-size:34px;margin:2px 0 4px;letter-spacing:.01em;font-family:var(--font-display);font-weight:800;
+       background:linear-gradient(135deg,var(--gold),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .rc-win-fame{font-size:44px;font-weight:800;color:var(--gold);font-family:inherit;margin:0 0 4px;line-height:1.05}
+  .rc-win-milestone{font-size:15px;font-weight:700;margin:2px auto 10px;padding:7px 15px;border-radius:999px;display:inline-block}
+  .rc-win-milestone.rc-win-level{color:#1a1320;background:linear-gradient(135deg,var(--gold),var(--accent2));box-shadow:0 6px 20px rgba(217,166,61,.3)}
+  .rc-win-milestone.rc-win-run{color:var(--gold);background:rgba(217,166,61,.12);border:1px solid var(--gold-dim)}
+  .rc-win-reel{margin:4px 0 10px}
+  .rc-win-reel img{max-width:100%;max-height:300px;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  .rc-win-details{margin:8px auto 2px;max-width:320px;text-align:left;background:rgba(255,255,255,.03);
+       border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:4px 12px}
+  .rc-win-details summary{list-style:none;text-align:center;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;padding:6px 0}
+  .rc-win-details summary::-webkit-details-marker{display:none}
+  .rc-win-details[open] summary{color:var(--gold);margin-bottom:6px}
+  .rc-win-details .rc-bd-head,.rc-win-details .rc-cmp-head{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--accent2);font-weight:700;margin:10px 0 6px}
+  .rc-win-details .rc-bd-row{display:flex;justify-content:space-between;font-size:13px;margin:2px 0;color:var(--muted)}
+  .rc-win-details .rc-bd-row b{color:#fff}
+  .rc-win-details .rc-bd-total{display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.12);color:#fff}
+  .rc-win-details .rc-bd-run{margin-top:6px;padding-top:6px;border-top:1px dashed rgba(217,166,61,.35)}
+  .rc-win-details .rc-bd-run span,.rc-win-details .rc-bd-run b{color:var(--gold)}
+  .rc-win-details .rc-cmp-row{display:flex;justify-content:space-between;font-size:14px;margin:3px 0;color:var(--muted)}
+  .rc-win-details .rc-cmp-row b{color:#fff}
+  .rc-win-details .rc-cmp-foot{margin-top:8px;font-size:13px;font-weight:600;padding-top:8px;border-top:1px solid rgba(255,184,77,.25)}
+  .rc-win-details .rc-cmp-foot.rc-win{color:var(--good)}
+  .rc-win-details .rc-cmp-foot.rc-lose{color:var(--bad)}
+  @media (max-width:480px){ .rc-win-modal h2.rc-win-h{font-size:28px} .rc-win-fame{font-size:38px} }
 
   /* Unscoped button so the win modal's button is styled even though the
      overlay sits (by design) outside .rc-app. */
@@ -358,11 +455,15 @@
   <div class="rc-chain-track" id="chainTrack"></div>
   <div class="rc-slots-line" id="slotsLine">Tap an actor to start your chain</div>
 
-  <!-- Actor / movie picker: compact, lives under the chain -->
+  <!-- Actor / movie picker: compact film strip under the chain -->
   <div class="rc-deck-wrap">
-    <div class="rc-deck-head" id="deckHead">Tap an actor to add them to the chain</div>
-    <div class="rc-deck" id="actorDeck"></div>
-    <div class="rc-deck rc-films" id="filmDeck" style="display:none"></div>
+    <div class="rc-strip" id="stripWrap">
+      <div class="rc-sprocket-row"></div>
+      <div class="rc-strip-track rc-deck" id="actorDeck"></div>
+      <div class="rc-actor-chip" id="actorChip" style="display:none"></div>
+      <div class="rc-strip-track rc-deck rc-films" id="filmDeck" style="display:none"></div>
+      <div class="rc-sprocket-row"></div>
+    </div>
   </div>
 
   <div id="msg"></div>
@@ -421,20 +522,28 @@
   </div>
 
   <div class="rc-overlay" id="overlay">
-    <div class="rc-modal">
-      <h2 id="winTitle">Round solved! 🎉</h2>
-      <div class="rc-big" id="winSteps">0</div>
-      <div class="rc-sub" id="winSub"></div>
-      <div class="rc-breakdown" id="winBreakdown"></div>
-      <div class="rc-compare" id="winCompare" style="display:none"></div>
-    <div class="rc-chain" id="winChain"></div>
-    <div class="rc-reel" id="winReel"></div>
-    <div class="rc-row" style="justify-content:center;margin-top:10px">
-      <button class="rc-btn" id="winNext">▶ One more round</button>
-      <button class="rc-btn ghost" id="winShare">📤 Challenge a friend</button>
-    </div>
-    <div class="rc-sub" id="winEndHint" style="margin-top:12px;margin-bottom:0"></div>
+    <div class="rc-modal rc-win-modal">
+      <div class="rc-win-glow"></div>
+      <h2 class="rc-win-h" id="winTitle">Chain Complete</h2>
+      <div class="rc-win-fame" id="winFame">+0 Fame</div>
+      <div class="rc-win-milestone rc-win-run" id="winMilestone" style="display:none"></div>
+      <div class="rc-win-reel" id="winReel"></div>
+      <details class="rc-win-details" id="winDetails">
+        <summary>Score details</summary>
+        <div class="rc-breakdown" id="winBreakdown"></div>
+        <div class="rc-compare" id="winCompare" style="display:none"></div>
+      </details>
+      <div class="rc-row" style="justify-content:center;margin-top:14px;gap:10px">
+        <button class="rc-btn" id="winNext" style="flex:1 1 auto;min-width:150px">▶ One more go</button>
+        <button class="rc-btn ghost" id="winShare" style="min-width:auto">📤 Challenge a friend</button>
+      </div>
   </div>
+  </div>
+
+  <!-- Stage 5: "Linked!" celebration hold, fires the instant the chain completes -->
+  <div class="rc-linked" id="linkedHold" aria-hidden="true">
+    <div class="rc-linked-word">Linked!</div>
+    <div class="rc-linked-sub">Chain complete</div>
   </div>
 
   <!-- v3-ut:WS7 — Give Up confirm (Reveal becomes the consequence of giving up, per brief §3) -->
@@ -725,9 +834,24 @@ function render() {
   buildActorDeck();
   // film deck hidden until an actor is chosen
   const fd = $("filmDeck"); fd.innerHTML = ""; fd.style.display = "none";
-  $("deckHead").textContent = state.selectedActor
-    ? "Tap a movie with " + state.selectedActor
-    : "Tap an actor in " + state.current;
+  const chip = $("actorChip");
+  if (state.selectedActor) {
+    chip.style.display = "flex";
+    chip.innerHTML = '<span class="rc-chip-tag">👤 Films with <b>' + state.selectedActor + '</b></span>'
+      + '<button class="rc-chip-change" type="button">Change actor</button>';
+    const ch = chip.querySelector(".rc-chip-change");
+    if (ch) ch.onclick = () => { undoPendingActor(); };
+  } else {
+    chip.style.display = "none";
+    chip.innerHTML = "";
+  }
+}
+
+function undoPendingActor() {
+  // Undo only the pending actor selection (not the whole chain) so the player
+  // can pick a different actor. Reuses the existing undo() pending-actor branch.
+  if (!state.selectedActor) return;
+  undo();
 }
 
 // The chain is the hero: always visible, grows one item per decision.
@@ -762,8 +886,9 @@ function buildChainTrack() {
   items.forEach((it, idx) => {
     if (idx > 0) {
       const conn = document.createElement("span");
-      conn.className = "rc-ct-conn" + (idx <= liveEdgeCount() ? " rc-live" : "");
-      conn.textContent = "›";
+      const isLive = idx <= liveEdgeCount();
+      const isGhostGap = (idx === items.length - 1) && !isLive; // connector leading into the goal ghost
+      conn.className = "rc-ct-conn" + (isLive ? " rc-live" : (isGhostGap ? " rc-ghost" : ""));
       track.appendChild(conn);
     }
     const wrap = document.createElement("div");
@@ -830,8 +955,7 @@ function buildFilmDeck() {
     deck.appendChild(p);
   }
   [...deck.children].forEach((c, i) => { c.style.animationDelay = (i * 32) + "ms"; });
-  deck.style.display = "grid";
-  $("deckHead").textContent = "Tap a movie with " + state.selectedActor;
+  deck.style.display = "flex";
 }
 
 function updateModeBar() {
@@ -1014,13 +1138,50 @@ function hint() {
   }
 }
 
+// ---------- Stage 5: win celebration (Linked! hold + confetti) ----------
+// Fires the moment a chain completes. Shows a brief "Linked!" hold, then a
+// confetti burst inside the win modal. Purely additive — touches no scoring.
+const RC_CONFETTI_COLORS = ["#D9A63D", "#f0c674", "#ff4d6d", "#5b8cff", "#39d98a", "#ffffff"];
+function fireWinCelebration() {
+  // 1) "Linked!" hold (auto-fades via CSS animation)
+  const hold = $("linkedHold");
+  if (hold) {
+    hold.classList.remove("rc-show");
+    void hold.offsetWidth; // restart the animation
+    hold.classList.add("rc-show");
+    setTimeout(() => hold.classList.remove("rc-show"), 1300);
+  }
+  // 2) confetti burst into the win modal
+  const modal = document.querySelector(".rc-win-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".rc-confetti").forEach(n => n.remove());
+  const N = 46;
+  for (let i = 0; i < N; i++) {
+    const c = document.createElement("div");
+    c.className = "rc-confetti";
+    const left = Math.random() * 100;
+    const dur = 2.2 + Math.random() * 1.4;
+    const spin = (Math.random() * 720 - 360) | 0;
+    const delay = Math.random() * 0.5;
+    const color = RC_CONFETTI_COLORS[(Math.random() * RC_CONFETTI_COLORS.length) | 0];
+    c.style.left = left + "%";
+    c.style.background = color;
+    c.style.setProperty("--dur", dur + "s");
+    c.style.setProperty("--spin", spin + "deg");
+    c.style.animationDelay = delay + "s";
+    modal.appendChild(c);
+  }
+  // clean up confetti after it has fallen
+  setTimeout(() => modal.querySelectorAll(".rc-confetti").forEach(n => n.remove()), 4200);
+}
+
 // ---------- Win (a solved round feeds the run) ----------
 function win() {
+  fireWinCelebration();   // Stage 5: "Linked!" hold + confetti (additive)
   stopTimer();
   const steps = state.pathActors.length;
   const optimal = state.optimal || steps;
   const perfect = (steps === optimal) && (state.backtracks || 0) === 0 && run.hints === 0 && !run.usedSecondTake;
-  const secs = Math.round(elapsed / 1000);
 
   const { earn, runBonus, total } = applyRoundToRun(steps, optimal, state.backtracks || 0, run.usedSecondTake);
   updateHUD();
@@ -1038,17 +1199,24 @@ function win() {
 
   const st = hofStatus(run.fame);
   const justLeveled = (st.i > (lastRound ? hofIndex((run.fame - total)) : 0));
-  $("winTitle").textContent = perfect ? "PERFECT CHAIN 🎯" : "CHAIN COMPLETE 🎉";
-  $("winSteps").textContent = "+" + total + " Fame" + (runBonus > 0 ? "  ·  🔥 Run Bonus +" + runBonus : "");
-  // summary line (par shown here — post-solve, so it informs without spoiling)
-  let sub;
-  if (perfect) sub = steps + " moves · par " + optimal + " (fewest possible)";
-  else sub = steps + " moves · par " + optimal + " (+" + (steps - optimal) + " over par)";
-  const need = st.next ? (st.next.min - run.fame) : 0;
-  if (justLeveled && st.next) sub += "  ·  🏆 You reached " + st.name + "!";
-  else if (st.next) sub += "  ·  " + need + " Fame to " + st.next.name;
-  $("winSub").textContent = sub;
-  // transparent breakdown (per brief §12): round Fame levers, THEN run bonus separately, THEN total.
+
+  // --- Celebration hierarchy (no "Perfect Chain") ---
+  $("winTitle").textContent = "CHAIN COMPLETE 🎉";
+  $("winFame").textContent = "+" + total + " Fame" + (runBonus > 0 ? "  🔥" : "");
+
+  // Milestone: HoF level-up (primary) OR Run bonus (secondary) — never both.
+  const ms = $("winMilestone");
+  if (justLeveled && st.next !== st) {
+    ms.textContent = "🏆 You reached " + st.name + "!";
+    ms.className = "rc-win-milestone rc-win-level"; ms.style.display = "inline-block";
+  } else if (runBonus > 0) {
+    ms.textContent = "🔥 Run Bonus +" + runBonus + " (round " + run.rounds + ")";
+    ms.className = "rc-win-milestone rc-win-run"; ms.style.display = "inline-block";
+  } else {
+    ms.style.display = "none";
+  }
+
+  // --- Score details (collapsed; optional) ---
   const bd = $("winBreakdown");
   const rows = (lastRound.breakdown || []).map(p =>
     "<div class='rc-bd-row'><span>" + p.label + "</span><b>" + (p.value >= 0 ? "+" : "") + p.value + "</b></div>"
@@ -1060,7 +1228,7 @@ function win() {
     bonusRow +
     "<div class='rc-bd-total'><span>Total Earned</span><b>+" + total + " Fame</b></div>";
 
-  // (0b) Beat-my-score comparison vs the sender's challenge (if this run came from one)
+  // Beat-my-score comparison (if this came from a challenge) — also hidden behind details.
   const cmp = $("winCompare");
   if (activeChallenge && activeChallenge.m) {
     const theirMoves = activeChallenge.m;
@@ -1082,26 +1250,10 @@ function win() {
       beat, myMoves: steps, theirMoves, myPar: optimal, theirPar,
       myDifficulty: run.difficulty, sameDataset: activeChallenge.v === DATASET_VERSION,
     });
-    // a rematch: flip the pair so the sender gets a fresh duel on the same films
     activeChallenge = null; // consume so it shows once
   } else {
     cmp.style.display = "none";
   }
-
-  // (1) chain outcome + (2) animated route recap
-  const wc = $("winChain"); wc.innerHTML = "";
-  state.pathFilms.forEach((f, i) => {
-    wc.appendChild(mkNode("film", f));
-    if (i < state.pathActors.length) {
-      wc.appendChild(arrow());
-      wc.appendChild(mkNode("actor", state.pathActors[i]));
-      wc.appendChild(arrow());
-    }
-  });
-  // (3) Fame +(4) HoF progress (already reflected in HUD); (5) next-round choices live in buttons.
-  $("winEndHint").textContent = need > 0
-    ? "One more " + run.difficulty + " round could push you toward " + st.next.name + "."
-    : "You're at the top of the Hall of Fame — keep building your legend.";
 
   let best = +(localStorage.getItem("rc_best") || 0);
   if (!best || elapsed < best) { best = elapsed; localStorage.setItem("rc_best", best); }
@@ -2037,12 +2189,8 @@ async function queueReelPlay() {
     const reel = document.getElementById("winReel");
     reel.innerHTML = "";
     const img = document.createElement("img");
-    img.src = url; img.alt = "Instant ReelPlay"; img.style.maxWidth = "100%"; img.style.borderRadius = "12px";
+    img.src = url; img.alt = "Instant ReelPlay"; img.className = "rc-win-reel-img";
     reel.appendChild(img);
-    const dl = document.createElement("button");
-      dl.className = "rc-btn ghost"; dl.textContent = "⬇ Save ReelPlay";
-      dl.onclick = () => { const a = document.createElement("a"); a.href = url; a.download = "reelchain-reelplay.gif"; a.click(); track("instant_reelplay_gif_generated", { perfect: lastRound.perfect }); };
-    reel.appendChild(dl);
     track("instant_reelplay_completed", { perfect: lastRound.perfect, moves: actors.length, par: ci.optimal, over: ci.over.size });
   } catch (e) { /* GIF unavailable — result screen still works without it */ }
 }

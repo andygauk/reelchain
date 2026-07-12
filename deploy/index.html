@@ -285,6 +285,26 @@
   .rc-modal .rc-breakdown .rc-bd-run b{color:var(--accent2)}
   .rc-modal .rc-chain{justify-content:center;margin:14px 0}
 
+  /* ===== Stage 5: win celebration — "Linked!" hold + confetti ===== */
+  /* A brief "Linked!" flourish fires the instant the chain completes, then the
+     win overlay (with a confetti burst) takes over. Both are purely additive. */
+  .rc-linked{position:fixed;inset:0;z-index:2147483646;display:none;align-items:center;justify-content:center;
+       pointer-events:none;flex-direction:column;gap:6px}
+  .rc-linked.rc-show{display:flex;animation:rcLinkedFade 1.15s ease forwards}
+  .rc-linked .rc-linked-word{font-family:var(--font-display);font-weight:800;font-size:64px;letter-spacing:.01em;
+       background:linear-gradient(135deg,var(--gold),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;
+       text-shadow:0 0 40px rgba(217,166,61,.35);transform:scale(.6);opacity:0;animation:rcLinkedPop .9s cubic-bezier(.22,1.4,.36,1) .08s forwards}
+  .rc-linked .rc-linked-sub{font-family:var(--font-brand);font-size:15px;letter-spacing:.18em;text-transform:uppercase;
+       color:var(--ink);opacity:0;animation:rcLinkedSub .7s ease .5s forwards}
+  @keyframes rcLinkedPop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}}
+  @keyframes rcLinkedSub{from{opacity:0;transform:translateY(8px)}to{opacity:.9;transform:none}}
+  @keyframes rcLinkedFade{0%,70%{opacity:1}100%{opacity:0;visibility:hidden}}
+  /* confetti: lightweight CSS pieces spawned into the win overlay */
+  .rc-confetti{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;pointer-events:none;z-index:50;
+       animation:rcConfettiFall var(--dur,2.6s) cubic-bezier(.3,.7,.4,1) forwards}
+  @keyframes rcConfettiFall{0%{transform:translateY(-10px) rotate(0);opacity:1}
+       100%{transform:translateY(560px) rotate(var(--spin,520deg));opacity:.15}}
+
   /* Win modal — celebration hierarchy (Chain Complete → Fame → Milestone → ReelPlay → actions) */
   .rc-win-modal{position:relative;text-align:center;overflow:hidden}
   .rc-win-glow{position:absolute;top:-44%;left:50%;transform:translateX(-50%);width:360px;height:360px;border-radius:50%;
@@ -518,6 +538,12 @@
         <button class="rc-btn ghost" id="winShare" style="min-width:auto">📤 Challenge a friend</button>
       </div>
   </div>
+  </div>
+
+  <!-- Stage 5: "Linked!" celebration hold, fires the instant the chain completes -->
+  <div class="rc-linked" id="linkedHold" aria-hidden="true">
+    <div class="rc-linked-word">Linked!</div>
+    <div class="rc-linked-sub">Chain complete</div>
   </div>
 
   <!-- v3-ut:WS7 — Give Up confirm (Reveal becomes the consequence of giving up, per brief §3) -->
@@ -1112,8 +1138,46 @@ function hint() {
   }
 }
 
+// ---------- Stage 5: win celebration (Linked! hold + confetti) ----------
+// Fires the moment a chain completes. Shows a brief "Linked!" hold, then a
+// confetti burst inside the win modal. Purely additive — touches no scoring.
+const RC_CONFETTI_COLORS = ["#D9A63D", "#f0c674", "#ff4d6d", "#5b8cff", "#39d98a", "#ffffff"];
+function fireWinCelebration() {
+  // 1) "Linked!" hold (auto-fades via CSS animation)
+  const hold = $("linkedHold");
+  if (hold) {
+    hold.classList.remove("rc-show");
+    void hold.offsetWidth; // restart the animation
+    hold.classList.add("rc-show");
+    setTimeout(() => hold.classList.remove("rc-show"), 1300);
+  }
+  // 2) confetti burst into the win modal
+  const modal = document.querySelector(".rc-win-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".rc-confetti").forEach(n => n.remove());
+  const N = 46;
+  for (let i = 0; i < N; i++) {
+    const c = document.createElement("div");
+    c.className = "rc-confetti";
+    const left = Math.random() * 100;
+    const dur = 2.2 + Math.random() * 1.4;
+    const spin = (Math.random() * 720 - 360) | 0;
+    const delay = Math.random() * 0.5;
+    const color = RC_CONFETTI_COLORS[(Math.random() * RC_CONFETTI_COLORS.length) | 0];
+    c.style.left = left + "%";
+    c.style.background = color;
+    c.style.setProperty("--dur", dur + "s");
+    c.style.setProperty("--spin", spin + "deg");
+    c.style.animationDelay = delay + "s";
+    modal.appendChild(c);
+  }
+  // clean up confetti after it has fallen
+  setTimeout(() => modal.querySelectorAll(".rc-confetti").forEach(n => n.remove()), 4200);
+}
+
 // ---------- Win (a solved round feeds the run) ----------
 function win() {
+  fireWinCelebration();   // Stage 5: "Linked!" hold + confetti (additive)
   stopTimer();
   const steps = state.pathActors.length;
   const optimal = state.optimal || steps;
