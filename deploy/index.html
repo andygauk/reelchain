@@ -14,6 +14,9 @@
 <meta name="twitter:title" content="ReelChain — Connect Two Films">
 <meta name="twitter:description" content="Connect two films through shared cast and build your Fame.">
 <meta name="twitter:image" content="https://reelchain.app/og-reelchain.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Oswald:wght@500;600;700&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='20' fill='none' stroke='%23ff4d6d' stroke-width='5'/%3E%3Ccircle cx='24' cy='24' r='4.5' fill='%23ff4d6d'/%3E%3Cg fill='%23ff4d6d'%3E%3Ccircle cx='24' cy='9' r='2.6'/%3E%3Ccircle cx='39' cy='24' r='2.6'/%3E%3Ccircle cx='24' cy='39' r='2.6'/%3E%3Ccircle cx='9' cy='24' r='2.6'/%3E%3Ccircle cx='34' cy='14' r='2.6'/%3E%3Ccircle cx='34' cy='34' r='2.6'/%3E%3Ccircle cx='14' cy='34' r='2.6'/%3E%3Ccircle cx='14' cy='14' r='2.6'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   :root{
@@ -21,6 +24,8 @@
     --gold:#D9A63D; --gold-dim:rgba(217,166,61,.35); --ink:#F2EFE8; --ink-dim:#8E93A3;
     --accent:#D9A63D; --accent2:#f0c674; --good:#39d98a; --bad:#ff5470;
     --text:#e8eaf2; --muted:#8a90a6; --film:#5b8cff; --actor:#ffb84d; --slot-empty:#2A2E3A;
+    --font-display:"Fraunces",Georgia,"Times New Roman",serif;
+    --font-brand:"Oswald",Georgia,serif;
   }
   .rc-app *{box-sizing:border-box}
 
@@ -29,7 +34,7 @@
   .rc-app .rc-topbar{display:flex;align-items:center;justify-content:space-between;margin:2px 0 14px}
   .rc-app .rc-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
   .rc-app .rc-logo-mark{width:32px;height:32px;flex:0 0 auto}
-  .rc-app .rc-logo-word{font-size:21px;font-weight:800;letter-spacing:.07em;color:var(--ink);font-family:"Oswald",Georgia,serif}
+  .rc-app .rc-logo-word{font-size:21px;font-weight:800;letter-spacing:.07em;color:var(--ink);font-family:var(--font-brand)}
   .rc-app .rc-logo-word b{color:var(--gold);font-weight:800}
   .rc-app .rc-topmeta{display:none}
   .rc-app .rc-topmeta b{color:var(--ink);font-weight:700}
@@ -41,7 +46,7 @@
        background:var(--bg-raised);border:1px solid #20242e;box-shadow:0 18px 50px rgba(0,0,0,.45);margin-bottom:10px}
   .rc-app .rc-poster{flex:1;position:relative;overflow:hidden}
   .rc-app .rc-poster img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.72)}
-  .rc-app .rc-poster .rc-plabel{position:absolute;left:12px;right:12px;bottom:10px;font-family:"Oswald",Georgia,serif;
+  .rc-app .rc-poster .rc-plabel{position:absolute;left:12px;right:12px;bottom:10px;font-family:var(--font-brand);
        font-weight:600;font-size:16px;letter-spacing:.02em;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.85);line-height:1.12}
   .rc-app .rc-poster.rc-a::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.78) 0%,rgba(0,0,0,0) 52%)}
   .rc-app .rc-poster.rc-b::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.78) 0%,rgba(0,0,0,0) 52%)}
@@ -57,7 +62,7 @@
   .rc-app .rc-ct-tile{width:66px;height:66px;border-radius:14px;overflow:hidden;background:var(--bg-raised);
        border:2px solid #2a2e3a;display:flex;align-items:center;justify-content:center;position:relative;transition:border-color .2s,box-shadow .2s}
   .rc-app .rc-ct-tile img{width:100%;height:100%;object-fit:cover;display:block}
-  .rc-app .rc-ct-tile .rc-ct-fb{font-family:"Oswald",Georgia,serif;font-weight:800;font-size:20px;color:var(--gold);
+  .rc-app .rc-ct-tile .rc-ct-fb{font-family:var(--font-brand);font-weight:800;font-size:20px;color:var(--gold);
        background:linear-gradient(135deg,#2a2333,#15131c);width:100%;height:100%;display:flex;align-items:center;justify-content:center}
   .rc-app .rc-ct-item.rc-actor .rc-ct-tile{border-radius:50%}
   .rc-app .rc-ct-item.rc-film.rc-here .rc-ct-tile{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.22)}
@@ -142,7 +147,7 @@
   .rc-app .rc-pick.rc-goalpick .rc-nm{color:var(--gold);font-weight:700}
   .rc-app .rc-pick .rc-thumb img{width:100%;height:100%;object-fit:cover;display:block}
   .rc-app .rc-pick .rc-thumb.rc-fallback{display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(135deg,#2a2333,#15131c);color:var(--gold);font-weight:800;font-size:16px;font-family:"Oswald",Georgia,serif}
+    background:linear-gradient(135deg,#2a2333,#15131c);color:var(--gold);font-weight:800;font-size:16px;font-family:var(--font-brand)}
   .rc-app .rc-pick .rc-nm{font-size:10px;color:var(--ink);text-align:center;line-height:1.15;max-width:62px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   @keyframes rcFrameIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -173,7 +178,7 @@
   .rc-app .rc-runrisk b.rc-risk{color:#ff8a9c}
   .rc-app .rc-riskbox{display:none;margin-top:6px;padding:10px 12px;font-size:13px;color:#ffd7df;background:rgba(255,84,112,.12);border:1px solid rgba(255,84,112,.3);border-radius:10px}
   .rc-app .rc-riskbox b{color:#ff8aa0}
-  .rc-app{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  .rc-app{margin:0;font-family:var(--font-brand);
        background:radial-gradient(1200px 600px at 50% -10%,#1b2030,#0d0f17);color:var(--text);padding:22px 16px 80px}
   .rc-app h1{font-size:30px;margin:0 0 2px;letter-spacing:.5px}
   .rc-app h1 .rc-c{color:var(--accent)}
@@ -284,7 +289,7 @@
   .rc-win-modal{position:relative;text-align:center;overflow:hidden}
   .rc-win-glow{position:absolute;top:-44%;left:50%;transform:translateX(-50%);width:360px;height:360px;border-radius:50%;
        background:radial-gradient(circle, rgba(217,166,61,.22), rgba(217,166,61,0) 70%);pointer-events:none}
-  .rc-win-modal h2.rc-win-h{font-size:34px;margin:2px 0 4px;letter-spacing:.02em;
+  .rc-win-modal h2.rc-win-h{font-size:34px;margin:2px 0 4px;letter-spacing:.01em;font-family:var(--font-display);font-weight:800;
        background:linear-gradient(135deg,var(--gold),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
   .rc-win-fame{font-size:44px;font-weight:800;color:var(--gold);font-family:inherit;margin:0 0 4px;line-height:1.05}
   .rc-win-milestone{font-size:15px;font-weight:700;margin:2px auto 10px;padding:7px 15px;border-radius:999px;display:inline-block}
