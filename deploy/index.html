@@ -73,8 +73,11 @@
   .rc-app .rc-ct-lbl{font-size:11px;line-height:1.15;color:var(--ink-dim);max-width:78px;
        overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .rc-app .rc-ct-item.rc-here .rc-ct-lbl,.rc-app .rc-ct-item.rc-pending .rc-ct-lbl{color:var(--ink)}
-  .rc-app .rc-ct-conn{flex:0 0 auto;align-self:center;margin-top:-18px;color:#3a4150;font-size:16px;padding:0 1px}
-  .rc-app .rc-ct-conn.rc-live{color:var(--gold)}
+  .rc-app .rc-ct-conn{flex:0 0 auto;align-self:center;margin-top:-17px;width:16px;height:3px;border-radius:2px;
+       background:#2f3543;position:relative;transition:background .25s,box-shadow .25s}
+  .rc-app .rc-ct-conn.rc-live{background:linear-gradient(90deg,var(--gold),var(--gold-dim));box-shadow:0 0 7px rgba(217,166,61,.45)}
+  .rc-app .rc-ct-conn.rc-ghost{background:none;border-top:2px dashed var(--gold-dim);height:0;border-radius:0;box-shadow:none}
+  .rc-app .rc-chain-track.rc-solved .rc-ct-conn.rc-live{box-shadow:0 0 10px rgba(217,166,61,.7)}
   /* satisfying growth: newest item springs in + a brief flash on the tile */
   .rc-app .rc-ct-item.rc-grew{animation:rcGrow .34s cubic-bezier(.22,1.2,.36,1) both}
   @keyframes rcGrow{0%{transform:translateY(16px) scale(.5);opacity:0}60%{transform:translateY(0) scale(1.12)}100%{transform:none;opacity:1}}
@@ -837,8 +840,9 @@ function buildChainTrack() {
   items.forEach((it, idx) => {
     if (idx > 0) {
       const conn = document.createElement("span");
-      conn.className = "rc-ct-conn" + (idx <= liveEdgeCount() ? " rc-live" : "");
-      conn.textContent = "›";
+      const isLive = idx <= liveEdgeCount();
+      const isGhostGap = (idx === items.length - 1) && !isLive; // connector leading into the goal ghost
+      conn.className = "rc-ct-conn" + (isLive ? " rc-live" : (isGhostGap ? " rc-ghost" : ""));
       track.appendChild(conn);
     }
     const wrap = document.createElement("div");
