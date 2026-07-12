@@ -31,7 +31,7 @@
   .rc-app .rc-logo-mark{width:32px;height:32px;flex:0 0 auto}
   .rc-app .rc-logo-word{font-size:21px;font-weight:800;letter-spacing:.07em;color:var(--ink);font-family:"Oswald",Georgia,serif}
   .rc-app .rc-logo-word b{color:var(--gold);font-weight:800}
-  .rc-app .rc-topmeta{display:flex;align-items:center;gap:14px;font-size:13px;color:var(--ink-dim)}
+  .rc-app .rc-topmeta{display:none}
   .rc-app .rc-topmeta b{color:var(--ink);font-weight:700}
   .rc-app .rc-topmeta .rc-flame{color:var(--gold)}
   .rc-app .rc-topmeta .rc-hof{color:var(--gold)}
@@ -49,62 +49,74 @@
        background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:"Oswald",Georgia,serif;font-weight:700;
        color:#1a1200;font-size:15px;box-shadow:0 0 0 5px rgba(11,13,18,.7),0 0 22px rgba(217,166,61,.55);z-index:3}
 
-  /* ===== Chain track: always-visible, self-explanatory, grows every tap ===== */
-  .rc-app .rc-chain-track{display:flex;align-items:flex-start;gap:2px;overflow-x:auto;overflow-y:hidden;
-       padding:14px 6px 8px;margin-bottom:2px;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;min-height:104px}
+  /* ===== Chain track: the centre of the experience ===== */
+  .rc-app .rc-chain-track{display:flex;align-items:flex-start;gap:2px;justify-content:center;overflow-x:auto;overflow-y:hidden;
+       padding:18px 6px 10px;margin:6px 0 4px;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;min-height:118px}
   .rc-app .rc-chain-track::-webkit-scrollbar{height:0}
-  .rc-app .rc-ct-item{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:5px;width:66px;text-align:center}
-  .rc-app .rc-ct-tile{width:56px;height:56px;border-radius:12px;overflow:hidden;background:var(--bg-raised);
-       border:2px solid #2a2e3a;display:flex;align-items:center;justify-content:center;position:relative}
+  .rc-app .rc-ct-item{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;width:78px;text-align:center}
+  .rc-app .rc-ct-tile{width:66px;height:66px;border-radius:14px;overflow:hidden;background:var(--bg-raised);
+       border:2px solid #2a2e3a;display:flex;align-items:center;justify-content:center;position:relative;transition:border-color .2s,box-shadow .2s}
   .rc-app .rc-ct-tile img{width:100%;height:100%;object-fit:cover;display:block}
-  .rc-app .rc-ct-tile .rc-ct-fb{font-family:"Oswald",Georgia,serif;font-weight:800;font-size:18px;color:var(--gold);
+  .rc-app .rc-ct-tile .rc-ct-fb{font-family:"Oswald",Georgia,serif;font-weight:800;font-size:20px;color:var(--gold);
        background:linear-gradient(135deg,#2a2333,#15131c);width:100%;height:100%;display:flex;align-items:center;justify-content:center}
   .rc-app .rc-ct-item.rc-actor .rc-ct-tile{border-radius:50%}
   .rc-app .rc-ct-item.rc-film.rc-here .rc-ct-tile{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.22)}
   .rc-app .rc-ct-item.rc-start .rc-ct-tile{border-color:#3a4150}
   .rc-app .rc-ct-item.rc-goal .rc-ct-tile{border-style:dashed;border-color:var(--gold-dim);opacity:.85}
   .rc-app .rc-ct-item.rc-goal .rc-ct-tile img{filter:grayscale(.55) brightness(.7)}
+  /* the "you are here" position pulses gently so the eye always finds its place */
+  .rc-app .rc-ct-item.rc-here .rc-ct-tile{animation:rcHere 1.8s ease-in-out infinite}
+  @keyframes rcHere{0%,100%{box-shadow:0 0 0 3px rgba(217,166,61,.18)}50%{box-shadow:0 0 0 5px rgba(217,166,61,.10)}}
   /* pending actor: chosen, awaiting a movie pick — the signal to "now pick a movie" */
   .rc-app .rc-ct-item.rc-pending .rc-ct-tile{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.28);animation:rcGlow 1.4s ease-in-out infinite}
   @keyframes rcGlow{0%,100%{box-shadow:0 0 0 3px rgba(217,166,61,.22)}50%{box-shadow:0 0 0 6px rgba(217,166,61,.10)}}
-  .rc-app .rc-ct-lbl{font-size:10.5px;line-height:1.15;color:var(--ink-dim);max-width:66px;
+  .rc-app .rc-ct-lbl{font-size:11px;line-height:1.15;color:var(--ink-dim);max-width:78px;
        overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .rc-app .rc-ct-item.rc-here .rc-ct-lbl,.rc-app .rc-ct-item.rc-pending .rc-ct-lbl{color:var(--ink)}
-  .rc-app .rc-ct-conn{flex:0 0 auto;align-self:center;margin-top:-14px;color:#3a4150;font-size:14px;padding:0 1px}
+  .rc-app .rc-ct-conn{flex:0 0 auto;align-self:center;margin-top:-18px;color:#3a4150;font-size:16px;padding:0 1px}
   .rc-app .rc-ct-conn.rc-live{color:var(--gold)}
   /* satisfying growth: newest item springs in + a brief flash on the tile */
   .rc-app .rc-ct-item.rc-grew{animation:rcGrow .34s cubic-bezier(.22,1.2,.36,1) both}
-  @keyframes rcGrow{0%{transform:translateY(14px) scale(.5);opacity:0}60%{transform:translateY(0) scale(1.12)}100%{transform:none;opacity:1}}
-  .rc-app .rc-ct-item.rc-grew .rc-ct-tile{animation:rcFlash .5s ease}
-  @keyframes rcFlash{0%{box-shadow:0 0 0 3px rgba(217,166,61,.6),0 0 22px rgba(217,166,61,.5)}100%{box-shadow:0 0 0 3px rgba(217,166,61,0)}}
-  .rc-app .rc-slots-line{text-align:center;color:var(--ink-dim);font-size:12px;margin:2px 0 10px;letter-spacing:.03em}
+  @keyframes rcGrow{0%{transform:translateY(16px) scale(.5);opacity:0}60%{transform:translateY(0) scale(1.12)}100%{transform:none;opacity:1}}
+  .rc-app .rc-ct-item.rc-grew .rc-ct-tile{animation:rcFlash .55s ease}
+  @keyframes rcFlash{0%{box-shadow:0 0 0 3px rgba(217,166,61,.75),0 0 26px rgba(217,166,61,.6)}100%{box-shadow:0 0 0 3px rgba(217,166,61,0)}}
+  /* when solved: the whole chain rings gold once */
+  .rc-app .rc-chain-track.rc-solved .rc-ct-item .rc-ct-tile{animation:rcSolved .9s ease}
+  @keyframes rcSolved{0%{box-shadow:0 0 0 4px rgba(217,166,61,.7),0 0 30px rgba(217,166,61,.6)}100%{box-shadow:0 0 0 0 rgba(217,166,61,0)}}
+  .rc-app .rc-slots-line{text-align:center;color:var(--ink-dim);font-size:13px;margin:4px 0 12px;letter-spacing:.02em}
   .rc-app .rc-slots-line b{color:var(--gold);font-weight:600}
 
   /* Instruction line */
   .rc-app .rc-instruct{text-align:center;font-size:15px;color:var(--ink);padding:2px 18px 10px;min-height:22px}
   .rc-app .rc-instruct b{color:var(--gold);font-weight:600}
 
-  /* Actor / film decks */
-  .rc-app .rc-deck-wrap{padding:8px 8px 12px;margin:0 0 12px;background:rgba(255,255,255,.02);border:1px solid #20242e;border-radius:16px}
-  .rc-app .rc-deck-head{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-dim);text-align:center;margin:4px 0 12px}
-  .rc-app .rc-deck{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;justify-items:center}
-  .rc-app .rc-deck.rc-films{grid-template-columns:repeat(3,1fr)}
-  .rc-app .rc-pick{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;background:none;border:none;padding:0;font-family:inherit}
-  .rc-app .rc-pick .rc-thumb{width:62px;height:62px;border-radius:12px;overflow:hidden;border:2px solid #2a2e3a;transition:border-color .15s,transform .15s}
-  .rc-app .rc-pick.rc-actor .rc-thumb{border-radius:50%;width:60px;height:60px}
-  .rc-app .rc-pick:hover .rc-thumb{border-color:var(--gold);transform:scale(1.05)}
+  /* ===== Minimal action bar (Flip foregrounded, never competes with the chain) ===== */
+  .rc-app .rc-actions{display:flex;gap:8px;justify-content:center;align-items:center;margin:6px 0 0}
+  .rc-app .rc-act{cursor:pointer;border:1px solid #2b3142;background:var(--panel2);color:var(--ink);
+       border-radius:999px;padding:9px 16px;font-size:14px;font-weight:600;font-family:inherit;transition:border-color .12s,transform .06s,background .12s}
+  .rc-app .rc-act:hover{border-color:var(--gold)}
+  .rc-app .rc-act:active{transform:translateY(1px)}
+  .rc-app .rc-act#flipBtn{background:linear-gradient(135deg,var(--gold),var(--accent2));color:#1a1200;border-color:transparent}
+  .rc-app .rc-act#flipBtn:hover{filter:brightness(1.06)}
+
+  /* ===== Compact decks: add a link, not a screen ===== */
+  .rc-app .rc-deck-wrap{padding:6px 4px 4px;margin:0 0 10px;background:none;border:none;border-radius:0}
+  .rc-app .rc-deck-head{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-dim);text-align:center;margin:2px 0 10px}
+  .rc-app .rc-deck{display:flex;flex-wrap:wrap;gap:8px 8px;justify-content:center}
+  .rc-app .rc-deck.rc-films{gap:8px 8px}
+  .rc-app .rc-pick{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;background:none;border:none;padding:0;font-family:inherit;width:56px}
+  .rc-app .rc-pick .rc-thumb{width:50px;height:50px;border-radius:11px;overflow:hidden;border:2px solid #2a2e3a;transition:border-color .15s,transform .15s}
+  .rc-app .rc-pick.rc-actor .rc-thumb{border-radius:50%;width:50px;height:50px}
+  .rc-app .rc-pick:hover .rc-thumb{border-color:var(--gold);transform:scale(1.06)}
   .rc-app .rc-pick.rc-picked .rc-thumb{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.3)}
   .rc-app .rc-pick.rc-dim{opacity:.32;pointer-events:none}
   .rc-app .rc-pick.rc-goalpick .rc-thumb{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.35),0 0 16px rgba(217,166,61,.3)}
   .rc-app .rc-pick.rc-goalpick .rc-nm{color:var(--gold);font-weight:700}
   .rc-app .rc-pick .rc-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-  .rc-app .rc-pick .rc-thumb.rc-fallback{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2a2333,#15131c);color:var(--gold);font-weight:800;font-size:18px;font-family:"Oswald",Georgia,serif}
-  .rc-app .rc-pick .rc-nm{font-size:11.5px;color:var(--ink);text-align:center;line-height:1.15;max-width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rc-app .rc-pick .rc-thumb.rc-fallback{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2a2333,#15131c);color:var(--gold);font-weight:800;font-size:16px;font-family:"Oswald",Georgia,serif}
+  .rc-app .rc-pick .rc-nm{font-size:10.5px;color:var(--ink);text-align:center;line-height:1.15;max-width:62px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rc-app .rc-deal{animation:rcDeal .3s ease both}
-  @keyframes rcDeal{0%{transform:translateY(26px) scale(.8);opacity:0}100%{transform:none;opacity:1}}
-  .rc-app .rc-more{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 14px;background:none;border:1px solid #2a2e3a;
-       color:var(--ink-dim);border-radius:999px;padding:9px 18px;font-size:13px;cursor:pointer;font-family:inherit}
-  .rc-app .rc-more:hover{border-color:var(--gold);color:var(--ink)}
+  @keyframes rcDeal{0%{transform:translateY(22px) scale(.85);opacity:0}100%{transform:none;opacity:1}}
   .rc-app .rc-tools{display:none;flex-direction:column;gap:10px;margin:0 0 14px;padding:14px;border:1px solid #20242e;border-radius:16px;background:rgba(255,255,255,.02)}
   .rc-app .rc-tools.rc-open{display:flex}
   .rc-app .rc-tools .rc-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:0}
@@ -323,7 +335,7 @@
 <body>
 <!-- v3-ut:WS1 brand logo + favicon + og image -->
 <div class="rc-app">
-  <!-- Top bar: brand + minimal Run / Fame (HoF tucked into More) -->
+  <!-- Top bar: brand only — the chain owns the rest of the screen -->
   <div class="rc-topbar">
     <a class="rc-logo" href="https://reelchain.app/" aria-label="ReelChain home">
       <svg class="rc-logo-mark" viewBox="0 0 48 48" aria-hidden="true">
@@ -338,28 +350,13 @@
       </svg>
       <span class="rc-logo-word">REEL<b>CHAIN</b></span>
     </a>
-    <div class="rc-topmeta">
-      <span><b class="rc-flame" id="hudRun">0</b> 🔥 run</span>
-      <span><b id="hudFame">0</b> ⭐ Fame</span>
-      <span class="rc-hof">🏆 <b id="hudHof">—</b></span>
-    </div>
-  </div>
-  <div class="rc-runrisk" id="runRisk" style="display:none"></div>
-
-  <!-- HERO: the two posters — the puzzle is the hero -->
-  <div class="rc-hero">
-    <div class="rc-poster rc-a" id="posterA"><img id="posterAImg" alt=""><span class="rc-plabel" id="startName">—</span></div>
-    <div class="rc-vs">→</div>
-    <div class="rc-poster rc-b" id="posterB"><img id="posterBImg" alt=""><span class="rc-plabel" id="targetName">—</span></div>
   </div>
 
-  <!-- Chain track: always visible; grows with every decision -->
+  <!-- The chain is the experience. -->
   <div class="rc-chain-track" id="chainTrack"></div>
   <div class="rc-slots-line" id="slotsLine">Tap an actor to start your chain</div>
 
-  <div class="rc-modebar" id="modeBar"></div>
-
-  <!-- Actor / movie picker -->
+  <!-- Actor / movie picker: compact, lives under the chain -->
   <div class="rc-deck-wrap">
     <div class="rc-deck-head" id="deckHead">Tap an actor to add them to the chain</div>
     <div class="rc-deck" id="actorDeck"></div>
@@ -368,7 +365,12 @@
 
   <div id="msg"></div>
 
-  <button class="rc-more" id="moreBtn">⚙ More ▾</button>
+  <!-- Minimal action bar: stays within reach, never competes with the chain -->
+  <div class="rc-actions">
+    <button class="rc-act" id="flipBtn" title="Flip start and target (solve it backwards)">🔄 Flip</button>
+    <button class="rc-act" id="undoBtn" title="Undo last step">↩</button>
+    <button class="rc-act" id="moreBtn" title="More">⚙</button>
+  </div>
   <div class="rc-tools" id="tools">
     <div class="rc-row" style="justify-content:space-between">
       <div class="rc-seg" id="diff">
@@ -378,8 +380,6 @@
       </div>
       <div class="rc-row" style="margin:0">
         <button class="rc-btn ghost" id="hintBtn" title="Hint">💡 Hint</button>
-        <button class="rc-btn ghost" id="undoBtn" title="Undo">↩</button>
-        <button class="rc-btn ghost" id="flipBtn" title="Flip">🔄</button>
         <button class="rc-btn ghost" id="resetBtn" title="Reset">⟲</button>
         <button class="rc-btn ghost" id="avatarBtn" title="Avatar">⭐</button>
         <button class="rc-btn ghost" id="secondTakeBtn" title="Second Take (undo keeping Perfect bonus)" style="display:none">⏪ Take 2</button>
@@ -391,9 +391,8 @@
     <details>
       <summary>How to play / Custom pair</summary>
       <div class="rc-help">
-        <p><b>Goal:</b> get from the <b>start film</b> to the <b>target film</b> using the smallest number of actor links.</p>
-        <p><b>Each link:</b> tap an actor who is in your <i>current</i> film, then tap one of the other films that actor is in. That film becomes your new position. Keep going until you land on the target.</p>
-        <p><b>Example:</b> The Godfather → <i>Al Pacino</i> → Once Upon a Time in Hollywood → <i>Tim Roth</i> → Pulp Fiction. (2 links.)</p>
+        <p><b>Goal:</b> build a chain from the <b>start film</b> to the <b>target film</b> through shared cast.</p>
+        <p><b>Each link:</b> tap an actor, then one of their other films. That becomes your new position.</p>
         <div class="rc-row" style="margin-top:14px">
           <span class="rc-lbl2">Custom pair:</span>
           <select id="customA"></select>
@@ -652,8 +651,7 @@ function newPuzzle(a, b, skipIntro) {
     optimal: opt ? opt.steps : null,
     selectedActor: null,
   };
-  $("startName").textContent = a;
-  $("targetName").textContent = b;
+  // start/target labels are now rendered inside the chain track itself
   $("msg").innerHTML = "";
   // disclose the round's reward band before play begins (no risk/lose language — brief: no forced failure)
   const d = DIFF[difficulty] || DIFF.easy;
@@ -700,20 +698,16 @@ function mediaEl(kind, name) {
   return el;
 }
 function setPoster(side, name) {
-  const url = fullImg(name);
-  const im = document.getElementById(side === "A" ? "posterAImg" : "posterBImg");
-  const lbl = document.getElementById(side === "A" ? "startName" : "targetName");
-  if (lbl) lbl.textContent = name;
-  if (im && url) im.src = url;
+  // Hero posters removed in the chain-centred rebuild — start/target now live
+  // inside the chain track itself. Kept as a safe no-op for any remaining caller.
+  return;
 }
 
 // ---------- Rendering ----------
 function render() {
-  // hero posters
-  setPoster("A", state.start);
-  setPoster("B", state.target);
+  $("chainTrack").classList.remove("rc-solved");
   buildChainTrack();
-  // slots line — always tells the player the next physical action
+  // one quiet line that tells the player the next physical action
   const links = state.pathActors.length;
   const sl = $("slotsLine");
   if (state.current === state.target) {
@@ -732,7 +726,6 @@ function render() {
   $("deckHead").textContent = state.selectedActor
     ? "Tap a movie with " + state.selectedActor
     : "Tap an actor in " + state.current;
-  updateModeBar();
 }
 
 // The chain is the hero: always visible, grows one item per decision.
@@ -742,21 +735,24 @@ let _growKey = null;
 function buildChainTrack() {
   const track = $("chainTrack");
   track.innerHTML = "";
-  const items = [];
-  for (let i = 0; i < state.pathFilms.length; i++) {
+  // Always anchor the chain with the start film (first, solid) and the target
+  // (as a ghost at the end — the destination is always visible). The "you are
+  // here" position pulses so the eye always knows where it is.
+  const items = [{ key: "start", type: "film", name: state.start, cls: "rc-start" + (state.start === state.current && !state.selectedActor ? " rc-here" : "") }];
+  for (let i = 1; i < state.pathFilms.length; i++) {
     const f = state.pathFilms[i];
     const isCurrent = (f === state.current) && !state.selectedActor;
     items.push({ key: "f" + i, type: "film", name: f, cls:
-      (i === 0 ? "rc-start " : "") + (isCurrent ? "rc-here" : "") });
-    if (i < state.pathActors.length) {
-      items.push({ key: "a" + i, type: "actor", name: state.pathActors[i], cls: "" });
+      (isCurrent ? "rc-here" : "") + (f === state.target ? " rc-goalreached" : "") });
+    if (i - 1 < state.pathActors.length) {
+      items.push({ key: "a" + (i - 1), type: "actor", name: state.pathActors[i - 1], cls: "" });
     }
   }
   // pending actor: tapped, glowing, waiting for a movie choice
   if (state.selectedActor) {
     items.push({ key: "pending", type: "actor", name: state.selectedActor, cls: "rc-pending" });
   }
-  // ghost of the goal so the destination is always in view (unless already there)
+  // ghost of the goal so the destination is always in view (unless already reached)
   if (state.current !== state.target && !state.selectedActor) {
     items.push({ key: "goal", type: "film", name: state.target, cls: "rc-goal" });
   }
@@ -847,6 +843,11 @@ function updateModeBar() {
 }
 
 function updateHUD() {
+  // The persistent run/Fame/HoF HUD was removed in the chain-centred rebuild
+  // (it competed with the chain). Those numbers now surface only inside the
+  // More drawer's HoF line. Guard against the gone elements.
+  const hudRun = $("hudRun"), hudFame = $("hudFame"), hudHof = $("hudHof");
+  if (!hudRun || !hudFame || !hudHof) return;
   if (!run) return;
   const st = hofStatus(run.fame);
   // Run chip shows the count + a short status word (no separate label element now).
@@ -855,9 +856,9 @@ function updateHUD() {
   else if (run.rounds >= 6) runWord = "🔥 on fire";
   else if (run.rounds >= 3) runWord = "🔥 heating up";
   else if (run.rounds >= 1) runWord = "in a run";
-  $("hudRun").textContent = run.rounds + (runWord ? " · " + runWord : " · run");
-  $("hudFame").textContent = run.fame;
-  $("hudHof").textContent = st.name;
+  hudRun.textContent = run.rounds + (runWord ? " · " + runWord : " · run");
+  hudFame.textContent = run.fame;
+  hudHof.textContent = st.name;
   const need = st.next ? (st.next.min - run.fame) : 0;
   // hudNext removed in v3.5 interaction rebuild; progress surfaces in HoF line under More.
   // Unobtrusive risk indicator: what's banked vs what's on the table this Run.
@@ -946,6 +947,7 @@ function chooseFilm(f) {
   state.pathActors.push(state.selectedActor);
   state.pathFilms.push(f);
   if (f === state.target) {
+    $("chainTrack").classList.add("rc-solved");
     win();
     return;
   }
@@ -1309,7 +1311,7 @@ $("secondTakeBtn") && ($("secondTakeBtn").onclick = secondTake);
 $("moreBtn").onclick = () => {
   const t = $("tools");
   const open = t.classList.toggle("rc-open");
-  $("moreBtn").textContent = open ? "⚙ Hide ▴" : "⚙ More ▾";
+  $("moreBtn").textContent = open ? "✕" : "⚙";
   const hof = $("hof");
   if (hof) {
     hof.style.display = open ? "block" : "none";
