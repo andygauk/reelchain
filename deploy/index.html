@@ -238,6 +238,36 @@
   .rc-modal .rc-breakdown .rc-bd-run b{color:var(--accent2)}
   .rc-modal .rc-chain{justify-content:center;margin:14px 0}
 
+  /* Win modal — celebration hierarchy (Chain Complete → Fame → Milestone → ReelPlay → actions) */
+  .rc-win-modal{position:relative;text-align:center;overflow:hidden}
+  .rc-win-glow{position:absolute;top:-44%;left:50%;transform:translateX(-50%);width:360px;height:360px;border-radius:50%;
+       background:radial-gradient(circle, rgba(217,166,61,.22), rgba(217,166,61,0) 70%);pointer-events:none}
+  .rc-win-modal h2.rc-win-h{font-size:34px;margin:2px 0 4px;letter-spacing:.02em;
+       background:linear-gradient(135deg,var(--gold),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .rc-win-fame{font-size:44px;font-weight:800;color:var(--gold);font-family:inherit;margin:0 0 4px;line-height:1.05}
+  .rc-win-milestone{font-size:15px;font-weight:700;margin:2px auto 10px;padding:7px 15px;border-radius:999px;display:inline-block}
+  .rc-win-milestone.rc-win-level{color:#1a1320;background:linear-gradient(135deg,var(--gold),var(--accent2));box-shadow:0 6px 20px rgba(217,166,61,.3)}
+  .rc-win-milestone.rc-win-run{color:var(--gold);background:rgba(217,166,61,.12);border:1px solid var(--gold-dim)}
+  .rc-win-reel{margin:4px 0 10px}
+  .rc-win-reel img{max-width:100%;max-height:300px;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  .rc-win-details{margin:8px auto 2px;max-width:320px;text-align:left;background:rgba(255,255,255,.03);
+       border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:4px 12px}
+  .rc-win-details summary{list-style:none;text-align:center;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;padding:6px 0}
+  .rc-win-details summary::-webkit-details-marker{display:none}
+  .rc-win-details[open] summary{color:var(--gold);margin-bottom:6px}
+  .rc-win-details .rc-bd-head,.rc-win-details .rc-cmp-head{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--accent2);font-weight:700;margin:10px 0 6px}
+  .rc-win-details .rc-bd-row{display:flex;justify-content:space-between;font-size:13px;margin:2px 0;color:var(--muted)}
+  .rc-win-details .rc-bd-row b{color:#fff}
+  .rc-win-details .rc-bd-total{display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.12);color:#fff}
+  .rc-win-details .rc-bd-run{margin-top:6px;padding-top:6px;border-top:1px dashed rgba(217,166,61,.35)}
+  .rc-win-details .rc-bd-run span,.rc-win-details .rc-bd-run b{color:var(--gold)}
+  .rc-win-details .rc-cmp-row{display:flex;justify-content:space-between;font-size:14px;margin:3px 0;color:var(--muted)}
+  .rc-win-details .rc-cmp-row b{color:#fff}
+  .rc-win-details .rc-cmp-foot{margin-top:8px;font-size:13px;font-weight:600;padding-top:8px;border-top:1px solid rgba(255,184,77,.25)}
+  .rc-win-details .rc-cmp-foot.rc-win{color:var(--good)}
+  .rc-win-details .rc-cmp-foot.rc-lose{color:var(--bad)}
+  @media (max-width:480px){ .rc-win-modal h2.rc-win-h{font-size:28px} .rc-win-fame{font-size:38px} }
+
   /* Unscoped button so the win modal's button is styled even though the
      overlay sits (by design) outside .rc-app. */
   .rc-btn{cursor:pointer;border:none;border-radius:10px;padding:10px 15px;font-size:14px;font-weight:600;
@@ -421,19 +451,21 @@
   </div>
 
   <div class="rc-overlay" id="overlay">
-    <div class="rc-modal">
-      <h2 id="winTitle">Round solved! 🎉</h2>
-      <div class="rc-big" id="winSteps">0</div>
-      <div class="rc-sub" id="winSub"></div>
-      <div class="rc-breakdown" id="winBreakdown"></div>
-      <div class="rc-compare" id="winCompare" style="display:none"></div>
-    <div class="rc-chain" id="winChain"></div>
-    <div class="rc-reel" id="winReel"></div>
-    <div class="rc-row" style="justify-content:center;margin-top:10px">
-      <button class="rc-btn" id="winNext">▶ One more round</button>
-      <button class="rc-btn ghost" id="winShare">📤 Challenge a friend</button>
-    </div>
-    <div class="rc-sub" id="winEndHint" style="margin-top:12px;margin-bottom:0"></div>
+    <div class="rc-modal rc-win-modal">
+      <div class="rc-win-glow"></div>
+      <h2 class="rc-win-h" id="winTitle">Chain Complete</h2>
+      <div class="rc-win-fame" id="winFame">+0 Fame</div>
+      <div class="rc-win-milestone rc-win-run" id="winMilestone" style="display:none"></div>
+      <div class="rc-win-reel" id="winReel"></div>
+      <details class="rc-win-details" id="winDetails">
+        <summary>Score details</summary>
+        <div class="rc-breakdown" id="winBreakdown"></div>
+        <div class="rc-compare" id="winCompare" style="display:none"></div>
+      </details>
+      <div class="rc-row" style="justify-content:center;margin-top:14px;gap:10px">
+        <button class="rc-btn" id="winNext" style="flex:1 1 auto;min-width:150px">▶ One more go</button>
+        <button class="rc-btn ghost" id="winShare" style="min-width:auto">📤 Challenge a friend</button>
+      </div>
   </div>
   </div>
 
@@ -1020,7 +1052,6 @@ function win() {
   const steps = state.pathActors.length;
   const optimal = state.optimal || steps;
   const perfect = (steps === optimal) && (state.backtracks || 0) === 0 && run.hints === 0 && !run.usedSecondTake;
-  const secs = Math.round(elapsed / 1000);
 
   const { earn, runBonus, total } = applyRoundToRun(steps, optimal, state.backtracks || 0, run.usedSecondTake);
   updateHUD();
@@ -1038,17 +1069,24 @@ function win() {
 
   const st = hofStatus(run.fame);
   const justLeveled = (st.i > (lastRound ? hofIndex((run.fame - total)) : 0));
-  $("winTitle").textContent = perfect ? "PERFECT CHAIN 🎯" : "CHAIN COMPLETE 🎉";
-  $("winSteps").textContent = "+" + total + " Fame" + (runBonus > 0 ? "  ·  🔥 Run Bonus +" + runBonus : "");
-  // summary line (par shown here — post-solve, so it informs without spoiling)
-  let sub;
-  if (perfect) sub = steps + " moves · par " + optimal + " (fewest possible)";
-  else sub = steps + " moves · par " + optimal + " (+" + (steps - optimal) + " over par)";
-  const need = st.next ? (st.next.min - run.fame) : 0;
-  if (justLeveled && st.next) sub += "  ·  🏆 You reached " + st.name + "!";
-  else if (st.next) sub += "  ·  " + need + " Fame to " + st.next.name;
-  $("winSub").textContent = sub;
-  // transparent breakdown (per brief §12): round Fame levers, THEN run bonus separately, THEN total.
+
+  // --- Celebration hierarchy (no "Perfect Chain") ---
+  $("winTitle").textContent = "CHAIN COMPLETE 🎉";
+  $("winFame").textContent = "+" + total + " Fame" + (runBonus > 0 ? "  🔥" : "");
+
+  // Milestone: HoF level-up (primary) OR Run bonus (secondary) — never both.
+  const ms = $("winMilestone");
+  if (justLeveled && st.next !== st) {
+    ms.textContent = "🏆 You reached " + st.name + "!";
+    ms.className = "rc-win-milestone rc-win-level"; ms.style.display = "inline-block";
+  } else if (runBonus > 0) {
+    ms.textContent = "🔥 Run Bonus +" + runBonus + " (round " + run.rounds + ")";
+    ms.className = "rc-win-milestone rc-win-run"; ms.style.display = "inline-block";
+  } else {
+    ms.style.display = "none";
+  }
+
+  // --- Score details (collapsed; optional) ---
   const bd = $("winBreakdown");
   const rows = (lastRound.breakdown || []).map(p =>
     "<div class='rc-bd-row'><span>" + p.label + "</span><b>" + (p.value >= 0 ? "+" : "") + p.value + "</b></div>"
@@ -1060,7 +1098,7 @@ function win() {
     bonusRow +
     "<div class='rc-bd-total'><span>Total Earned</span><b>+" + total + " Fame</b></div>";
 
-  // (0b) Beat-my-score comparison vs the sender's challenge (if this run came from one)
+  // Beat-my-score comparison (if this came from a challenge) — also hidden behind details.
   const cmp = $("winCompare");
   if (activeChallenge && activeChallenge.m) {
     const theirMoves = activeChallenge.m;
@@ -1082,26 +1120,10 @@ function win() {
       beat, myMoves: steps, theirMoves, myPar: optimal, theirPar,
       myDifficulty: run.difficulty, sameDataset: activeChallenge.v === DATASET_VERSION,
     });
-    // a rematch: flip the pair so the sender gets a fresh duel on the same films
     activeChallenge = null; // consume so it shows once
   } else {
     cmp.style.display = "none";
   }
-
-  // (1) chain outcome + (2) animated route recap
-  const wc = $("winChain"); wc.innerHTML = "";
-  state.pathFilms.forEach((f, i) => {
-    wc.appendChild(mkNode("film", f));
-    if (i < state.pathActors.length) {
-      wc.appendChild(arrow());
-      wc.appendChild(mkNode("actor", state.pathActors[i]));
-      wc.appendChild(arrow());
-    }
-  });
-  // (3) Fame +(4) HoF progress (already reflected in HUD); (5) next-round choices live in buttons.
-  $("winEndHint").textContent = need > 0
-    ? "One more " + run.difficulty + " round could push you toward " + st.next.name + "."
-    : "You're at the top of the Hall of Fame — keep building your legend.";
 
   let best = +(localStorage.getItem("rc_best") || 0);
   if (!best || elapsed < best) { best = elapsed; localStorage.setItem("rc_best", best); }
@@ -2037,12 +2059,8 @@ async function queueReelPlay() {
     const reel = document.getElementById("winReel");
     reel.innerHTML = "";
     const img = document.createElement("img");
-    img.src = url; img.alt = "Instant ReelPlay"; img.style.maxWidth = "100%"; img.style.borderRadius = "12px";
+    img.src = url; img.alt = "Instant ReelPlay"; img.className = "rc-win-reel-img";
     reel.appendChild(img);
-    const dl = document.createElement("button");
-      dl.className = "rc-btn ghost"; dl.textContent = "⬇ Save ReelPlay";
-      dl.onclick = () => { const a = document.createElement("a"); a.href = url; a.download = "reelchain-reelplay.gif"; a.click(); track("instant_reelplay_gif_generated", { perfect: lastRound.perfect }); };
-    reel.appendChild(dl);
     track("instant_reelplay_completed", { perfect: lastRound.perfect, moves: actors.length, par: ci.optimal, over: ci.over.size });
   } catch (e) { /* GIF unavailable — result screen still works without it */ }
 }
