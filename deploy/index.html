@@ -99,24 +99,37 @@
   .rc-app .rc-act#flipBtn{background:linear-gradient(135deg,var(--gold),var(--accent2));color:#1a1200;border-color:transparent}
   .rc-app .rc-act#flipBtn:hover{filter:brightness(1.06)}
 
-  /* ===== Compact decks: add a link, not a screen ===== */
-  .rc-app .rc-deck-wrap{padding:6px 4px 4px;margin:0 0 10px;background:none;border:none;border-radius:0}
-  .rc-app .rc-deck-head{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-dim);text-align:center;margin:2px 0 10px}
-  .rc-app .rc-deck{display:flex;flex-wrap:wrap;gap:8px 8px;justify-content:center}
-  .rc-app .rc-deck.rc-films{gap:8px 8px}
-  .rc-app .rc-pick{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;background:none;border:none;padding:0;font-family:inherit;width:56px}
-  .rc-app .rc-pick .rc-thumb{width:50px;height:50px;border-radius:11px;overflow:hidden;border:2px solid #2a2e3a;transition:border-color .15s,transform .15s}
-  .rc-app .rc-pick.rc-actor .rc-thumb{border-radius:50%;width:50px;height:50px}
-  .rc-app .rc-pick:hover .rc-thumb{border-color:var(--gold);transform:scale(1.06)}
-  .rc-app .rc-pick.rc-picked .rc-thumb{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.3)}
+  /* ===== Decks as a film strip (prototype A): horizontal scroll, sprockets,
+     circular actor avatars + poster cards, stagger deal-in, hover glow, chosen-flash ===== */
+  .rc-app .rc-deck-wrap{padding:4px 0 6px;margin:0 0 8px;background:none;border:none;border-radius:0}
+  .rc-app .rc-deck-head{display:none} /* replaced by the actor-tag chip in Stage 2 */
+  .rc-app .rc-strip{width:100%;position:relative;margin-top:2px}
+  .rc-app .rc-sprocket-row{display:flex;justify-content:space-evenly;padding:0 6px}
+  .rc-app .rc-sprocket{width:6px;height:6px;border-radius:1px;background:#242938}
+  .rc-app .rc-strip-track{display:flex;gap:10px;padding:8px 10px;overflow-x:auto;scrollbar-width:none;
+    background:#0E1119;border-top:1px dashed #232838;border-bottom:1px dashed #232838;-webkit-overflow-scrolling:touch}
+  .rc-app .rc-strip-track::-webkit-scrollbar{display:none}
+  .rc-app .rc-deck{display:flex;gap:10px;flex-wrap:nowrap;justify-content:flex-start}
+  .rc-app .rc-deck.rc-films{margin-top:0}
+  .rc-app .rc-pick{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;
+    background:none;border:none;padding:0;font-family:inherit;opacity:0;transform:translateY(10px);animation:rcFrameIn .34s ease forwards}
+  .rc-app .rc-pick .rc-thumb{width:50px;height:50px;border-radius:50%;overflow:hidden;border:2px solid #242938;
+    transition:border-color .15s,transform .15s,box-shadow .15s;background:#15131c}
+  .rc-app .rc-pick.rc-film .rc-thumb{border-radius:6px;width:52px;height:70px}
+  .rc-app .rc-pick:hover .rc-thumb{border-color:var(--gold);transform:scale(1.06);box-shadow:0 0 0 4px rgba(217,166,61,.28)}
+  .rc-app .rc-pick.rc-picked .rc-thumb,.rc-app .rc-pick.rc-chosen .rc-thumb{border-color:var(--gold);
+    box-shadow:0 0 0 6px rgba(217,166,61,.28);animation:rcChoseFlash .4s ease}
   .rc-app .rc-pick.rc-dim{opacity:.32;pointer-events:none}
-  .rc-app .rc-pick.rc-goalpick .rc-thumb{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,166,61,.35),0 0 16px rgba(217,166,61,.3)}
+  .rc-app .rc-pick.rc-goalpick .rc-thumb{border-color:var(--gold);box-shadow:0 0 0 4px rgba(217,166,61,.35),0 0 16px rgba(217,166,61,.3)}
   .rc-app .rc-pick.rc-goalpick .rc-nm{color:var(--gold);font-weight:700}
   .rc-app .rc-pick .rc-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-  .rc-app .rc-pick .rc-thumb.rc-fallback{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2a2333,#15131c);color:var(--gold);font-weight:800;font-size:16px;font-family:"Oswald",Georgia,serif}
-  .rc-app .rc-pick .rc-nm{font-size:10.5px;color:var(--ink);text-align:center;line-height:1.15;max-width:62px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rc-app .rc-deal{animation:rcDeal .3s ease both}
-  @keyframes rcDeal{0%{transform:translateY(22px) scale(.85);opacity:0}100%{transform:none;opacity:1}}
+  .rc-app .rc-pick .rc-thumb.rc-fallback{display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#2a2333,#15131c);color:var(--gold);font-weight:800;font-size:16px;font-family:"Oswald",Georgia,serif}
+  .rc-app .rc-pick .rc-nm{font-size:10px;color:var(--ink);text-align:center;line-height:1.15;max-width:62px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @keyframes rcFrameIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes rcChoseFlash{0%{box-shadow:0 0 0 0 rgba(217,166,61,.28)}60%{box-shadow:0 0 0 10px rgba(217,166,61,.28)}100%{box-shadow:0 0 0 6px rgba(217,166,61,.28)}}
+  .rc-app .rc-deal{animation:rcFrameIn .34s ease forwards}
   .rc-app .rc-tools{display:none;flex-direction:column;gap:10px;margin:0 0 14px;padding:14px;border:1px solid #20242e;border-radius:16px;background:rgba(255,255,255,.02)}
   .rc-app .rc-tools.rc-open{display:flex}
   .rc-app .rc-tools .rc-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:0}
@@ -388,11 +401,14 @@
   <div class="rc-chain-track" id="chainTrack"></div>
   <div class="rc-slots-line" id="slotsLine">Tap an actor to start your chain</div>
 
-  <!-- Actor / movie picker: compact, lives under the chain -->
+  <!-- Actor / movie picker: compact film strip under the chain -->
   <div class="rc-deck-wrap">
-    <div class="rc-deck-head" id="deckHead">Tap an actor to add them to the chain</div>
-    <div class="rc-deck" id="actorDeck"></div>
-    <div class="rc-deck rc-films" id="filmDeck" style="display:none"></div>
+    <div class="rc-strip" id="stripWrap">
+      <div class="rc-sprocket-row"></div>
+      <div class="rc-strip-track rc-deck" id="actorDeck"></div>
+      <div class="rc-strip-track rc-deck rc-films" id="filmDeck" style="display:none"></div>
+      <div class="rc-sprocket-row"></div>
+    </div>
   </div>
 
   <div id="msg"></div>
@@ -757,7 +773,8 @@ function render() {
   buildActorDeck();
   // film deck hidden until an actor is chosen
   const fd = $("filmDeck"); fd.innerHTML = ""; fd.style.display = "none";
-  $("deckHead").textContent = state.selectedActor
+  const dh = $("deckHead");
+  if (dh) dh.textContent = state.selectedActor
     ? "Tap a movie with " + state.selectedActor
     : "Tap an actor in " + state.current;
 }
@@ -862,8 +879,8 @@ function buildFilmDeck() {
     deck.appendChild(p);
   }
   [...deck.children].forEach((c, i) => { c.style.animationDelay = (i * 32) + "ms"; });
-  deck.style.display = "grid";
-  $("deckHead").textContent = "Tap a movie with " + state.selectedActor;
+  deck.style.display = "flex";
+  const dh = $("deckHead"); if (dh) dh.textContent = "Tap a movie with " + state.selectedActor;
 }
 
 function updateModeBar() {
