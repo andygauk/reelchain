@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Reelchain — full chain loop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#0A0D14; --panel:#12151E; --gold:#D9A63D; --gold-soft:rgba(217,166,61,.28);
+    --ink:#EDEFF5; --ink-dim:#7C8296; --thread:#232838;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:#000;font-family:'Inter',sans-serif;}
+
+  .stage-wrap{ max-width:1200px; margin:40px auto; display:flex; gap:60px; justify-content:center; flex-wrap:wrap; padding:20px; }
+  .caption{ text-align:center; color:#999; font-size:13px; margin-bottom:14px; letter-spacing:.04em; text-transform:uppercase; }
+  .hint{ text-align:center; color:#666; font-size:12px; margin-top:14px; max-width:390px; line-height:1.5; }
+
+  .phone{
+    width:390px; height:820px; background:var(--bg); border-radius:40px; overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.6); border:1px solid #1A1D28; position:relative;
+    display:flex; flex-direction:column;
+  }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px 6px; }
+  .brand{ font-family:'Fraunces',serif; font-weight:700; font-size:16px; color:var(--ink); }
+  .brand .accent{ color:var(--gold); }
+  .icon-btn{ width:28px; height:28px; border-radius:50%; border:1px solid #262b38; background:none; color:var(--ink-dim); font-size:13px; display:flex; align-items:center; justify-content:center; }
+
+  .history-rail{
+    display:flex; align-items:center; padding:14px 18px 10px; overflow-x:auto; scrollbar-width:none; min-height:52px;
+  }
+  .history-rail::-webkit-scrollbar{ display:none; }
+  .h-poster{
+    width:34px; height:46px; border-radius:5px; background-size:cover; border:1px solid #2a2f3d; flex-shrink:0;
+    opacity:0; transform:scale(.6); animation:popIn .38s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  .h-actor{
+    width:26px; height:26px; border-radius:50%; background-size:cover; border:1.5px solid var(--gold);
+    flex-shrink:0; margin:0 6px; opacity:0; transform:scale(.5); animation:popIn .32s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  .h-thread{ width:14px; height:1.5px; background:var(--gold); flex-shrink:0; }
+  .h-thread.dashed{ width:22px; background:repeating-linear-gradient(to right, var(--thread) 0 4px, transparent 4px 8px); height:1.5px; }
+  .h-target{
+    width:34px; height:46px; border-radius:5px; background-size:cover; border:1px dashed #333a4a; opacity:.4;
+    flex-shrink:0; filter:grayscale(1); transition:opacity .4s, filter .4s;
+  }
+  .h-target.reached{ opacity:1; filter:grayscale(0); border:1.5px solid var(--gold); box-shadow:0 0 12px var(--gold-soft); }
+
+  @keyframes popIn{ 0%{opacity:0;transform:scale(.5);} 60%{opacity:1;transform:scale(1.12);} 100%{opacity:1;transform:scale(1);} }
+
+  .stage{ flex:1; display:flex; flex-direction:column; align-items:center; padding:6px 20px 0; position:relative; }
+
+  .gate{
+    position:relative; width:210px; height:240px; border-radius:16px; padding:6px;
+    background:linear-gradient(160deg,#1c2030,#12151e); border:1.5px solid var(--gold-soft);
+    box-shadow:0 0 0 6px rgba(217,166,61,.06), 0 0 40px rgba(217,166,61,.08);
+    animation:breathe 3.2s ease-in-out infinite;
+  }
+  @keyframes breathe{ 0%,100%{box-shadow:0 0 0 6px rgba(217,166,61,.06),0 0 40px rgba(217,166,61,.08);} 50%{box-shadow:0 0 0 9px rgba(217,166,61,.10),0 0 55px rgba(217,166,61,.16);} }
+  .gate-corner-tl,.gate-corner-tr,.gate-corner-bl,.gate-corner-br{ position:absolute; width:16px; height:16px; border:2px solid var(--gold); opacity:.8; }
+  .gate-corner-tl{ top:-2px; left:-2px; border-right:none; border-bottom:none; border-radius:6px 0 0 0; }
+  .gate-corner-tr{ top:-2px; right:-2px; border-left:none; border-bottom:none; border-radius:0 6px 0 0; }
+  .gate-corner-bl{ bottom:-2px; left:-2px; border-right:none; border-top:none; border-radius:0 0 0 6px; }
+  .gate-corner-br{ bottom:-2px; right:-2px; border-left:none; border-top:none; border-radius:0 0 6px 0; }
+
+  .current-poster{
+    width:100%; height:100%; border-radius:11px; background-size:cover; background-position:center;
+    display:flex; align-items:flex-end; position:relative; overflow:hidden;
+  }
+  .current-poster::after{ content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.8), transparent 55%); }
+  .current-poster .cp-title{ position:relative; z-index:1; font-family:'Oswald',sans-serif; font-weight:600; font-size:18px; color:var(--ink); padding:14px; line-height:1.15; }
+  .current-poster.iris-in{ animation:irisIn .5s cubic-bezier(.2,.9,.3,1.2); }
+  @keyframes irisIn{ 0%{opacity:0;transform:scale(.75);filter:brightness(2) blur(4px);} 60%{opacity:1;transform:scale(1.04);filter:brightness(1.1) blur(0);} 100%{opacity:1;transform:scale(1);filter:brightness(1) blur(0);} }
+
+  .live-dot{ position:absolute; top:12px; right:12px; z-index:2; display:flex; align-items:center; gap:5px; background:rgba(0,0,0,.4); padding:3px 8px 3px 6px; border-radius:20px; }
+  .live-dot .dot{ width:6px; height:6px; border-radius:50%; background:var(--gold); animation:blink 1.6s infinite; }
+  .live-dot .txt{ font-size:9px; color:var(--gold); letter-spacing:.1em; font-weight:600; }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+  .prompt{ text-align:center; color:var(--ink-dim); font-size:13px; margin-top:12px; padding:0 20px; min-height:16px; }
+  .prompt b{ color:var(--gold); font-weight:600; }
+
+  .actor-tag{
+    display:flex; align-items:center; gap:8px; background:#161a24; border:1px solid #262b38;
+    border-radius:20px; padding:5px 12px 5px 5px; margin-top:8px; opacity:0; transform:translateY(-6px);
+    animation:tagIn .3s ease forwards;
+  }
+  .actor-tag .tag-avatar{ width:22px; height:22px; border-radius:50%; background-size:cover; border:1px solid var(--gold); }
+  .actor-tag .tag-label{ font-size:11.5px; color:var(--ink-dim); }
+  .actor-tag .tag-label b{ color:var(--ink); }
+  .back-link{ font-size:11px; color:var(--ink-dim); text-decoration:underline; cursor:pointer; margin-left:4px; }
+  @keyframes tagIn{ to{opacity:1; transform:translateY(0);} }
+
+  .strip{ width:100%; margin-top:10px; position:relative; }
+  .sprocket-row{ display:flex; justify-content:space-evenly; padding:0 6px; }
+  .sprocket{ width:6px; height:6px; border-radius:1px; background:#242938; }
+  .strip-track{ display:flex; gap:10px; padding:8px 10px; overflow-x:auto; scrollbar-width:none; background:#0E1119; border-top:1px dashed #232838; border-bottom:1px dashed #232838; }
+  .strip-track::-webkit-scrollbar{ display:none; }
+
+  .card{ flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; opacity:0; transform:translateY(10px); animation:frameIn .34s ease forwards; }
+  .card.actor{ width:56px; }
+  .card.movie{ width:62px; }
+  .card .avatar{ width:50px; height:50px; border-radius:50%; background-size:cover; border:2px solid #242938; transition:border-color .15s, transform .15s, box-shadow .15s; }
+  .card .poster{ width:52px; height:70px; border-radius:6px; background-size:cover; border:2px solid #242938; transition:border-color .15s, transform .15s, box-shadow .15s; display:flex; align-items:flex-end; }
+  .card:hover .avatar, .card:hover .poster{ border-color:var(--gold); transform:scale(1.06); box-shadow:0 0 0 4px var(--gold-soft); }
+  .card .cname{ font-size:10px; color:var(--ink); text-align:center; line-height:1.15; }
+  .card.chosen .avatar, .card.chosen .poster{ border-color:var(--gold); box-shadow:0 0 0 6px var(--gold-soft); animation:choseFlash .4s ease; }
+  .card.leaving{ animation:frameOut .3s ease forwards; }
+  .card.decoy{ filter:saturate(.55) brightness(.85); }
+
+  @keyframes frameIn{ from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes frameOut{ to{opacity:0;transform:translateY(-14px) scale(.7);} }
+  @keyframes choseFlash{ 0%{box-shadow:0 0 0 0 var(--gold-soft);} 60%{box-shadow:0 0 0 10px var(--gold-soft);} 100%{box-shadow:0 0 0 6px var(--gold-soft);} }
+
+  .footer{ padding:12px 20px 20px; text-align:center; }
+  .fame-note{ color:var(--ink-dim); font-size:12px; }
+  .fame-note b{ color:var(--gold); }
+
+  .celebrate{ display:none; flex-direction:column; align-items:center; gap:10px; padding:12px 20px 20px; }
+  .celebrate.show{ display:flex; }
+  .celebrate .title{ font-family:'Oswald',sans-serif; font-size:15px; color:var(--gold); letter-spacing:.03em; text-align:center; }
+  .replay-btn{ background:var(--gold); border:none; color:#241a05; font-weight:600; font-size:13px; padding:9px 22px; border-radius:20px; cursor:pointer; }
+
+  .gate.win-flash{ animation:gateWinFlash .7s ease; }
+  @keyframes gateWinFlash{
+    0%{ transform:scale(1); box-shadow:0 0 0 6px rgba(217,166,61,.06), 0 0 40px rgba(217,166,61,.08); }
+    35%{ transform:scale(1.045); box-shadow:0 0 0 14px rgba(217,166,61,.35), 0 0 90px rgba(217,166,61,.55); }
+    100%{ transform:scale(1); box-shadow:0 0 0 6px rgba(217,166,61,.06), 0 0 40px rgba(217,166,61,.08); }
+  }
+
+  .confetti-piece{
+    position:absolute; top:70px; width:6px; height:11px; border-radius:1px; opacity:.95; z-index:5;
+    animation:confettiFall 1000ms cubic-bezier(.3,.6,.4,1) forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(260px) rotate(540deg); opacity:0; }
+  }
+
+  .win-title-pop{
+    animation:winTitlePop .5s cubic-bezier(.2,.9,.3,1.3);
+  }
+  @keyframes winTitlePop{
+    0%{ opacity:0; transform:translateY(8px) scale(.9); }
+    100%{ opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  .toast{
+    position:absolute; left:50%; bottom:100px; transform:translate(-50%, 12px); z-index:10;
+    background:#1a1e29; border:1px solid #2a2f3d; color:var(--ink-dim); font-size:11.5px;
+    padding:9px 14px; border-radius:10px; opacity:0; transition:opacity .25s, transform .25s; max-width:260px; text-align:center;
+    pointer-events:none;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%, 0); }
+</style>
+</head>
+<body>
+
+<div class="stage-wrap">
+  <div>
+    <div class="caption">Reelchain — full actor ⇄ filmography loop</div>
+    <div class="phone">
+
+      <div class="topbar">
+        <div class="brand">REEL<span class="accent">CHAIN</span></div>
+        <button class="icon-btn">⚙</button>
+      </div>
+
+      <div class="history-rail" id="historyRail"></div>
+
+      <div class="stage">
+        <div class="gate">
+          <div class="gate-corner-tl"></div><div class="gate-corner-tr"></div>
+          <div class="gate-corner-bl"></div><div class="gate-corner-br"></div>
+          <div class="current-poster" id="currentPoster">
+            <div class="live-dot"><span class="dot"></span><span class="txt">NOW PLAYING</span></div>
+            <div class="cp-title" id="cpTitle"></div>
+          </div>
+        </div>
+
+        <div id="actorTagSlot"></div>
+        <div class="prompt" id="promptText"></div>
+
+        <div class="strip" id="stripWrap">
+          <div class="sprocket-row"></div>
+          <div class="strip-track" id="track"></div>
+          <div class="sprocket-row"></div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+      </div>
+
+      <div class="footer" id="footerNormal">
+        <div class="fame-note">Earn up to <b>+30 Fame</b> for a perfect chain</div>
+      </div>
+      <div class="celebrate" id="celebrate">
+        <div class="title">CHAIN COMPLETE<br>ENDGAME → BASTERDS IN 2 ACTORS</div>
+        <button class="replay-btn" onclick="location.reload()">Play again</button>
+      </div>
+
+    </div>
+    <div class="hint">Tap <b style="color:#aaa">Samuel L. Jackson</b>, then <b style="color:#aaa">Django Unchained</b>, then <b style="color:#aaa">Christoph Waltz</b>, then <b style="color:#aaa">Inglourious Basterds</b> to see the full loop. Other names are shown but lead to a "keep exploring" note, to keep this prototype focused.</div>
+  </div>
+</div>
+
+<script>
+const grad = (c) => `background:linear-gradient(160deg, ${c[0]}, ${c[1]})`;
+const TARGET = "INGLOURIOUS BASTERDS";
+
+const movies = {
+  "AVENGERS: ENDGAME": {
+    color:["#1c2a4a","#0d1220"],
+    actors: [
+      {name:"Samuel L. Jackson", color:["#333","#111"], golden:true},
+      {name:"Robert Downey Jr.", color:["#b5651d","#5a2e0d"]},
+      {name:"Chris Evans", color:["#2a4d8f","#12234a"]},
+      {name:"Scarlett Johansson", color:["#8a2e4a","#3a1120"]},
+      {name:"Chris Hemsworth", color:["#5a5a8a","#232349"]},
+    ]
+  },
+  "DJANGO UNCHAINED": {
+    color:["#7a3a1f","#2a120a"],
+    actors: [
+      {name:"Christoph Waltz", color:["#4a4a4a","#1a1a1a"], golden:true},
+      {name:"Jamie Foxx", color:["#2a3a2a","#0d1a0d"]},
+      {name:"Leonardo DiCaprio", color:["#3a3a5a","#12122a"]},
+      {name:"Kerry Washington", color:["#5a2a3a","#2a0d15"]},
+    ]
+  }
+};
+
+const actorFilms = {
+  "Samuel L. Jackson": {
+    tagColor:["#333","#111"],
+    films: [
+      {title:"DJANGO UNCHAINED", color:["#7a3a1f","#2a120a"], golden:true},
+      {title:"PULP FICTION", color:["#7a1f1f","#2a0a0a"]},
+      {title:"KINGSMAN: THE SECRET SERVICE", color:["#2a4a5a","#0d1e2a"]},
+      {title:"COMING 2 AMERICA", color:["#5a3a1f","#2a1a0a"]},
+    ]
+  },
+  "Christoph Waltz": {
+    tagColor:["#4a4a4a","#1a1a1a"],
+    films: [
+      {title:"INGLOURIOUS BASTERDS", color:["#7a5a1f","#2a1d0a"], golden:true, isTarget:true},
+      {title:"SPECTRE", color:["#2a2a3a","#0d0d15"]},
+      {title:"WATER FOR ELEPHANTS", color:["#5a4a2a","#2a200d"]},
+    ]
+  }
+};
+
+let mode = 'actors';
+let currentMovieKey = "AVENGERS: ENDGAME";
+let history = [{type:'movie', key:currentMovieKey, color: movies[currentMovieKey].color}];
+
+const historyRail = document.getElementById('historyRail');
+const cpTitle = document.getElementById('cpTitle');
+const currentPoster = document.getElementById('currentPoster');
+const promptText = document.getElementById('promptText');
+const track = document.getElementById('track');
+const actorTagSlot = document.getElementById('actorTagSlot');
+const toastEl = document.getElementById('toast');
+
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=> toastEl.classList.remove('show'), 2200);
+}
+
+function renderHistory(){
+  historyRail.innerHTML = '';
+  history.forEach((h, i) => {
+    if(h.type === 'movie'){
+      const el = document.createElement('div'); el.className='h-poster'; el.style.cssText += grad(h.color);
+      historyRail.appendChild(el);
+    } else {
+      const el = document.createElement('div'); el.className='h-actor'; el.style.cssText += grad(h.color);
+      historyRail.appendChild(el);
+    }
+    if(i < history.length-1){
+      const t = document.createElement('div'); t.className='h-thread'; historyRail.appendChild(t);
+    }
+  });
+  const reached = currentMovieKey === TARGET;
+  if(!reached){
+    // ghost preview of the destination — this disappears once the last real
+    // node in the chain IS the target, so it's never drawn twice
+    const dashed = document.createElement('div'); dashed.className='h-thread dashed'; historyRail.appendChild(dashed);
+    const target = document.createElement('div');
+    target.className = 'h-target';
+    target.style.cssText += grad(actorFilms["Christoph Waltz"].films[0].color);
+    historyRail.appendChild(target);
+  }
+}
+
+function renderGate(animate){
+  cpTitle.textContent = currentMovieKey;
+  const c = movies[currentMovieKey] ? movies[currentMovieKey].color : actorFilms["Christoph Waltz"].films[0].color;
+  currentPoster.setAttribute('style', currentPoster.getAttribute('style') ? currentPoster.getAttribute('style').replace(/background:[^;]+;?/,'') : '');
+  currentPoster.style.cssText += grad(c);
+  if(animate){
+    currentPoster.classList.remove('iris-in'); void currentPoster.offsetWidth; currentPoster.classList.add('iris-in');
+  }
+}
+
+function clearStrip(cb){
+  const cards = track.querySelectorAll('.card');
+  if(cards.length === 0){ cb(); return; }
+  cards.forEach(c => c.classList.add('leaving'));
+  setTimeout(cb, 260);
+}
+
+function renderActorsMode(){
+  mode = 'actors';
+  actorTagSlot.innerHTML = '';
+  promptText.innerHTML = `Tap an actor from <b>${currentMovieKey}</b>`;
+  clearStrip(() => {
+    track.innerHTML = '';
+    movies[currentMovieKey].actors.forEach((a, k) => {
+      const card = document.createElement('div');
+      card.className = 'card actor' + (a.golden ? '' : ' decoy');
+      card.style.animationDelay = (k*0.05)+'s';
+      card.innerHTML = `<div class="avatar" style="${grad(a.color)}"></div><div class="cname">${a.name}</div>`;
+      card.addEventListener('click', () => onActorTap(a, card));
+      track.appendChild(card);
+    });
+  });
+}
+
+function renderMoviesMode(actorName){
+  mode = 'movies';
+  const data = actorFilms[actorName];
+  actorTagSlot.innerHTML = `
+    <div class="actor-tag">
+      <div class="tag-avatar" style="${grad(data.tagColor)}"></div>
+      <div class="tag-label">Films with <b>${actorName}</b></div>
+      <div class="back-link" id="backLink">change actor</div>
+    </div>`;
+  document.getElementById('backLink').addEventListener('click', renderActorsMode);
+  promptText.innerHTML = `Tap a film to add it to the chain`;
+  clearStrip(() => {
+    track.innerHTML = '';
+    data.films.forEach((f, k) => {
+      const card = document.createElement('div');
+      card.className = 'card movie' + (f.golden ? '' : ' decoy');
+      card.style.animationDelay = (k*0.05)+'s';
+      card.innerHTML = `<div class="poster" style="${grad(f.color)}"></div><div class="cname">${f.title}</div>`;
+      card.addEventListener('click', () => onMovieTap(f, card));
+      track.appendChild(card);
+    });
+  });
+}
+
+function onActorTap(actor, cardEl){
+  if(!actorFilms[actor.name]){
+    showToast(`In the full game every actor connects further — try Samuel L. Jackson or Christoph Waltz to see the loop.`);
+    return;
+  }
+  document.querySelectorAll('.card').forEach(c => c.style.pointerEvents='none');
+  cardEl.classList.add('chosen');
+  setTimeout(() => {
+    history.push({type:'actor', key:actor.name, color:actor.color});
+    renderHistory();
+    renderMoviesMode(actor.name);
+  }, 420);
+}
+
+function burstConfetti(){
+  const stage = document.querySelector('.stage');
+  const colors = ['#D9A63D','#F2D18C','#EDEFF5','#B8863A'];
+  for(let i=0;i<26;i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = (18 + Math.random()*64) + '%';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDelay = (Math.random()*180)+'ms';
+    p.style.animationDuration = (800 + Math.random()*500)+'ms';
+    stage.appendChild(p);
+    setTimeout(() => p.remove(), 1600);
+  }
+}
+
+function onMovieTap(film, cardEl){
+  if(!film.golden){
+    showToast(`This branch continues in the full game — try Django Unchained or Inglourious Basterds here to keep the demo moving.`);
+    return;
+  }
+  document.querySelectorAll('.card').forEach(c => c.style.pointerEvents='none');
+  cardEl.classList.add('chosen');
+  setTimeout(() => {
+    currentMovieKey = film.title;
+    history.push({type:'movie', key:film.title, color:film.color});
+    renderHistory();
+    renderGate(true);
+
+    if(film.isTarget){
+      // hold on the linked gate for a beat before anything else changes —
+      // this tap IS the win, so it needs its own moment before the panel swaps in
+      const gateEl = document.querySelector('.gate');
+      gateEl.classList.add('win-flash');
+      promptText.innerHTML = `<b>Linked!</b>`;
+      setTimeout(() => burstConfetti(), 120);
+
+      setTimeout(() => {
+        document.getElementById('stripWrap').style.display='none';
+        actorTagSlot.innerHTML = '';
+        promptText.innerHTML = '';
+        document.getElementById('footerNormal').style.display='none';
+        const celebrateEl = document.getElementById('celebrate');
+        celebrateEl.classList.add('show');
+        celebrateEl.querySelector('.title').classList.add('win-title-pop');
+      }, 750);
+    } else {
+      renderActorsMode();
+    }
+  }, 420);
+}
+
+renderHistory();
+renderGate(false);
+renderActorsMode();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Issue 2: Focus States — Keyboard Accessibility</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#0b0d12; --gold:#D9A63D; --text:#e8eaf2; --muted:#8a90a6;
+    --card:#14171f; --panel:#1a1e28;
+    --font-brand:"Oswald",Georgia,serif; --font-display:"Fraunces",Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font-brand);background:var(--bg);color:var(--text);line-height:1.5}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  h1{font-family:var(--font-display);font-size:clamp(28px,4vw,42px);margin:0 0 8px}
+  .meta{color:var(--muted);margin-bottom:32px}
+  .panel{background:var(--panel);border:1px solid #2a2f3a;border-radius:16px;padding:24px;margin-bottom:24px}
+  .panel h2{margin:0 0 16px;font-size:18px;color:var(--gold)}
+  .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;margin-bottom:16px}
+  .badge.missing{background:#3a1a1a;color:#f77;border:1px solid #5a2a2a}
+  .badge.added{background:#0a3a1a;color:#74f0a4;border:1px solid #1a5a2a}
+  .demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;align-items:start}
+  .card{background:var(--card);border:1px solid #2a2f3a;border-radius:12px;padding:20px}
+  .card h3{margin:0 0 12px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .actor-row{display:flex;gap:12px;flex-wrap:wrap}
+  .actor-btn{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:8px;border-radius:12px;transition:all .15s}
+  .actor-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .avatar{width:62px;height:62px;border-radius:50%;background:#2a2f3a;border:2px solid #3a3f4a;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted)}
+  .avatar.proposed{border-color:var(--gold);box-shadow:0 0 0 2px var(--bg),0 0 16px rgba(217,166,61,.25)}
+  .name{font-size:13px;color:var(--text);font-weight:500;text-align:center;max-width:80px;white-space:normal;line-height:1.2}
+  .film-btn{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:8px;border-radius:12px;transition:all .15s;min-width:120px}
+  .film-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .film-poster{width:100px;height:150px;border-radius:8px;background:#2a2f3a;border:2px solid #3a3f4a;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);text-align:center;padding:8px}
+  .film-poster.proposed{border-color:var(--gold);box-shadow:0 0 0 2px var(--bg),0 0 16px rgba(217,166,61,.25)}
+  .film-title{font-size:12px;color:var(--text);text-align:center;max-width:116px;white-space:normal;line-height:1.2}
+  .ct-card{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;border-radius:12px;background:var(--card);border:2px solid #3a3f4a;transition:all .15s}
+  .ct-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .ct-card.proposed{border-color:var(--gold);box-shadow:0 0 0 2px var(--bg),0 0 24px rgba(217,166,61,.2)}
+  .ct-poster{width:120px;height:180px;border-radius:8px;background:#2a2f3a;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);text-align:center;padding:8px}
+  .ct-title{font-size:13px;font-weight:600;color:var(--text);text-align:center}
+  .code-block{background:#0a0c10;padding:16px;border-radius:8px;overflow:auto;font-size:13px;color:#c9d1d9;font-family:ui-monospace,SFMono-Regular,monospace;margin:16px 0}
+  .diff{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .diff span{background:#0a0c10;padding:2px 8px;border-radius:4px;font-size:12px;color:var(--gold)}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrap">
+  <h1>Issue 2: Missing Keyboard Focus</h1>
+  <p class="meta">All interactive game tiles are <code><div onclick></code> — not in tab order, no ARIA role, no focus styles. Keyboard users cannot play.</p>
+
+  <div class="panel">
+    <span class="badge missing">CURRENT — inaccessible</span>
+    <h2>Game tiles: actors, films, start/target cards</h2>
+    <div class="demo-grid">
+      <div class="card">
+        <h3>Actor deck (5 items)</h3>
+        <div class="actor-row">
+          <button class="actor-btn" tabindex="-1" disabled>
+            <div class="avatar">LD</div>
+            <div class="name">Leonardo DiCaprio</div>
+          </button>
+          <button class="actor-btn" tabindex="-1" disabled>
+            <div class="avatar">BP</div>
+            <div class="name">Brad Pitt</div>
+          </button>
+          <button class="actor-btn" tabindex="-1" disabled>
+            <div class="avatar">MR</div>
+            <div class="name">Margot Robbie</div>
+          </button>
+        </div>
+        <div class="code-block"><code><div class="rc-actor rc-pick" onclick="chooseActor(...)">
+  <img ...><span class="rc-nm">Leonardo DiCaprio</span>
+</div></code></div>
+        <div class="diff">
+          <span>No tabindex</span><span>No role</span><span>No :focus-visible</span><span>Div not button</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Film deck (variable)</h3>
+        <div class="actor-row">
+          <button class="film-btn" tabindex="-1" disabled>
+            <div class="film-poster">Once Upon a Time<br>in Hollywood</div>
+            <div class="film-title">Once Upon a Time in Hollywood</div>
+          </button>
+          <button class="film-btn" tabindex="-1" disabled>
+            <div class="film-poster">The Hateful Eight</div>
+            <div class="film-title">The Hateful Eight</div>
+          </button>
+        </div>
+        <div class="code-block"><code><div class="rc-film rc-pick" onclick="chooseFilm(...)">
+  <img ...><span class="rc-flbl">Once Upon a Time...</span>
+</div></code></div>
+        <div class="diff">
+          <span>No tabindex</span><span>No role</span><span>No :focus-visible</span><span>Div not button</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Start / Target cards</h3>
+        <div class="actor-row" style="justify-content:center">
+          <div class="ct-card" tabindex="-1">
+            <div class="ct-poster">Once Upon a Time<br>in Hollywood</div>
+            <div class="ct-title">START</div>
+          </div>
+          <div class="ct-card" tabindex="-1" style="border-style:dashed">
+            <div class="ct-poster">Cape Fear</div>
+            <div class="ct-title">TARGET</div>
+          </div>
+        </div>
+        <div class="code-block"><code><div class="rc-ct-tile" onclick="...">
+  <img ...><span class="rc-ct-fb">Once Upon a Time...</span>
+</div></code></div>
+        <div class="diff">
+          <span>No tabindex</span><span>No role</span><span>No :focus-visible</span><span>Dashed border only</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <span class="badge added">PROPOSED — minimal accessible fix</span>
+    <h2>Add role, tabindex, focus ring — keep existing onclick</h2>
+    <div class="demo-grid">
+      <div class="card">
+        <h3>Actor — keyboard accessible</h3>
+        <div class="actor-row">
+          <button class="actor-btn" aria-label="Choose Leonardo DiCaprio">
+            <div class="avatar proposed">LD</div>
+            <div class="name">Leonardo DiCaprio</div>
+          </button>
+          <button class="actor-btn" aria-label="Choose Brad Pitt">
+            <div class="avatar proposed">BP</div>
+            <div class="name">Brad Pitt</div>
+          </button>
+          <button class="actor-btn" aria-label="Choose Margot Robbie">
+            <div class="avatar proposed">MR</div>
+            <div class="name">Margot Robbie</div>
+          </button>
+        </div>
+        <div class="code-block"><code><div class="rc-actor rc-pick" 
+     role="button" tabindex="0" 
+     aria-label="Choose Leonardo DiCaprio"
+     onclick="chooseActor(...)">
+  <img ...><span class="rc-nm">Leonardo DiCaprio</span>
+</div></code></div>
+      </div>
+      <div class="card">
+        <h3>Film — keyboard accessible</h3>
+        <div class="actor-row">
+          <button class="film-btn" aria-label="Choose Once Upon a Time in Hollywood">
+            <div class="film-poster proposed">Once Upon a Time<br>in Hollywood</div>
+            <div class="film-title">Once Upon a Time in Hollywood</div>
+          </button>
+          <button class="film-btn" aria-label="Choose The Hateful Eight">
+            <div class="film-poster proposed">The Hateful Eight</div>
+            <div class="film-title">The Hateful Eight</div>
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Start / Target — keyboard accessible</h3>
+        <div class="actor-row" style="justify-content:center">
+          <div class="ct-card proposed" tabindex="0" role="button" aria-label="Start film: Once Upon a Time in Hollywood">
+            <div class="ct-poster">Once Upon a Time<br>in Hollywood</div>
+            <div class="ct-title">START</div>
+          </div>
+          <div class="ct-card proposed" tabindex="0" role="button" aria-label="Target film: Cape Fear" style="border-style:dashed">
+            <div class="ct-poster">Cape Fear</div>
+            <div class="ct-title">TARGET</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>CSS — focus ring (add to stylesheet)</h2>
+    <div class="code-block"><code>/* Focus visible for all interactive game tiles */
+.rc-actor:focus-visible,
+.rc-film:focus-visible,
+.rc-ct-tile:focus-visible,
+.rc-ct-item:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 12px;
+  z-index: 10;
+}
+
+/* Ensure focus ring isn't clipped by containers */
+#actorDeck, #filmDeck, #chainTrack {
+  overflow: visible;
+}
+
+/* Optional: subtle scale on focus for tactile feel */
+.rc-actor:focus-visible,
+.rc-film:focus-visible {
+  transform: scale(1.03);
+}</code></div>
+  </div>
+
+  <div class="panel">
+    <h2>JS — one-time enhancement (run after render)</h2>
+    <div class="code-block"><code>// Make all game tiles keyboard accessible
+function enhanceTiles() {
+  // Actors
+  document.querySelectorAll('.rc-actor.rc-pick').forEach(el => {
+    if (!el.hasAttribute('role')) {
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      const name = el.querySelector('.rc-nm')?.textContent?.trim() || 'actor';
+      el.setAttribute('aria-label', `Choose ${name}`);
+      // Enter/Space triggers onclick
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          el.click();
+        }
+      });
+    }
+  });
+
+  // Films
+  document.querySelectorAll('.rc-film.rc-pick, .rc-film[onclick]').forEach(el => {
+    if (!el.hasAttribute('role')) {
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      const name = el.querySelector('.rc-flbl')?.textContent?.trim() || 'film';
+      el.setAttribute('aria-label', `Choose ${name}`);
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+      });
+    }
+  });
+
+  // Chain track tiles (start/target)
+  document.querySelectorAll('.rc-ct-tile[onclick], .rc-ct-item[onclick]').forEach(el => {
+    if (!el.hasAttribute('role')) {
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      const label = el.querySelector('.rc-ct-fb')?.textContent?.trim() || 'film';
+      const type = el.classList.contains('rc-here') ? 'Start' : 'Target';
+      el.setAttribute('aria-label', `${type} film: ${label}`);
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+      });
+    }
+  });
+}
+
+// Call after initial render and after each newPuzzle()
+enhanceTiles();</code></div>
+  </div>
+
+  <div class="panel">
+    <h2>Screen-reader experience after fix</h2>
+    <ul style="color:var(--muted);line-height:2">
+      <li><strong>Tab</strong> → lands on START card → "Start film: Once Upon a Time in Hollywood, button"</li>
+      <li><strong>Tab</strong> → TARGET card → "Target film: Cape Fear, button"</li>
+      <li><strong>Tab</strong> → actor deck (left to right) → "Choose Leonardo DiCaprio, button"</li>
+      <li><strong>Enter/Space</strong> → selects actor → film deck populates → focus moves to first film</li>
+      <li><strong>Tab</strong> through films → "Choose Once Upon a Time in Hollywood, button"</li>
+      <li><strong>Enter</strong> → chain extends → focus returns to actor deck for next hop</li>
+      <li>All existing <code>onclick</code> logic preserved — zero engine changes</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

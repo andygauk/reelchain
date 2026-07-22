@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ReelChain — UX/Accessibility Review Summary</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#0b0d12; --gold:#D9A63D; --text:#e8eaf2; --muted:#8a90a6;
+    --card:#14171f; --panel:#1a1e28; --good:#39d98a; --bad:#ff5470;
+    --font-brand:"Oswald",Georgia,serif; --font-display:"Fraunces",Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font-brand);background:var(--bg);color:var(--text);line-height:1.6}
+  .wrap{max-width:1200px;margin:0 auto;padding:32px 24px}
+  h1{font-family:var(--font-display);font-size:clamp(32px,5vw,56px);margin:0 0 8px}
+  .meta{color:var(--muted);margin-bottom:40px;font-size:16px}
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;margin-bottom:40px}
+  .summary-card{background:var(--panel);border:1px solid #2a2f3a;border-radius:16px;padding:24px;display:flex;flex-direction:column}
+  .summary-card h2{margin:0 0 8px;font-size:18px;color:var(--gold)}
+  .summary-card p{margin:0 0 16px;color:var(--muted);font-size:14px;line-height:1.6}
+  .summary-card .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .tag{font-size:11px;padding:2px 8px;border-radius:999px;background:#2a2f3a;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .tag.sev-high{background:#3a1a1a;color:#f77;border-color:#5a2a2a}
+  .tag.sev-med{background:#3a2a0a;color:#f0c674;border-color:#5a4a1a}
+  .tag.sev-low{background:#0a3a1a;color:#74f0a4;border-color:#1a5a2a}
+  .summary-card .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:var(--gold);color:#1a1200;border-radius:999px;font:inherit;font-size:13px;font-weight:600;text-decoration:none;margin-top:auto;transition:all .15s}
+  .summary-card .btn:hover{background:#e8b84d;transform:translateY(-1px)}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:12px 16px;text-align:left;border-bottom:1px solid #2a2f3a}
+  th{background:rgba(217,166,61,.1);color:var(--gold);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  tr:hover td{background:rgba(255,255,255,.02)}
+  .sev{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase}
+  .sev.high{background:#3a1a1a;color:#f77}
+  .sev.med{background:#3a2a0a;color:#f0c674}
+  .sev.low{background:#0a3a1a;color:#74f0a4}
+  .effort{font-family:ui-monospace,monospace;font-size:12px;color:var(--muted)}
+  .section{margin-bottom:48px}
+  .section h2{font-family:var(--font-display);font-size:clamp(24px,3vw,36px);margin:0 0 16px;color:var(--gold)}
+  .section p{color:var(--muted);margin-bottom:24px;max-width:800px}
+  .checklist{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .check-item{background:var(--panel);border:1px solid #2a2f3a;border-radius:12px;padding:16px}
+  .check-item h3{margin:0 0 8px;font-size:14px;color:var(--gold)}
+  .check-item ul{margin:0;padding-left:20px;color:var(--muted);font-size:13px;line-height:1.8}
+  .check-item li{margin-bottom:4px}
+  .check-item li::marker{color:var(--good)}
+  .note{background:#1a1408;border:1px solid #3a2a0a;border-radius:12px;padding:16px;margin:24px 0;color:#f0c674;font-size:13px}
+  .note strong{color:var(--gold)}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrap">
+  <h1>ReelChain — UX / Accessibility Review</h1>
+  <p class="meta">Live audit of <a href="https://reelchain.app" style="color:var(--gold)">reelchain.app</a> (commit <code>f0d56ad</code>) — 5 issues, prioritised by impact & effort. Each has a working sketch in <code>sketches/ux-review/</code>.</p>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="tags">
+        <span class="tag sev-high">High</span>
+        <span class="tag">Accessibility</span>
+        <span class="tag">Keyboard</span>
+      </div>
+      <h2>1. No keyboard access — all game tiles are <div onclick></h2>
+      <p>Actors, films, start/target cards: zero <code>tabindex</code>, no <code>role</code>, no focus ring. Keyboard users cannot play. Screen readers see nothing actionable.</p>
+      <a class="btn" href="02-focus-states/index.html">View sketch →</a>
+    </div>
+    <div class="summary-card">
+      <div class="tags">
+        <span class="tag sev-high">High</span>
+        <span class="tag">Legibility</span>
+        <span class="tag">Mobile</span>
+      </div>
+      <h2>2. Actor names: 10px / muted / truncated</h2>
+      <p>Labels under avatars are 10px, <code>#8a90a6</code> on dark, ellipsised at 68px. Unreadable on laptop/tablet. WCAG AA fails on size alone.</p>
+      <a class="btn" href="01-actor-labels/index.html">View sketch →</a>
+    </div>
+    <div class="summary-card">
+      <div class="tags">
+        <span class="tag sev-med">Medium</span>
+        <span class="tag">Motion</span>
+        <span class="tag">Vestibular</span>
+      </div>
+      <h2>3. No <code>prefers-reduced-motion</code> guard</h2>
+      <p>13 keyframe animations (confetti, Linked! pop, gate pulse, chain dash) run regardless of OS setting. Users with vestibular disorders get full motion.</p>
+      <a class="btn" href="04-reduced-motion/index.html">View sketch →</a>
+    </div>
+    <div class="summary-card">
+      <div class="tags">
+        <span class="tag sev-med">Medium</span>
+        <span class="tag">Hierarchy</span>
+        <span class="tag">Flow</span>
+      </div>
+      <h2>4. Instruction disconnected from actor deck</h2>
+      <p>"Tap an <em>actor</em> to start" sits in <code>#slotsLine</code> far above <code>#actorDeck</code>. Gap ≈ 80px. Gold highlight on "actor" helps but visual grouping is broken.</p>
+      <a class="btn" href="03-instruction-hierarchy/index.html">View sketch →</a>
+    </div>
+    <div class="summary-card">
+      <div class="tags">
+        <span class="tag sev-med">Medium</span>
+        <span class="tag">Disclosure</span>
+        <span class="tag">Win UX</span>
+      </div>
+      <h2>5. "Score details" disclosure has no affordance</h2>
+      <p>Native <code><details></code> but <code><summary></code> is plain muted text — no chevron, no button styling, no hover/focus. Expanded grid is dense 2-col (fails mobile).</p>
+      <a class="btn" href="05-win-screen-details/index.html">View sketch →</a>
+    </div>
+    <div class="summary-card">
+      <div class="tags">
+        <span class="tag sev-low">Low</span>
+        <span class="tag">Contrast</span>
+        <span class="tag">Target card</span>
+      </div>
+      <h2>6. Target card recedes visually</h2>
+      <p>Dashed gold border + dark poster makes the goal feel distant/low-priority. Start card has solid gold glow; target needs equal visual weight (different treatment, not less).</p>
+      <a class="btn" href="01-actor-labels/index.html">View sketch →</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Impact × Effort matrix</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Issue</th><th>Severity</th><th>User impact</th><th>Dev effort</th><th>Files touched</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td><td>Keyboard access — all tiles</td><td><span class="sev high">High</span></td><td>Blocks keyboard/screen-reader users entirely</td><td class="effort">~30 min</td><td>JS enhancement + CSS focus ring</td>
+          </tr>
+          <tr>
+            <td>2</td><td>Actor label size/contrast</td><td><span class="sev high">High</span></td><td>Everyone on non-desktop; WCAG AA fail</td><td class="effort">~5 min</td><td>CSS only (2 rules)</td>
+          </tr>
+          <tr>
+            <td>3</td><td>prefers-reduced-motion</td><td><span class="sev med">Med</span></td><td>Vestibular users get nausea-inducing motion</td><td class="effort">~10 min</td><td>CSS @media block (drop-in)</td>
+          </tr>
+          <tr>
+            <td>4</td><td>Instruction proximity</td><td><span class="sev med">Med</span></td><td>New players miss the actor→film flow</td><td class="effort">~15 min</td><td>CSS grid reorder or margin fix</td>
+          </tr>
+          <tr>
+            <td>5</td><td>Score details affordance</td><td><span class="sev med">Med</span></td><td>Players don't know it expands; mobile grid broken</td><td class="effort">~20 min</td><td>CSS + 1 JS line</td>
+          </tr>
+          <tr>
+            <td>6</td><td>Target card visual weight</td><td><span class="sev low">Low</span></td><td>Goal feels less important than start</td><td class="effort">~10 min</td><td>CSS border/glow tweak</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Quick wins you can ship today (CSS only)</h2>
+    <div class="checklist">
+      <div class="check-item">
+        <h3>Actor labels — 2 lines</h3>
+        <ul>
+          <li><code>.rc-nm { font-size: 13px; color: var(--text); max-width: 80px; white-space: normal; }</code></li>
+          <li>Fixes WCAG AA + readability on all viewports</li>
+        </ul>
+      </div>
+      <div class="check-item">
+        <h3>Reduced motion — 1 @media block</h3>
+        <ul>
+          <li>Disable 13 animations for <code>prefers-reduced-motion: reduce</code></li>
+          <li>Confetti, Linked! pop, gate pulse, chain dash all respect OS setting</li>
+        </ul>
+      </div>
+      <div class="check-item">
+        <h3>Score details button — native details upgrade</h3>
+        <ul>
+          <li>Chevron, button styling, hover/focus, single-column grouped list</li>
+          <li>Works without JS; 1 line to sync <code>aria-expanded</code></li>
+        </ul>
+      </div>
+      <div class="check-item">
+        <h3>Focus ring — 1 rule</h3>
+        <ul>
+          <li><code>.rc-actor:focus-visible, .rc-film:focus-visible, .rc-ct-tile:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }</code></li>
+          <li>Pair with JS enhancement for <code>tabindex/role</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Accessibility baseline after fixes</h2>
+    <div class="checklist">
+      <div class="check-item">
+        <h3>✅ Keyboard</h3>
+        <ul>
+          <li>Tab order: Start → Target → Actors (L→R) → Films (L→R)</li>
+          <li>Enter/Space triggers selection at every step</li>
+          <li>Focus visible everywhere (gold 2px ring)</li>
+        </ul>
+      </div>
+      <div class="check-item">
+        <h3>✅ Screen readers</h3>
+        <ul>
+          <li>All tiles: <code>role="button"</code> + <code>aria-label</code> ("Choose Leonardo DiCaprio")</li>
+          <li>Start/Target: "Start film: X" / "Target film: Y"</li>
+          <li>Win screen: proper heading hierarchy (<code>h1</code> → <code>h2</code>)</li>
+          <li>Score details: native disclosure announced correctly</li>
+        </ul>
+      </div>
+      <div class="check-item">
+        <h3>✅ Motion</h3>
+        <ul>
+          <li><code>prefers-reduced-motion</code> respected globally</li>
+          <li>Confetti hidden, Linked! instant, gate glow static</li>
+        </ul>
+      </div>
+      <div class="check-item">
+        <h3>✅ Visual</h3>
+        <ul>
+          <li>Actor names 13px / high contrast / wrapped</li>
+          <li>Instruction adjacent to actor deck</li>
+          <li>Target card has equal visual presence</li>
+          <li>All contrast ratios ≥ 4.5:1 (measured: 5.85–16.18:1)</li>
+        </ul>
+      </div>
+      <div class="check-item">
+        <h3>✅ Mobile</h3>
+        <ul>
+          <li>Actor deck scrolls horizontally (already works)</li>
+          <li>Score details single-column list on < 480px</li>
+          <li>Tap targets ≥ 44px (actors 62×68, films 100×150, buttons 41px tall)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Method:</strong> Live audit via browser console (computed styles, contrast math, DOM inspection) + browser_vision screenshots. No code changes made — sketches are standalone HTML in <code>sketches/ux-review/</code>. Open any <code>index.html</code> in a browser to interact.
+  </div>
+</div>
+</body>
+</html>

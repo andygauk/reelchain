@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Issue 5: Win Screen Details — Affordance & Density</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#0b0d12; --gold:#D9A63D; --text:#e8eaf2; --muted:#8a90a6;
+    --card:#14171f; --panel:#1a1e28; --good:#39d98a; --bad:#ff5470;
+    --font-brand:"Oswald",Georgia,serif; --font-display:"Fraunces",Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font-brand);background:var(--bg);color:var(--text);line-height:1.5}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  h1{font-family:var(--font-display);font-size:clamp(28px,4vw,42px);margin:0 0 8px}
+  .meta{color:var(--muted);margin-bottom:32px}
+  .panel{background:var(--panel);border:1px solid #2a2f3a;border-radius:16px;padding:24px;margin-bottom:24px}
+  .panel h2{margin:0 0 16px;font-size:18px;color:var(--gold)}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+  @media(max-width:760px){.compare{grid-template-columns:1fr}}
+  .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;margin-bottom:16px}
+  .badge.current{background:#3a2a0a;color:#f0c674;border:1px solid #5a4a1a}
+  .badge.proposed{background:#0a3a1a;color:#74f0a4;border:1px solid #1a5a2a}
+  .win-modal{background:#0f1218;border:1px solid #2a2f3a;border-radius:16px;overflow:hidden;max-width:480px;margin:0 auto}
+  .win-modal header{padding:24px 24px 16px;text-align:center;background:linear-gradient(180deg,rgba(217,166,61,.08),transparent)}
+  .win-title{font-family:var(--font-display);font-size:34px;font-weight:800;color:var(--gold);margin:0 0 8px}
+  .win-fame{font-size:44px;font-weight:700;color:var(--gold);margin:0 0 16px}
+  .solved{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0;padding:16px;background:rgba(255,255,255,.03);border-radius:12px}
+  .solved-badge{font-family:var(--font-display);font-size:24px;font-weight:800;color:var(--good)}
+  .solved-text{color:var(--text);font-size:14px}
+  .solved-text strong{color:var(--bad)}
+  .chain-preview{display:flex;align-items:flex-start;justify-content:center;gap:8px;padding:0 16px 16px;overflow-x:auto}
+  .chain-node{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+  .node-poster{width:64px;height:96px;border-radius:6px;background:#2a2f3a;border:2px solid #3a3f4a;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);text-align:center;padding:4px}
+  .node-poster.current{border-color:var(--gold);box-shadow:0 0 0 2px var(--bg),0 0 12px rgba(217,166,61,.3)}
+  .node-label{font-size:10px;color:var(--muted);text-align:center;max-width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .node-label.current{color:var(--gold);font-weight:600}
+  .actions{display:flex;gap:12px;padding:16px 24px 24px;flex-wrap:wrap;justify-content:center}
+  .btn{padding:14px 28px;border-radius:999px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:none;transition:all .15s}
+  .btn.primary{background:var(--gold);color:#1a1200}
+  .btn.primary:hover{background:#e8b84d;transform:translateY(-1px)}
+  .btn.secondary{background:#2a2f3a;color:var(--text);border:1px solid #3a3f4a}
+  .btn.secondary:hover{background:#3a3f4a}
+  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* CURRENT details */
+  .details-current{padding:0 24px 24px;border-top:1px solid #2a2f3a}
+  .details-current summary{cursor:pointer;color:var(--muted);font-size:13px;padding:16px 0;display:flex;align-items:center;justify-content:center;gap:8px;user-select:none}
+  .details-current summary::-webkit-details-marker{display:none}
+  .details-current summary::after{content:"▼";font-size:10px;transition:transform .2s}
+  .details-current[open] summary::after{transform:rotate(180deg)}
+  .details-current[open] summary{color:var(--text)}
+  .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px;font-size:12px}
+  .detail-row{display:flex;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px}
+  .detail-label{color:var(--muted)}
+  .detail-value{color:var(--text);font-weight:600}
+  .detail-value.good{color:var(--good)}
+  .detail-value.bad{color:var(--bad)}
+
+  /* PROPOSED details */
+  .details-proposed{padding:0 24px 24px;border-top:1px solid #2a2f3a}
+  .details-proposed summary{
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:14px 20px;
+    margin:0 -16px 8px;
+    background:#2a2f3a;
+    border:1px solid #3a3f4a;
+    border-radius:999px;
+    font-size:13px;font-weight:600;
+    color:var(--text);
+    transition:all .15s;
+    user-select:none;
+    list-style:none;
+  }
+  .details-proposed summary::-webkit-details-marker{display:none}
+  .details-proposed summary::after{
+    content:"";width:16px;height:16px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23D9A63D' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-size:contain;transition:transform .2s;flex-shrink:0;
+  }
+  .details-proposed[open] summary::after{transform:rotate(180deg)}
+  .details-proposed summary:hover{background:#3a3f4a;border-color:var(--gold)}
+  .details-proposed summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .details-content{animation:slideDown .2s ease-out}
+  @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+  .detail-group{margin-bottom:16px}
+  .detail-group h4{margin:0 0 8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .detail-items{display:flex;flex-direction:column;gap:6px}
+  .detail-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px;font-size:13px}
+  .detail-item .label{color:var(--muted)}
+  .detail-item .value{color:var(--text);font-weight:600}
+  .detail-item .value.good{color:var(--good)}
+  .detail-item .value.bad{color:var(--bad)}
+  .detail-item .value.gold{color:var(--gold)}
+  @media(max-width:480px){
+    .win-modal{max-width:100%}
+    .details-grid{grid-template-columns:1fr}
+  }
+
+  pre{background:#0a0c10;padding:16px;border-radius:8px;overflow:auto;font-size:13px;color:#c9d1d9;margin:16px 0}
+  code{font-family:ui-monospace,SFMono-Regular,monospace}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrap">
+  <h1>Issue 5: Win Screen "Score details" Affordance</h1>
+  <p class="meta"><code><details></code> exists but <code><summary></code> looks like plain text — no chevron, no button styling, no hover/focus. Expanded grid is dense 2-col on mobile.</p>
+
+  <div class="compare">
+    <div class="panel">
+      <span class="badge current">CURRENT — weak affordance</span>
+      <h2>Summary looks like muted text</h2>
+      <div class="win-modal">
+        <header>
+          <div class="win-title">CHAIN COMPLETE 🎉</div>
+          <div class="win-fame">+30 Fame</div>
+        </header>
+        <div class="solved">
+          <span class="solved-badge">ReelChain SOLVED!</span>
+          <span class="solved-text">Solved in <strong>2</strong> links (par 2)</span>
+        </div>
+        <div class="chain-preview">
+          <div class="chain-node">
+            <div class="node-poster current">Once Upon<br>a Time...</div>
+            <div class="node-label current">Once Upon a Time in Hollywood</div>
+          </div>
+          <span style="color:var(--gold);font-size:20px;margin-top:20px">⟶</span>
+          <div class="chain-node">
+            <div class="node-poster">Cape Fear</div>
+            <div class="node-label">Cape Fear</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary">▶ One more go</button>
+          <button class="btn secondary">🏆 Challenge a friend</button>
+        </div>
+        <details class="details-current" id="detCurrent">
+          <summary>Score details</summary>
+          <div class="details-grid">
+            <div class="detail-row"><span class="detail-label">Difficulty</span><span class="detail-value">Medium</span></div>
+            <div class="detail-row"><span class="detail-label">Par</span><span class="detail-value">2</span></div>
+            <div class="detail-row"><span class="detail-label">Your links</span><span class="detail-value">2</span></div>
+            <div class="detail-row"><span class="detail-label">Perfect chain</span><span class="detail-value bad">No</span></div>
+            <div class="detail-row"><span class="detail-label">Base Fame</span><span class="detail-value gold">50</span></div>
+            <div class="detail-row"><span class="detail-label">Par bonus</span><span class="detail-value good">+0</span></div>
+            <div class="detail-row"><span class="detail-label">Under par</span><span class="detail-value good">+0</span></div>
+            <div class="detail-row"><span class="detail-label">Run bonus</span><span class="detail-value good">+5</span></div>
+            <div class="detail-row"><span class="detail-label">Total</span><span class="detail-value gold">+30</span></div>
+          </div>
+        </details>
+      </div>
+      <div class="code-block" style="margin-top:16px"><code>/* Current CSS — summary is just text */
+#winDetails summary {
+  color: var(--muted);
+  cursor: pointer;
+  padding: 16px 0;
+}
+/* No hover, no focus, no chevron, no button look */</code></pre>
+    </div>
+
+    <div class="panel">
+      <span class="badge proposed">PROPOSED — native button affordance</span>
+      <h2>Summary styled as button + grouped list</h2>
+      <div class="win-modal">
+        <header>
+          <div class="win-title">CHAIN COMPLETE 🎉</div>
+          <div class="win-fame">+30 Fame</div>
+        </header>
+        <div class="solved">
+          <span class="solved-badge">ReelChain SOLVED!</span>
+          <span class="solved-text">Solved in <strong>2</strong> links (par 2)</span>
+        </div>
+        <div class="chain-preview">
+          <div class="chain-node">
+            <div class="node-poster current">Once Upon<br>a Time...</div>
+            <div class="node-label current">Once Upon a Time in Hollywood</div>
+          </div>
+          <span style="color:var(--gold);font-size:20px;margin-top:20px">⟶</span>
+          <div class="chain-node">
+            <div class="node-poster">Cape Fear</div>
+            <div class="node-label">Cape Fear</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary">▶ One more go</button>
+          <button class="btn secondary">🏆 Challenge a friend</button>
+        </div>
+        <details class="details-proposed" id="detProposed">
+          <summary>Score details</summary>
+          <div class="details-content">
+            <div class="detail-group">
+              <h4>Chain</h4>
+              <div class="detail-items">
+                <div class="detail-item"><span class="label">Difficulty</span><span class="value">Medium</span></div>
+                <div class="detail-item"><span class="label">Par</span><span class="value">2 links</span></div>
+                <div class="detail-item"><span class="label">Your solution</span><span class="value">2 links</span></div>
+                <div class="detail-item"><span class="label">Perfect chain</span><span class="value bad">No</span></div>
+              </div>
+            </div>
+            <div class="detail-group">
+              <h4>Fame breakdown</h4>
+              <div class="detail-items">
+                <div class="detail-item"><span class="label">Base Fame (Medium)</span><span class="value gold">50</span></div>
+                <div class="detail-item"><span class="label">Par bonus</span><span class="value good">+0</span></div>
+                <div class="detail-item"><span class="label">Under par bonus</span><span class="value good">+0</span></div>
+                <div class="detail-item"><span class="label">Run bonus (run #2)</span><span class="value good">+5</span></div>
+                <div class="detail-item" style="border-top:1px solid #3a3f4a;margin-top:4px;padding-top:12px"><span class="label"><strong>Total earned</strong></span><span class="value gold"><strong>+30</strong></span></div>
+              </div>
+            </div>
+            <div class="detail-group">
+              <h4>Progress</h4>
+              <div class="detail-items">
+                <div class="detail-item"><span class="label">Run</span><span class="value">#2 / 3 to next bonus</span></div>
+                <div class="detail-item"><span class="label">Hall of Fame</span><span class="value">Supporting Player</span></div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+      <div class="code-block" style="margin-top:16px"><code>/* Proposed — native details + summary button */
+#winDetails summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  margin: 0 -16px 8px;
+  background: #2a2f3a;
+  border: 1px solid #3a3f4a;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+  transition: all .15s;
+}
+#winDetails summary::-webkit-details-marker { display: none; }
+#winDetails summary::after {
+  content: "";
+  width: 16px; height: 16px;
+  background: url("chevron-down.svg") center/contain no-repeat;
+  transition: transform .2s;
+}
+#winDetails[open] summary::after { transform: rotate(180deg); }
+#winDetails summary:hover { background: #3a3f4a; border-color: var(--gold); }
+#winDetails summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Content — single column grouped list */
+#winDetails .details-content { animation: slideDown .2s ease-out; }
+.detail-group { margin-bottom: 16px; }
+.detail-group h4 { margin: 0 0 8px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.detail-item { display: flex; justify-content: space-between; padding: 10px 12px; background: rgba(255,255,255,.03); border-radius: 8px; font-size: 13px; }
+.detail-item .value { font-weight: 600; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }</code></pre>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>JS — sync aria-expanded (optional but recommended)</h2>
+    <div class="code-block"><code>const det = document.getElementById('winDetails');
+det.addEventListener('toggle', () => {
+  det.querySelector('summary').setAttribute('aria-expanded', det.open);
+});</code></div>
+  </div>
+
+  <div class="panel">
+    <h2>Why this beats a custom <code><button></code> toggle</h2>
+    <ul style="color:var(--muted);line-height:2;max-width:700px">
+      <li><strong>Native semantics</strong> — screen readers announce "disclosure widget, collapsed/expanded" automatically</li>
+      <li><strong>Zero JS required</strong> for basic open/close — works without JS, enhanced with aria-sync</li>
+      <li><strong>Keyboard native</strong> — <kbd>Enter</kbd>/<kbd>Space</kbd> toggles, <kbd>Tab</kbd> moves in/out correctly</li>
+      <li><strong>Print/Reader mode safe</strong> — content stays accessible when styles stripped</li>
+      <li><strong>Find-in-page works</strong> — hidden content still searchable when closed (browser-dependent but usually yes)</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>
